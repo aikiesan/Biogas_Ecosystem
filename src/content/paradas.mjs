@@ -5,6 +5,7 @@
 // - more:    detalhes opcionais (recolhidos em "Saiba mais")
 // - tags:    zonas destacadas no diorama · streams: fluxos em evidência
 // - anchor:  posição do pino (mundo) · focus: enquadramento do tour
+import { DIGESTATO, CASA_M3_MES, ONIBUS, PCI, EVITADO_DIESEL } from "../data/numeros.mjs";
 import { METANO_POR_TONELADA as T, POTENCIAL_SP as SP, POTENCIAL_SP_DIA, CAPACIDADE_SP_DIA, BIOGAS, BIOMETANO_CH4_MIN, BIOMETANO_SPEC, CHP, CSTR, INTENSIDADE, REDUCAO_DIESEL, RSU_ORGANICO_BR, CBIO, CGOB } from "../data/numeros.mjs";
 const mid = ([a, b]) => (a + b) / 2;
 import { FONTES } from "../data/fontes.mjs";
@@ -38,7 +39,8 @@ export const STOPS = [
       { label: "Vinhaça", v: SP.cana.vinhaca, tone: "agricola", shade: 2 }, { label: "Bagaço", v: SP.cana.bagaco, tone: "agricola", shade: 3 },
       { label: "Outros", v: 100 - 81.8, tone: "neutral" }] },
     text: ["Palha, torta de filtro, vinhaça e bagaço sobram da produção de açúcar e etanol, em volumes enormes."],
-    tags: ["agro", "ind"], streams: ["substrato"], anchor: [110, 100, 18], focus: [0, 0, 250, 215], sources: ["cp2bEvidencia"],
+    more: ["A colheita no Centro-Sul vai de abril/maio a novembro, com pico de junho a outubro. Na entressafra (dezembro a março), vinhaça e palha quase param, salvo estoques. No mapa, o relógio mostra a safra passando."],
+    tags: ["agro", "ind"], streams: ["substrato"], anchor: [110, 100, 18], focus: [0, 0, 250, 215], sources: ["cp2bEvidencia", "conab"],
   },
   {
     id: "pec", chapter: "origem", n: 2, kicker: "Pecuária",
@@ -113,7 +115,8 @@ export const STOPS = [
       { label: "Biogás", parts: [{ k: "ch4", v: BIOGAS.ch4Tipico }, { k: "co2", v: 100 - BIOGAS.ch4Tipico }] },
       { label: "Biometano", parts: [{ k: "ch4", v: 92, label: `CH₄ ≥ ${BIOMETANO_CH4_MIN}%` }, { k: "neutral", v: 8, label: "" }] }], arrow: "membranas", note: `Resolução ANP nº 1.006/2026: CH₄ ≥ ${BIOMETANO_SPEC.ch4Min}%, CO₂ ≤ ${BIOMETANO_SPEC.co2Max}%, H₂S ≤ ${BIOMETANO_SPEC.h2sMax} mg/m³.` },
     text: ["O biometano é intercambiável com o gás natural fóssil: mesmos dutos, fogões, caldeiras e motores."],
-    sources: ["anp1006", "anp1006Noticia", "anp1006Texto"],
+    more: [`Energia: cada m³ de biometano tem cerca de ${PCI.mj[0]}–${PCI.mj[1]} MJ (≈ ${fmt(PCI.kwh[0])}–${fmt(PCI.kwh[1])} kWh) no poder calorífico inferior.`],
+    sources: ["anp1006", "anp1006Noticia", "anp1006Texto", "anpPci"],
     tags: ["upgrading"], streams: ["biogas", "biometano", "co2"], anchor: [550, 397, 38], focus: [500, 360, 660, 460],
   },
   {
@@ -126,7 +129,9 @@ export const STOPS = [
   {
     id: "digestato", chapter: "usina", n: 11, kicker: "Coproduto · Digestato",
     message: "O digestato devolve nutrientes ao campo.",
-    figure: { type: "cycle", steps: [{ icon: "leaf", label: "Lavoura" }, { icon: "truck", label: "Resíduo" }, { icon: "tank", label: "Biodigestor" }, { icon: "sprout", label: "Biofertilizante" }], chips: ["N", "P", "K"] },
+    figure: { type: "cycle", steps: [{ icon: "leaf", label: "Lavoura" }, { icon: "truck", label: "Resíduo" }, { icon: "tank", label: "Biodigestor" }, { icon: "sprout", label: "Biofertilizante" }], chips: ["N", "P", "K"], kpis: [{ v: `${fmt(DIGESTATO.liquidoMistura.n)}`, l: "kg de N por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.p2o5)}`, l: "kg de P₂O₅ por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.k2o)}`, l: "kg de K₂O por m³" }], kpiNote: "Digestato líquido de usina com mistura agropecuária (Embrapa). Ordem de grandeza: cada lote precisa de análise." },
+    more: [`Dejetos suínos (líquido): N ${fmt(DIGESTATO.liquidoSuino.n)} · P₂O₅ ${fmt(DIGESTATO.liquidoSuino.p2o5)} · K₂O ${fmt(DIGESTATO.liquidoSuino.k2o)} kg/m³. Composto sólido: N ${DIGESTATO.compostoSolido.n} · P₂O₅ ${DIGESTATO.compostoSolido.p2o5} · K₂O ${DIGESTATO.compostoSolido.k2o} kg/t.`, "A separação sólido-líquido concentra fósforo e matéria orgânica no sólido; o líquido guarda a maior parte do nitrogênio amoniacal e do potássio."],
+    sources: ["embrapaDigestato", "abiogasDigestato"],
     text: ["Separado em fração sólida e líquida, o digestato substitui parte do adubo mineral e fecha o ciclo."],
     tags: ["digestato", "agro"], streams: ["digestato"], anchor: [450, 600, 18], focus: [230, 0, 560, 700],
   },
@@ -146,15 +151,16 @@ export const STOPS = [
       { label: "Diesel B", v: INTENSIDADE.dieselB, tone: "neutral", prefix: "< " },
       { label: "Biometano (plantas certificadas no RenovaBio)", v: INTENSIDADE.biometano, tone: "biometano" }] },
     text: ["Comprimido (bio-GNV) abastece ônibus e caminhões; liquefeito (bio-GNL) serve a longas distâncias."],
-    more: ["A comparação é por unidade de energia do combustível. Não é uma projeção de frota: em cenários de longo prazo da EPE, o efeito agregado depende de quanto da frota de fato usa gás.", "O resultado varia com a matéria-prima, as emissões fugitivas de metano, as distâncias de transporte e o consumo de energia na purificação."],
-    sources: ["epeIntensidade", "epeMotorizacoes"],
+    more: ["A comparação é por unidade de energia do combustível. Não é uma projeção de frota: em cenários de longo prazo da EPE, o efeito agregado depende de quanto da frota de fato usa gás.", "O resultado varia com a matéria-prima, as emissões fugitivas de metano, as distâncias de transporte e o consumo de energia na purificação.", `Um ônibus urbano a gás consome ${fmt(ONIBUS.m3km[0])}–${fmt(ONIBUS.m3km[1])} m³/km; rodando ${ONIBUS.kmDia[0]}–${ONIBUS.kmDia[1]} km por dia, são cerca de ${ONIBUS.m3Dia[0]}–${ONIBUS.m3Dia[1]} m³/dia.`, `Na troca do diesel, cada m³ de biometano evita cerca de ${fmt(EVITADO_DIESEL.t[0] * 1000)}–${fmt(EVITADO_DIESEL.t[1] * 1000)} kg de CO₂e no ciclo de vida.`],
+    sources: ["epeIntensidade", "epeMotorizacoes", "comfrota", "gasbus"],
     tags: ["posto"], streams: ["biometano"], anchor: [835, 235, 30], focus: [690, 170, 900, 330],
   },
   {
     id: "casa", chapter: "destino", n: 14, kicker: "Chegada",
     message: "A chama do seu fogão pode vir de resíduos.",
     figure: { type: "chain", steps: [{ icon: "waste", label: "Resto de comida", tag: "urb" }, { icon: "tank", label: "Biodigestor", tag: "cstr" }, { icon: "pipe", label: "Rede", tag: "injecao" }, { icon: "flame", label: "Seu fogão", tag: "casa" }] },
-    text: ["Gás para cozinhar e aquecer água pela rede; luz pela rede elétrica."],
+    text: [`Uma casa paulista com medidor individual usa, em média, cerca de ${fmt(CASA_M3_MES)} m³ de gás por mês (ARSESP).`, "Gás para cozinhar e aquecer água pela rede; luz pela rede elétrica."],
+    sources: ["arsesp"],
     tags: ["casa"], streams: ["biometano", "eletricidade"], anchor: [743, 862, 22], focus: [712, 640, 905, 930],
   },
 

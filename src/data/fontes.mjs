@@ -31,5 +31,12 @@ export const FONTES = {
   planares: { t: "Planares · Plano Nacional de Resíduos Sólidos (seção 1.1.3, composição)", u: "https://portal-api.sinir.gov.br/wp-content/uploads/2022/07/Planares-B.pdf" },
   planoSP: { t: "Plano de Resíduos Sólidos do Estado de São Paulo (2020)", u: "https://smastr16.blob.core.windows.net/home/2020/12/plano-resi%CC%81duos-solidos-2020_final.pdf" },
   abrema: { t: "ABREMA · Panorama 2025: metodologia e premissas", u: "https://www.abrema.org.br/wp-content/uploads/2026/05/Panorama2025_Metodologia.pdf" },
+  conab: { t: "Conab · Acompanhamento da safra brasileira de cana-de-açúcar (2024/25 e 2026/27)", u: "" },
+  embrapaDigestato: { t: "Embrapa · Uso do digestato como fertilizante (Tabelas 1–3)", u: "" },
+  abiogasDigestato: { t: "Abiogás · Gestão do digestato para utilização como biofertilizante", u: "" },
+  arsesp: { t: "ARSESP · Nota Técnica Final, 6º Ciclo Tarifário da Comgás", u: "" },
+  comfrota: { t: "Prefeitura de São Paulo · Comfrota: parâmetros de consumo e emissão de ônibus", u: "" },
+  gasbus: { t: "Projeto GASBUS · teste de ônibus urbano a GNV", u: "" },
+  anpPci: { t: "ANP · Informe técnico sobre PCI e RenovaCalc", u: "" },
   verra: { t: "Verra · metodologias", u: "https://verra.org/methodologies/" },
 };

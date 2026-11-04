@@ -152,7 +152,7 @@ const F = {
     });
     return svg(128, b, `${input.label}: ${outs.map((o) => o.label).join(" ou ")}`);
   },
-  cycle({ steps, chips }) {
+  cycle({ steps, chips, kpis, kpiNote }) {
     const cx = W / 2, cy = 92, r = 64;
     let b = DEFS + `<circle class="ring flowing" cx="${cx}" cy="${cy}" r="${r}"/>`;
     steps.forEach((s, i) => {
@@ -163,7 +163,9 @@ const F = {
       b += label(s.label, lx, ly, "fl", Math.cos(a) >= 0.3 ? "start" : Math.cos(a) <= -0.3 ? "end" : "middle");
     });
     chips.forEach((c, i) => { b += `<circle cx="${cx - 24 + i * 24}" cy="${cy}" r="10" fill="${STREAMS.digestato.color}"/>` + label(c, cx - 24 + i * 24, cy + 4, "fv on"); });
-    return svg(190, b, steps.map((s) => s.label).join(" → "));
+    let html = svg(190, b, steps.map((s) => s.label).join(" → "));
+    if (kpis) html += `<div class="kpis">${kpis.map((k) => `<div class="kpi" style="--k:${STREAMS.digestato.color}"><div class="kv">${k.v}</div><div class="kl">${k.l}</div></div>`).join("")}</div>` + (kpiNote ? `<div class="fignote">${kpiNote}</div>` : "");
+    return html;
   },
   flowCert({ steps, kpis, color }) {
     const c = CERT[color];

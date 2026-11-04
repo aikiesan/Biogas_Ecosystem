@@ -6,6 +6,7 @@
 const DAY_S = 60;
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const SAFRA = (m) => m >= 3 && m <= 10;
+const PICO = (m) => m >= 5 && m <= 9;
 const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // noite: 1 entre 20h e 5h, transições suaves no amanhecer e no entardecer
 export const nightOf = (h) => 1 - smooth(5, 7, h) + smooth(17.5, 19.5, h);
@@ -67,7 +68,7 @@ export function createAmbient(stage, { night, onTick }) {
       const grow = SAFRA(m) ? 1 : [0.3, 0.45, 0.6, 0.8][(m + 1) % 12] ?? 0.4;
       svg.style.setProperty("--cane", grow);
     }
-    onTick({ h, m, month: MONTHS[m], safra: SAFRA(m), night: n, demand: dem, gasLevel: 0.55 + 0.35 * Math.cos((2 * Math.PI * (h - 8)) / 24), running });
+    onTick({ h, m, month: MONTHS[m], safra: SAFRA(m), pico: PICO(m), night: n, demand: dem, gasLevel: 0.55 + 0.35 * Math.cos((2 * Math.PI * (h - 8)) / 24), running });
   }
 
   stage.onFrame((t) => {

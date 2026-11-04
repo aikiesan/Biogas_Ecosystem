@@ -67,3 +67,24 @@ export const CGOB = {
   volumeMeta2026_mi_m3: 181.728,
   teto: 10, // %
 };
+
+// Safra de cana no Centro-Sul/SP (Conab): colheita de abr/mai a nov; pico jun–out;
+// entressafra dez–mar (vinhaça e palha diretas quase nulas, salvo estoques).
+export const SAFRA = { meses: [3, 4, 5, 6, 7, 8, 9, 10], pico: [5, 6, 7, 8, 9] }; // índices 0 = janeiro
+
+// Digestato (Embrapa, efluentes de biodigestores) — ordem de grandeza, exige análise.
+export const DIGESTATO = {
+  liquidoMistura: { n: 2.5, p2o5: 1.1, k2o: 2.1 }, // kg/m³, usina com mistura agropecuária
+  liquidoSuino: { n: 1.0, p2o5: 0.6, k2o: 1.1 }, // kg/m³
+  compostoSolido: { n: 93, p2o5: 121, k2o: 47 }, // kg/t, base úmida
+};
+
+// Consumo residencial de gás canalizado (ARSESP, Comgás, medição individual, 2025/26).
+export const CASA_M3_MES = 8.2;
+// Ônibus urbano a gás: 0,5–0,8 m³/km; 250–350 km/dia (Prefeitura SP/Comfrota; GASBUS; EPE).
+export const ONIBUS = { m3km: [0.5, 0.8], kmDia: [250, 350], m3Dia: [150, 240] };
+export const ONIBUS_M3_DIA_REF = 195; // ponto médio de 150–240 m³/dia
+// Poder calorífico inferior de projeto do biometano (ANP): 32–36 MJ/Nm³ ≈ 8,9–10,0 kWh/Nm³.
+export const PCI = { mj: [32, 36], kwh: [8.9, 10.0] };
+// Emissão evitada ao substituir diesel (EPE, ciclo de vida): 0,0022–0,0026 tCO₂e/Nm³.
+export const EVITADO_DIESEL = { t: [0.0022, 0.0026], ref: 0.0024 };

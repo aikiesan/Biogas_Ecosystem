@@ -59,3 +59,4 @@
 .fig .row .hit { fill: transparent; }
 .fig .row:hover .hit { fill: #F4F7F8; }
 .fig .node[data-tag]:hover circle { stroke: #00573A; stroke-width: 2; }
+.fignote { font-size: 10.5px; font-style: italic; color: var(--ink-muted); margin-top: 6px; }

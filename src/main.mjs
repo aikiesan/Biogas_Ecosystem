@@ -10,7 +10,7 @@ import { renderIndex, renderStop, renderLegend } from "./ui/panel.mjs";
 import { addLife } from "./ui/life.mjs";
 import { createJourney } from "./ui/journey.mjs";
 import { createAmbient } from "./ui/ambient.mjs";
-import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO } from "./data/numeros.mjs";
+import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
 const svg = $("world"), panel = $("panel"), body = $("panel-body"), progress = $("progress");
@@ -31,24 +31,32 @@ const REAL_S = (CAPACIDADE_SP_DIA * 1e6) / 86400; // m³/s ≈ 4,6
 const t0 = performance.now();
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 let lastHud = 0;
+// equivalências que se alternam a cada 5 s (fontes em DATA.md)
+const EQS = [
+  { f: (m) => m / CASA_M3_MES, t: "casas abastecidas por um mês (≈ 8,2 m³/mês, ARSESP)" },
+  { f: (m) => m / ONIBUS_M3_DIA_REF, t: "ônibus rodando um dia inteiro (≈ 150–240 m³/dia)" },
+  { f: (m) => m * EVITADO_DIESEL.ref, t: "t de CO₂e evitadas, se substituíssem diesel (EPE)" },
+  { f: (m) => (m * CBIO.porMil_m3) / 1000, t: "CBIOs, se virassem biometano certificado (ref. EPE)" },
+];
 stage.onFrame((t) => {
   if (t - lastHud < 0.1) return; lastHud = t;
   const s = (performance.now() - t0) / 1000;
   $("hud-pot").textContent = nf.format(s * POT_S);
   $("hud-real").textContent = nf.format(s * REAL_S);
-  $("hud-cbio").textContent = nf.format((s * POT_S * CBIO.porMil_m3) / 1000);
+  const m3 = s * POT_S, eq = EQS[Math.floor(s / 5) % EQS.length];
+  $("hud-eq").innerHTML = `≈ <b>${nf.format(eq.f(m3))}</b> ${eq.t}`;
 });
 $("hud-bar-real").style.width = `${(REAL_S / POT_S) * 100}%`;
 
 // ---------- relógio: dia/noite, demanda de gás e safra da cana
 const ambient = createAmbient(stage, {
   night: stage.night,
-  onTick({ h, month, safra, night, gasLevel }) {
+  onTick({ h, month, safra, pico, night, gasLevel }) {
     const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 10) * 10;
     $("clk-time").textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
     $("clk-ico").textContent = night > 0.5 ? "☾" : h < 8 || h > 17 ? "◐" : "☀";
     $("clk-month").textContent = month;
-    $("clk-season").textContent = safra ? "safra da cana" : "entressafra";
+    $("clk-season").textContent = safra ? (pico ? "pico da safra" : "safra da cana") : "entressafra";
     $("clk-season").classList.toggle("off", !safra);
     $("gas-lvl").style.width = `${Math.round(gasLevel * 100)}%`;
   },
