@@ -59,24 +59,24 @@
 
 /* ---------- fluxos */
 .flow .pipe { fill: none; stroke: #fff; stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; opacity: .95; }
-.flow .core { fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 7; animation: flow 1.6s linear infinite; }
+.flow .core { fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 7; }
 .flow.overhead .core { stroke-width: 1.1; stroke-dasharray: 2 5; }
 .flow.knowledge .core { stroke-width: 1.4; stroke-dasharray: 1 6; opacity: .8; }
 @keyframes flow { to { stroke-dashoffset: -24; } }
 .particle { fill: var(--c); stroke: #fff; stroke-width: .7; }
-.flow, .particle, [data-tag], [data-fx] { transition: opacity .5s var(--ease); }
+.flow { transition: opacity .5s var(--ease); }
 .off { opacity: 0 !important; }
 /* destaque: contorno e brilho, nunca esmaecimento */
 #L-halo { pointer-events: none; }
-#halo-objs { animation: halo 2.4s ease-in-out infinite; }
+
 @keyframes halo { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .plot-hl { fill: rgba(182, 224, 59, .16); stroke: #B6E03B; stroke-width: 5; stroke-linejoin: round; opacity: .9; }
-.plot-ants { fill: none; stroke: #00573A; stroke-width: 1.6; stroke-dasharray: 6 5; stroke-linejoin: round; animation: ants 1.2s linear infinite; }
+.plot-ants { fill: none; stroke: #00573A; stroke-width: 1.6; stroke-dasharray: 6 5; stroke-linejoin: round; }
 @keyframes ants { to { stroke-dashoffset: -22; } }
 .flow.em .pipe { stroke-width: 6; }
 .flow.em .core { stroke-width: 3.2; }
 .flow.overhead.em .core { stroke-width: 2; }
-.particle.em { r: 3; }
+
 
 /* ---------- animações discretas */
 .breathing { animation: breathe 7s ease-in-out infinite; }
@@ -122,29 +122,35 @@
 .lot { fill: #C7D0D4; }
 .stall { fill: none; stroke: #fff; stroke-width: .8; vector-effect: non-scaling-stroke; }
 .solarp { fill: #2F4F6B; stroke: #9fb6c4; stroke-width: .4; vector-effect: non-scaling-stroke; }
-.cloud ellipse { fill: #fff; opacity: .75; }
-.cloud { animation: drift 70s ease-in-out infinite alternate; }
-.cloud.c1 { animation-duration: 90s; } .cloud.c2 { animation-duration: 110s; animation-direction: alternate-reverse; }
-@keyframes drift { from { translate: -40px 0; } to { translate: 60px 0; } }
-.liquid.water { animation: shimmer 5s ease-in-out infinite; }
+/* camadas HTML em coordenadas de mundo: animadas só com transform (GPU) */
+.worldhtml { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; pointer-events: none; }
+.hcloud { position: absolute; width: 120px; height: 40px; will-change: transform; animation: drift 70s ease-in-out infinite alternate; }
+.hcloud.c1 { animation-duration: 90s; } .hcloud.c2 { animation-duration: 110s; animation-direction: alternate-reverse; }
+.hcloud i { position: absolute; background: #fff; opacity: .78; border-radius: 50%; }
+.hcloud i:nth-child(1) { left: -46px; top: -16px; width: 92px; height: 32px; }
+.hcloud i:nth-child(2) { left: -48px; top: -24px; width: 48px; height: 32px; }
+.hcloud i:nth-child(3) { left: -14px; top: -34px; width: 56px; height: 40px; }
+.hcloud i:nth-child(4) { left: 18px; top: -16px; width: 40px; height: 24px; }
+@keyframes drift { from { transform: translateX(-40px) scale(var(--s)); } to { transform: translateX(60px) scale(var(--s)); } }
+
 @keyframes shimmer { 50% { fill: #A6D3E4; } }
 
 /* ---------- vida: conexões ao passar o mouse */
-#halo-hover { opacity: .75; }
+#ly-halo-hover { opacity: .75; }
 .flow .core.hot { stroke-width: 3.6; filter: drop-shadow(0 0 2px var(--c)); }
-.particle.hot { r: 3.2; }
-[data-tag] { cursor: pointer; }
+
+#L-objects [data-tag], #L-ground [data-tag] { cursor: pointer; }
 .cow { animation: graze 10s ease-in-out infinite; }
 @keyframes graze { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(2.5px, 1px); } 60% { transform: translate(-1.5px, 1.6px); } }
 
 /* ---------- água e floresta */
 .river { fill: #6FB3D2; }
-.lake { fill: #6FB3D2; animation: shimmer2 6s ease-in-out infinite; }
+.lake { fill: #6FB3D2; }
 @keyframes shimmer2 { 50% { fill: #84C2DC; } }
 .bank, .bankfill { fill: #E8DDBF; }
-.pond { fill: #7DBAD6; animation: shimmer2 5s ease-in-out infinite; }
-.current { fill: none; stroke: #fff; stroke-width: .9; stroke-dasharray: 6 26; opacity: .55; animation: current 6s linear infinite; vector-effect: non-scaling-stroke; }
-.current.c1 { animation-duration: 8s; stroke-dasharray: 4 30; } .current.c2 { animation-duration: 10s; stroke-dasharray: 10 40; }
+.pond { fill: #7DBAD6; }
+.current { fill: none; stroke: #fff; stroke-width: .6; stroke-dasharray: 6 26; opacity: .3; vector-effect: non-scaling-stroke; }
+.current.c1 { stroke-dasharray: 4 30; } .current.c2 { stroke-dasharray: 10 40; }
 @keyframes current { to { stroke-dashoffset: -64; } }
 .creek { fill: none; stroke: #6FB3D2; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .spring { fill: #84C2DC; stroke: #fff; stroke-width: .6; }

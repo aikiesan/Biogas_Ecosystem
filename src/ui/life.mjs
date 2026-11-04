@@ -7,8 +7,8 @@ import { CLARIFIERS } from "../scene/zones/residuos.mjs";
 const ring = (iso, cx, cy, r, z, n = 48) => "M" + Array.from({ length: n + 1 }, (_, i) => { const a = (i / n) * Math.PI * 2; const [x, y] = iso([cx + r * Math.cos(a), cy + r * Math.sin(a), z]); return `${x.toFixed(1)},${y.toFixed(1)}`; }).join("L");
 
 export function addLife(stage) {
-  const { svg, iso } = stage;
-  const layer = svg.querySelector("#L-life");
+  const { iso } = stage;
+  const layer = document.getElementById("L-life");
   let html = "";
 
   // 1) misturador: anel tracejado girando sobre a cúpula dos CSTR
@@ -26,8 +26,9 @@ export function addLife(stage) {
 
   // 3) pássaros cruzando o céu
   const flock = [[0, 0], [14, 6], [-12, 8], [26, 12], [6, 16]];
-  html += `<g class="birds">${flock.map(([x, y], i) => `<path class="bird" style="animation-delay:-${i * 0.13}s" d="M${x - 4},${y - 1} q2,-2.6 4,0 q2,-2.6 4,0"/>`).join("")}</g>`;
-  html += `<g class="birds b2">${flock.slice(0, 3).map(([x, y], i) => `<path class="bird" style="animation-delay:-${i * 0.2}s" d="M${x - 4},${y - 1} q2,-2.6 4,0 q2,-2.6 4,0"/>`).join("")}</g>`;
+  let fg = "";
+  const birdSvg = (list) => `<svg viewBox="-20 -10 60 40" width="60" height="40">${list.map(([x, y], i) => `<path class="bird" style="animation-delay:-${i * 0.13}s" d="M${x - 4},${y - 1} q2,-2.6 4,0 q2,-2.6 4,0"/>`).join("")}</svg>`;
+  fg += `<div class="hbirds">${birdSvg(flock)}</div><div class="hbirds b2">${birdSvg(flock.slice(0, 3))}</div>`;
 
   // 4) ondas de "chegada" na recepção e no fogão da casa
   const ripple = (p, cls) => { const [x, y] = iso(p); return `<ellipse class="ripple ${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="10" ry="5"/>`; };
@@ -70,16 +71,20 @@ export function addLife(stage) {
   html += ripple([814, 236, 2], "r-posto") + ripple([814, 236, 2], "r-posto d");
 
   // 11) avião com rastro e nuvem de chuva passando sobre o campo
-  html += `<g class="plane"><path class="trail" d="M-150,0 L-8,0"/><path class="plane-body" d="M0,0 l-9,-1.2 l-2,-4 l-2,0 l1,4 l-5,.4 l-1.6,-2 l-1.4,0 l.8,2.6 l-.8,2.6 l1.4,0 l1.6,-2 l5,.4 l-1,4 l2,0 l2,-4 l9,-1.2z"/></g>`;
+  fg += `<div class="hplane"><svg viewBox="-160 -10 170 20" width="170" height="20"><path class="trail" d="M-150,0 L-8,0"/><path class="plane-body" d="M0,0 l-9,-1.2 l-2,-4 l-2,0 l1,4 l-5,.4 l-1.6,-2 l-1.4,0 l.8,2.6 l-.8,2.6 l1.4,0 l1.6,-2 l5,.4 l-1,4 l2,0 l2,-4 l9,-1.2z"/></svg></div>`;
   { const [rx, ry] = iso([110, 100, 80]); let rain = ""; for (let k = 0; k < 18; k++) rain += `<line class="drop" x1="${(rx - 40 + (k * 9) % 80).toFixed(1)}" y1="${(ry + 8 + (k * 7) % 14).toFixed(1)}" x2="${(rx - 43 + (k * 9) % 80).toFixed(1)}" y2="${(ry + 20 + (k * 7) % 14).toFixed(1)}" style="animation-delay:-${(k * 0.13).toFixed(2)}s"/>`;
-    html += `<g class="raincloud"><g class="cloud"><ellipse cx="${rx}" cy="${ry}" rx="44" ry="13"/><ellipse cx="${rx - 18}" cy="${ry - 7}" rx="22" ry="13"/><ellipse cx="${rx + 14}" cy="${ry - 10}" rx="24" ry="15"/></g>${rain}</g>`; }
+    fg += `<div class="hrain" style="left:${(rx - 60).toFixed(0)}px;top:${(ry - 30).toFixed(0)}px"><svg viewBox="${(rx - 60).toFixed(0)} ${(ry - 30).toFixed(0)} 120 70" width="120" height="70"><g class="cloud"><ellipse cx="${rx}" cy="${ry}" rx="44" ry="13"/><ellipse cx="${rx - 18}" cy="${ry - 7}" rx="22" ry="13"/><ellipse cx="${rx + 14}" cy="${ry - 10}" rx="24" ry="15"/></g>${rain}</svg></div>`; }
+  document.getElementById("ly-world-fg").innerHTML = fg;
 
   // 12) veleiros na represa
   html += [0, 1, 2].map((k) => `<g class="boat" id="boat-${k}"><path class="hull" d="M-5,0 L5,0 L3.5,2.2 L-3.5,2.2Z"/><path class="sail" d="M0,-0.5 L0,-11 L5.5,-1.5Z"/><path class="sail s2" d="M-0.8,-0.5 L-0.8,-8 L-4.5,-1.5Z"/></g>`).join("");
 
   layer.innerHTML = html;
+  stage.refreshDash();
   const boats = [0, 1, 2].map((k) => ({ el: layer.querySelector(`#boat-${k}`), k }));
+  let lastB = 0;
   stage.onFrame((t) => {
+    if (t - lastB < 1 / 30) return; lastB = t;
     boats.forEach(({ el, k }) => {
       const a = t * (0.05 + k * 0.012) + k * 2.1;
       const [x, y] = iso([928 + Math.cos(a) * (95 - k * 22), -172 + Math.sin(a) * (52 - k * 12), 0.6]);
@@ -93,7 +98,9 @@ export function addLife(stage) {
   const dEls = [...drops.children];
 
   const arms = CLARIFIERS.map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#arm-${i}`) }));
+  let lastL = 0;
   stage.onFrame((t) => {
+    if (t - lastL < 1 / 30) return; lastL = t;
     // pás do agitador girando (dentro do corte)
     blades.forEach(({ cx, cy, el }, i) => {
       const a = t * 2.2 + i;

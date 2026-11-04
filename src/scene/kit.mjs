@@ -20,15 +20,25 @@ export const circleRing = K.circleRing;
 export function createScene() {
   const ground = [];
   const objs = [];
+  const under = []; // chão animado (correnteza): camada dinâmica abaixo dos objetos
+  const dyn = []; // objetos animados (vacas, gasômetro): camada dinâmica acima
   return {
     ground,
     objs,
     floor(svg) { ground.push(svg); },
+    under(svg) { under.push(svg); },
+    dyn(svg, at, tag) { dyn.push({ d: depth(at), svg, tag }); },
     add(svg, at, tag) { objs.push({ d: depth(at), svg, tag }); },
     addAt(svg, d, tag) { objs.push({ d, svg, tag }); },
     render() {
       objs.sort((a, b) => a.d - b.d);
-      return { ground: ground.join(""), objects: objs.map((o, i) => (o.tag ? `<g data-tag="${o.tag}" id="ob${i}">${o.svg}</g>` : o.svg)).join("") };
+      dyn.sort((a, b) => a.d - b.d);
+      return {
+        ground: ground.join(""),
+        objects: objs.map((o, i) => (o.tag ? `<g data-tag="${o.tag}" id="ob${i}">${o.svg}</g>` : o.svg)).join(""),
+        under: under.join(""),
+        dyn: dyn.map((o, i) => (o.tag ? `<g data-tag="${o.tag}" id="dy${i}">${o.svg}</g>` : o.svg)).join(""),
+      };
     },
   };
 }

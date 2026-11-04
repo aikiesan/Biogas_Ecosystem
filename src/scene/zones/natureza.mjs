@@ -21,6 +21,15 @@ function nativeTree(x, y, s, i) {
   const mat = r < 0.07 ? "ipeYellow" : r < 0.12 ? "ipePink" : ["leafDark", "leaf", "roofGreen", "leafDark", "leafLight"][Math.floor(rnd(i + 9) * 5)];
   return tree(x, y, s, mat);
 }
+// Copa de floresta: uma única esfera grande, sem tronco (os troncos ficam
+// escondidos sob o dossel). Muito mais leve que árvores inteiras.
+const CANOPY = ["leafDark", "roofGreen", "leaf", "leafDark", "leafLight", "roofGreen"];
+function crown(x, y, r, i, z = 7) {
+  castShadow(circleRing(x, y, r * 0.9, 10), z + r * 0.6);
+  const t = rnd(i);
+  const mat = t < 0.05 ? "ipeYellow" : t < 0.08 ? "ipePink" : CANOPY[Math.floor(rnd(i + 3) * CANOPY.length)];
+  return sphere([x, y, z + r * 0.5], r, mat);
+}
 // Eucalipto: tronco alto e fino, copa estreita e clara.
 function euca(x, y, s = 1, i = 0) {
   castShadow(circleRing(x, y, 2.6 * s, 8), 20 * s);
@@ -37,7 +46,7 @@ export function buildNatureza(S) {
   // correnteza: linhas que deslizam rio abaixo
   for (let k = 0; k < 5; k++) {
     const yy = RIVER.y0 + 6 + k * 5;
-    S.floor(groundLine(riverBank(-30, 1120, yy, 4, 0.6 + k * 0.15), `current c${k % 3}`, 0.6));
+    S.under(groundLine(riverBank(-30, 1120, yy, 4, 0.6 + k * 0.15), `current c${k % 3}`, 0.6));
   }
   // ponte da estrada (x = 705) sobre o rio
   S.add(box(698, RIVER.y0 - 8, 14, RIVER.y1 - RIVER.y0 + 16, 2, 2.2, "concrete", { noShadow: true }) +
@@ -50,21 +59,22 @@ export function buildNatureza(S) {
     if (x > 684 && x < 726) continue;
     const yn = RIVER_N.find((p) => p[0] >= x)?.[1] ?? RIVER.y0;
     const ys = RIVER_S.find((p) => p[0] >= x)?.[1] ?? RIVER.y1;
-    S.add(nativeTree(x + rnd(i) * 6, yn - 9 - rnd(i + 1) * 6, 0.95 + rnd(i + 2) * 0.35, i), [x, yn - 10, 0], "agua"); i++;
-    if (x < 300 || x > 730) { S.add(nativeTree(x + 7 + rnd(i) * 5, ys + 8 + rnd(i + 3) * 4, 0.85 + rnd(i + 4) * 0.3, i), [x + 7, ys + 9, 0], "agua"); i++; }
+    S.add(crown(x + rnd(i) * 6, yn - 10 - rnd(i + 1) * 4, 6.5 + rnd(i + 2) * 2.5, i, 5), [x, yn - 10, 0], "agua"); i++;
+    if ((x < 300 || x > 730) && (x / 15) % 2 < 1) { S.add(crown(x + 7 + rnd(i) * 5, ys + 9 + rnd(i + 3) * 3, 6 + rnd(i + 4) * 2, i, 5), [x + 7, ys + 9, 0], "agua"); i++; }
   }
 
   // ---------- Mata Atlântica (floresta nativa) com nascente e córrego
   const creek = [[118, -246], [112, -220], [126, -192], [114, -160], [132, -128], [124, -96], [140, -66], [148, RIVER.y0 + 2]];
   S.floor(groundLine(creek, "creek", 0.5));
   S.floor(`<ellipse class="spring" cx="${iso([118, -248, 0.5])[0].toFixed(1)}" cy="${iso([118, -248, 0.5])[1].toFixed(1)}" rx="9" ry="4.5"/>`);
-  for (let gx = -30; gx < 290; gx += 17) for (let gy = -286; gy < -62; gy += 17) {
-    const x = gx + rnd(i) * 9, y = gy + rnd(i + 5) * 9;
-    // deixa o córrego aberto
-    const near = creek.some(([cx, cy]) => Math.hypot(cx - x, cy - y) < 12);
+  // dossel contínuo: copas grandes e irregulares, com algumas emergentes e ipês floridos
+  for (let gx = -26; gx < 290; gx += 24) for (let gy = -282; gy < -62; gy += 22) {
+    const x = gx + rnd(i) * 12, y = gy + rnd(i + 5) * 10;
+    const near = creek.some(([cx, cy]) => Math.hypot(cx - x, cy - y) < 14);
     i++;
     if (near) continue;
-    S.add(nativeTree(x, y, 1.05 + rnd(i) * 0.6, i), [x, y, 0], "nativa");
+    const big = rnd(i + 7) < 0.12;
+    S.add(crown(x, y, big ? 15 : 10.5 + rnd(i) * 3.5, i, big ? 14 : 8), [x, y, 0], "nativa");
   }
   // placa da APP
   S.add(box(150, -70, 1, 1, 0, 8, "trunk") + box(146, -71, 9, 2, 6, 4, "green"), [150, -70, 0], "nativa");
@@ -93,5 +103,5 @@ export function buildNatureza(S) {
   S.floor(`<g data-tag="agua">${groundPoly(lake, "lake", 0.4)}</g>`);
   // píer e casa de bombas da captação de água
   S.add(box(742, -150, 34, 6, 1.2, 1.4, "log", { noShadow: true }) + box(722, -162, 18, 16, 0, 8, "wallBlue") + box(720, -164, 22, 20, 8, 1.4, "petrol"), [740, -150, 0], "agua");
-  for (let k = 0; k < 14; k++) { const a = rnd(k + 300) * Math.PI * 2; const x = 928 + Math.cos(a) * 196, y = -172 + Math.sin(a) * 110; if (x > 690 && x < 1120 && y > -290) S.add(nativeTree(x, y, 1.1, k + 500), [x, y, 0], "agua"); }
+  for (let k = 0; k < 14; k++) { const a = rnd(k + 300) * Math.PI * 2; const x = 928 + Math.cos(a) * 196, y = -172 + Math.sin(a) * 110; if (x > 690 && x < 1120 && y > -290) S.add(crown(x, y, 7, k + 500, 5), [x, y, 0], "agua"); }
 }

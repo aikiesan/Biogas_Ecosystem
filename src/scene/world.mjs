@@ -69,8 +69,9 @@ export function buildWorld() {
   takeShadows(); // descarta sombras dos veículos (eles se movem)
   const scene = S.render();
   // nuvens ao fundo, atrás do diorama
-  const clouds = [[-700, 40, 1], [-250, -60, 0.8], [520, -40, 1.1], [760, 120, 0.9], [-820, 420, 0.7], [880, 600, 0.8]].map(([x, y, k], i) =>
-    `<g class="cloud c${i % 3}" transform="translate(${x} ${y}) scale(${k})"><ellipse cx="0" cy="0" rx="46" ry="16"/><ellipse cx="-24" cy="-8" rx="24" ry="16"/><ellipse cx="14" cy="-14" rx="28" ry="20"/><ellipse cx="38" cy="-4" rx="20" ry="12"/></g>`).join("");
+  // nuvens como elementos HTML compostos pela GPU (sem repintar o SVG)
+  const clouds = [[-700, 40, 1], [-250, -120, 0.8], [520, -140, 1.1], [860, 120, 0.9], [-820, 420, 0.7], [880, 600, 0.8]].map(([x, y, k], i) =>
+    `<div class="hcloud c${i % 3}" style="left:${x}px;top:${y}px;--s:${k}"><i></i><i></i><i></i><i></i></div>`).join("");
 
   const corners = [[B.x, B.y, 0], [B.x + B.w, B.y, 0], [B.x, B.y + B.d, 0], [B.x + B.w, B.y + B.d, 0], [B.x, B.y + B.d, -26], [B.x + B.w, B.y + B.d, -26], [B.x, B.y, 70]].map(iso);
   const xs = corners.map((c) => c[0]), ys = corners.map((c) => c[1]);
@@ -79,7 +80,7 @@ export function buildWorld() {
   return {
     bounds,
     defs: gradients(),
-    layers: { sky: clouds, ground: scene.ground, pipes: flows.pipes, vehicles: vehicles.filter((v) => !v.top).map((v) => v.svg).join(""), vehiclesTop: vehicles.filter((v) => v.top).map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
+    layers: { sky: clouds, ground: scene.ground, under: scene.under, dyn: scene.dyn, pipes: flows.pipes, cores: flows.cores, vehicles: vehicles.filter((v) => !v.top).map((v) => v.svg).join(""), vehiclesTop: vehicles.filter((v) => v.top).map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
     vehicles,
     flows: flows.ids,
     night: { windows: NIGHT.windows.join(""), lamps: NIGHT.lamps.map(iso), houses: NIGHT.houses.slice() },

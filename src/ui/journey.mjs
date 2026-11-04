@@ -17,8 +17,8 @@ const LEGS = [
 ];
 
 export function createJourney(stage, { caption, onState }) {
-  const { svg, iso } = stage;
-  const layer = svg.querySelector("#L-journey");
+  const { iso } = stage;
+  const layer = document.getElementById("L-journey");
   // pré-calcula trechos em coordenadas de tela
   const legs = LEGS.map((l) => {
     const pts = l.pts.map(iso);

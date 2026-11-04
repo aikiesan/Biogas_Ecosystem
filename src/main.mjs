@@ -10,6 +10,7 @@ import { renderIndex, renderStop, renderLegend } from "./ui/panel.mjs";
 import { addLife } from "./ui/life.mjs";
 import { createJourney } from "./ui/journey.mjs";
 import { createAmbient } from "./ui/ambient.mjs";
+import { addPeople } from "./ui/people.mjs";
 import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -24,6 +25,7 @@ const exploreStops = STOPS.filter((s) => !s.tourOnly);
 const stage = createStage(svg, { stops: STOPS, onPick: (id) => open(id) });
 $("loading").remove();
 addLife(stage);
+addPeople(stage, { houses: stage.night.houses });
 
 // ---------- contador ao vivo (dados CP2b e ANP)
 const POT_S = (POTENCIAL_SP.medianaBiAno * 1e9) / (365 * 86400); // m³ CH₄/s ≈ 189

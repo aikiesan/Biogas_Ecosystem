@@ -36,7 +36,8 @@ export function buildUsina(S) {
   S.add(box(482, 440, 34, 22, 0, 12, "wallBlue") + windows(482, 440, 34, 22, 3, 10, "y", 4, 1, "win", 2) + door(482, 440, 34, 22, "x", 8, 3, 6) + box(480, 438, 38, 26, 12, 1.4, "petrol"), [499, 451, 0], "cstr");
 
   // ---------- Gasômetro e flare
-  S.add(cyl(548, 232, 33, 0, 2, "concrete", { steps: 72 }) + dome(548, 232, 32, 2, "wall", { squash: 0.7, bands: 3, cls: "gasholder" }) + cyl(578, 246, 1.2, 2, 8, "steelDark", { steps: 8 }), [548, 232, 0], "biogas");
+  S.add(cyl(548, 232, 33, 0, 2, "concrete", { steps: 72 }), [548, 232, 0], "biogas");
+  S.dyn(dome(548, 232, 32, 2, "wall", { squash: 0.7, bands: 3, cls: "gasholder" }) + cyl(578, 246, 1.2, 2, 8, "steelDark", { steps: 8 }), [548, 232, 0], "biogas");
   S.add(box(626, 190, 20, 20, 0, 1.4, "concrete") + cyl(636, 200, 4, 1.4, 4, "steelDark", { steps: 14 }) + cyl(636, 200, 2.4, 5, 38, "steelDark", { steps: 14 }) + band(636, 200, 2.4, 20) + cyl(636, 200, 3.4, 43, 3, "petrol", { steps: 14 }), [636, 200, 0], "biogas");
 
   // ---------- Cogeração (CHP): contêiner, radiadores, chaminé

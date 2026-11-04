@@ -1,13 +1,14 @@
 /* ---------- vida ambiente */
-.mix { fill: none; stroke: #00573A; stroke-width: 1.1; stroke-dasharray: 3 5; opacity: .55; animation: mix 2.2s linear infinite; }
-.mix.mix2 { stroke: #5CA032; animation-duration: 1.4s; animation-direction: reverse; }
+.mix { fill: none; stroke: #00573A; stroke-width: 1.1; stroke-dasharray: 3 5; opacity: .55; }
+.mix.mix2 { stroke: #5CA032; }
 @keyframes mix { to { stroke-dashoffset: -32; } }
 .aer { fill: #fff; opacity: 0; animation: aer 2.4s ease-out infinite; }
 @keyframes aer { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: .9; } 100% { opacity: 0; transform: translateY(-5px); } }
 .arm { stroke: #6f8790; stroke-width: 1.4; stroke-linecap: round; }
-.birds { animation: fly 46s linear infinite; }
-.birds.b2 { animation-duration: 63s; animation-delay: -30s; }
-@keyframes fly { from { transform: translate(-1000px, 40px); } to { transform: translate(1100px, -160px); } }
+.hbirds { position: absolute; left: 0; top: 0; will-change: transform; animation: fly 46s linear infinite; }
+.hbirds.b2 { animation-duration: 63s; animation-delay: -30s; }
+.hbirds svg, .hplane svg, .hrain svg { overflow: visible; display: block; }
+@keyframes fly { from { transform: translate(-1000px, -200px); } to { transform: translate(1100px, -400px); } }
 .bird { fill: none; stroke: #1E3E4C; stroke-width: 1.1; stroke-linecap: round; animation: flap .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
 @keyframes flap { to { transform: scaleY(.3); } }
 .ripple { fill: none; stroke: #B6E03B; stroke-width: 1.4; opacity: 0; animation: ripple 3s ease-out infinite; transform-box: fill-box; transform-origin: center; }
@@ -16,13 +17,14 @@
 @keyframes ripple { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.4); } }
 
 /* ---------- jornada do carbono */
-.jtrail { fill: none; stroke: var(--c); stroke-width: 3.2; stroke-dasharray: 2 6; stroke-linecap: round; opacity: .8; animation: flow 1s linear infinite; }
+.jtrail { fill: none; stroke: var(--c); stroke-width: 3.2; stroke-dasharray: 2 6; stroke-linecap: round; opacity: .8; }
 .jtok .jglow { fill: var(--c); opacity: .25; animation: jglow 1.2s ease-in-out infinite alternate; }
 .jtok .jcore { fill: var(--c); stroke: #fff; stroke-width: 1.6; }
 .jtok .jt { fill: #fff; font: 700 6.5px var(--font); text-anchor: middle; dominant-baseline: central; }
 .jtok circle, .jtok text { transition: fill .4s; }
 @keyframes jglow { to { opacity: .5; transform: scale(1.25); } }
-body.journey .pin { opacity: .35; }
+body.journey #ly-pins { opacity: .35; }
+#ly-pins { transition: opacity .4s; will-change: opacity; }
 
 /* ---------- painel ao vivo (HUD) */
 .hud { position: absolute; top: 14px; left: 14px; width: 270px; padding: 12px 14px; background: rgba(255, 255, 255, .95); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
@@ -66,15 +68,15 @@ body.journey .pin { opacity: .35; }
 
 /* ---------- dia e noite */
 .map { background: radial-gradient(120% 100% at 45% 40%, var(--sky1, #F2F7F4) 0%, var(--sky2, #DDEAE4) 100%) !important; transition: background 1s; }
-#night-tint { fill: #0B2236; opacity: 0; pointer-events: none; mix-blend-mode: multiply; }
-#L-lights { pointer-events: none; opacity: 0; }
+#night-tint-rect { fill: #0B2236; opacity: .34; mix-blend-mode: multiply; }
+#ly-lights { opacity: 0; }
 .win-night { fill: #FFD873; }
 .lamp-glow { fill: #FFE7A0; opacity: .85; filter: blur(2px); }
 .kitchen { opacity: 0; transition: opacity .8s; }
 .kitchen.on { opacity: 1; }
 .kitchen .kglow { fill: #5AA9E6; opacity: .35; filter: blur(1.5px); }
 body.entressafra .vehicle.safra { visibility: hidden; }
-.canerow { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--cane, 1)); transition: transform 3s ease-in-out; }
+.canerow { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--cane, 1)); }
 
 /* ---------- corte do biodigestor */
 .cutaway { opacity: 0; transition: opacity .5s var(--ease); pointer-events: none; }
@@ -109,14 +111,13 @@ body.entressafra .vehicle.safra { visibility: hidden; }
 .ripple.r-posto { stroke: #009E73; }
 
 /* ---------- avião e chuva */
-.plane { animation: plane 55s linear infinite; }
-@keyframes plane { 0% { transform: translate(-1100px, -60px); } 60% { transform: translate(1100px, -260px); } 100% { transform: translate(1100px, -260px); } }
+.hplane { position: absolute; left: 0; top: 0; will-change: transform; animation: plane 55s linear infinite; }
+@keyframes plane { 0% { transform: translate(-1100px, -260px); } 60% { transform: translate(1100px, -460px); } 100% { transform: translate(1100px, -460px); } }
 .plane-body { fill: #fff; stroke: #7d8c93; stroke-width: .5; }
 .trail { stroke: #fff; stroke-width: 2; stroke-linecap: round; opacity: .7; }
-.raincloud { opacity: 0; animation: raincloud 70s ease-in-out infinite; }
+.hrain { position: absolute; opacity: 0; will-change: transform, opacity; animation: raincloud 70s ease-in-out infinite; }
 @keyframes raincloud { 0%, 55% { opacity: 0; transform: translateX(-60px); } 62%, 82% { opacity: 1; } 90%, 100% { opacity: 0; transform: translateX(60px); } }
-.raincloud .cloud { animation: none; }
-.raincloud ellipse { fill: #B9C7CE; opacity: .95; }
+.hrain ellipse { fill: #B9C7CE; opacity: .95; }
 .drop { stroke: #5AA9E6; stroke-width: .9; stroke-linecap: round; animation: rain .7s linear infinite; }
 @keyframes rain { from { transform: translateY(-4px); opacity: 0; } 30% { opacity: 1; } to { transform: translateY(14px); opacity: 0; } }
 
@@ -137,3 +138,7 @@ body[data-mode="tour"] .hud { width: 220px; }
 body[data-mode="tour"] .hud .hud-k, body[data-mode="tour"] .hud .hud-row, body[data-mode="tour"] .hud .hud-bar, body[data-mode="tour"] .hud .hud-eq, body[data-mode="tour"] .hud .gasbar { display: none; }
 body[data-mode="tour"] .hud .clock { border: 0; margin: 0; padding: 0; }
 body[data-mode="tour"] .hud .journey-btn { margin-top: 8px; }
+/* animações escondidas ficam pausadas (não repintam à toa) */
+.cutaway .cbub { animation-play-state: paused; }
+#world[data-hover="cstr"] .cutaway .cbub, #world[data-sel~="cstr"] .cutaway .cbub { animation-play-state: running; }
+body.entressafra #drops { display: none; }

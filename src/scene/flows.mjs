@@ -53,10 +53,10 @@ function arc(a, b, lift, n = 24) {
 }
 
 export function buildFlows() {
-  const pipes = PIPES.map((f) => {
-    const d = pathOf(f.pts.map(([x, y]) => [x, y, Z]));
-    return `<g class="flow s-${f.stream}" data-stream="${f.stream}"><path class="pipe" d="${d}"/><path class="core" id="${f.id}" d="${d}"/></g>`;
-  }).join("");
+  // base branca do tubo (camada estática) e núcleo colorido animado (camada dinâmica)
+  const ds = PIPES.map((f) => ({ f, d: pathOf(f.pts.map(([x, y]) => [x, y, Z])) }));
+  const pipes = ds.map(({ f, d }) => `<g class="flow s-${f.stream}" data-stream="${f.stream}"><path class="pipe" d="${d}"/></g>`).join("");
+  const cores = ds.map(({ f, d }) => `<g class="flow s-${f.stream}" data-stream="${f.stream}"><path class="core" id="${f.id}" d="${d}"/></g>`).join("");
 
   // linhas aéreas de energia: CHP -> torres -> subestação (com catenária)
   const wire = [[578, 309, 16], ...PYLONS.map(([x, y]) => [x, y, PYLON_TOP - 6]), [944, 210, 20]];
@@ -74,6 +74,7 @@ export function buildFlows() {
   const lines = (list, cls) => `<g class="flow s-${list[0].stream} ${cls}" data-stream="${list[0].stream}">${list.map((w) => `<path class="core" id="${w.id}" d="${w.d}"/>`).join("")}</g>`;
   return {
     pipes,
+    cores,
     overhead: lines(overhead, "overhead") + lines(links, "overhead knowledge"),
     ids: PIPES.concat(overhead, links).map(({ id, stream, tags }) => ({ id, stream, tags })),
   };

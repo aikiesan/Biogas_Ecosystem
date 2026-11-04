@@ -17,6 +17,7 @@ Público: público geral, empresas, indústria e decisores públicos. Idioma: po
 - **Território paulista.** O mapa tem rio com mata ciliar, Mata Atlântica com nascente, floresta plantada de eucalipto com serraria, uma represa com veleiros e açudes. A cidade tem parque com lago e calçadas arborizadas.
 - **Gás canalizado.** O gás chega pelo gasoduto de transporte ao city gate e segue para a rede da distribuidora. Onde não há duto, o biometano vai comprimido em cilindros (gasoduto virtual).
 - **Resíduos urbanos ao lado da cidade.** A coleta leva o lixo à triagem: recicláveis voltam à indústria, orgânicos vão para o biodigestor e rejeitos vão para o aterro, que tem captação de gás. A ETE trata o esgoto e digere o lodo.
+- **Pessoas.** Moradores saem de casa de manhã pelas vielas e calçadas, entram na escola, no governo, nos prédios e na distribuidora, e voltam no fim da tarde. Há ciclistas nas ruas, passeios no parque, estudantes na universidade e operadores na usina; à noite, as ruas esvaziam.
 - **Cena viva.** A colhedora e o trator trabalham no canavial, as vacas pastam, os misturadores giram e o gasômetro "respira". Há também pontes raspadoras girando na ETE, bolhas no tanque de aeração, pássaros, nuvens, fumaça, a chama do flare e ondas de chegada na recepção e na sua casa.
 - **Link direto para uma etapa:** `…/#cstr`, `…/#cgob`, `…/#cp2b` etc.
 
@@ -55,6 +56,7 @@ src/
     stage.mjs      câmera, animação, destaque, pinos, hover
     life.mjs       vida ambiente (misturadores, ETE, pássaros, ondas)
     journey.mjs    "Siga o carbono": a jornada animada
+    people.mjs     pedestres e ciclistas (rede de calçadas, rotina diária)
     ambient.mjs    relógio: dia/noite, demanda de gás, safra
     panel.mjs      índice e páginas das etapas
     figures.mjs    figuras do painel (geradas a partir dos dados)
@@ -63,6 +65,16 @@ src/
   vendor/iso-kit.mjs  kit isométrico do projeto Anatomy (MIT)
 docs/ARQUITETURA.md   como editar e os princípios das figuras
 ```
+
+## Desempenho (meta: 60 fps)
+
+- O mapa é uma pilha de camadas. **Chão e objetos** (pesados) ficam em camadas estáticas: são desenhados uma vez e não repintam.
+- **Fluxos, veículos e efeitos** ficam em camadas leves, repintadas a cada quadro.
+- **Partículas, correnteza do rio e pessoas** são desenhadas num `<canvas>`, a partir de trajetórias pré-amostradas.
+- **Nuvens, pássaros, avião e chuva** são elementos HTML animados só com `transform`, pela GPU.
+- **Contorno de destaque:** é renderizado uma vez como imagem quando a seleção muda.
+- **Câmera do tour:** voa com `transform` sobre as camadas já prontas e redesenha nítido ao chegar.
+- **Tracejados animados:** são atualizados a 20 Hz por um único relógio; as animações escondidas ficam pausadas.
 
 ## Publicação
 

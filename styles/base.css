@@ -40,7 +40,15 @@ button { font-family: inherit; color: inherit; }
 
 .app { position: fixed; inset: var(--top-h) 0 0 0; display: grid; grid-template-columns: 1fr var(--panel-w); }
 .map { position: relative; min-width: 0; min-height: 0; background: radial-gradient(120% 100% at 45% 40%, #F2F7F4 0%, #DDEAE4 100%); }
-#world { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+#world { position: absolute; inset: 0; overflow: hidden; user-select: none; }
+/* camadas empilhadas: estáticas são desenhadas uma vez; só as leves repintam */
+.cam { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform; }
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; overflow: visible; }
+.layer[hidden] { display: none; }
+.layer.static, .layer.anim, .layer.fade, .layer.pulse { will-change: transform; transform: translateZ(0); }
+.layer.fade { will-change: opacity; }
+.layer.interactive > g, .layer.interactive > g * { pointer-events: auto; }
+.layer.pins .pin { pointer-events: auto; }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-muted); font-size: 14px; }
 
 .legend { position: absolute; left: 14px; bottom: 14px; max-width: 440px; padding: 10px 12px; background: rgba(255, 255, 255, .94); border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); }

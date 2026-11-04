@@ -4,6 +4,8 @@ import { iso, box, cyl, dome, gable, sawtooth, windows, door, stripe, band, ladd
 export const PYLONS = [[652, 300], [770, 322], [870, 322], [930, 262]];
 export const PYLON_TOP = 54;
 export const HOME = { x: 732, y: 852 };
+// Portas usadas pelos pedestres (preenchidas ao montar a cidade)
+export const DOORS = { towers: [], school: [796, 433], governo: [804, 598], distribuidora: [947, 571], posto: [761, 227] };
 
 export function buildCidade(S) {
   // ================= INDÚSTRIA (alimentos e bebidas: usa biometano e CO2)
@@ -56,6 +58,8 @@ export function buildCidade(S) {
   S.add(`<path class="ln pole" d="${pathOf([[870, 612, 1.7], [870, 612, 36]])}"/><path class="flag" d="${pathOf([[870, 612, 35], [870, 624, 35], [870, 624, 29], [870, 612, 29]], true)}"/>`, [870, 612, 0], "governo");
   S.add(groundText("GOVERNO", 760, 622, 7, "gt", "x", 1.8), [800, 622, 0]);
 
+  // vielas de pedestres entre as fileiras de casas
+  for (const ly of [694, 756, 818, 880]) S.floor(groundRect(726, ly - 2.5, 175, 5, "walk"));
   // casas (oeste da rua 910, sul da rua 640)
   const walls = ["wall", "wallWarm", "wallBlue", "wallSand"];
   const roofs = ["roofRed", "roofRed", "roofGrey", "roofRed", "roofGreen"];
@@ -73,6 +77,7 @@ export function buildCidade(S) {
   const blds = [[928, 382, 36, 30, 64, "wall"], [976, 384, 30, 30, 46, "wallBlue"], [1026, 380, 44, 34, 78, "wall"], [1078, 386, 18, 26, 30, "wallSand"],
     [1034, 540, 46, 34, 52, "wall"],
     [928, 660, 36, 32, 54, "wall"], [980, 656, 32, 36, 70, "wallBlue"], [1036, 664, 44, 30, 42, "wallSand"], [940, 742, 30, 30, 32, "wall"], [988, 744, 42, 34, 48, "wall"], [1048, 736, 36, 40, 60, "wallBlue"], [936, 826, 42, 40, 26, "wallSand"], [996, 830, 36, 32, 38, "wall"], [1048, 830, 40, 40, 30, "wall"]];
+  for (const [x, y, w, d, h, mat] of blds) DOORS.towers.push([x + w / 2, y + d + 0.5]);
   for (const [x, y, w, d, h, mat] of blds) S.add(tower(x, y, w, d, h, { mat, balcony: h > 40 && x % 3 !== 1, solar: w >= 36 }), [x + w / 2, y + d / 2, 0], "cidade");
   // distribuidora de gás canalizado: centro de operação que monitora a rede
   S.add(tower(926, 534, 42, 36, 30, { mat: "wallBlue", lit: 3 }) + stripe(926, 534, 42, 36, 26, 28, "gasband") + sideText("DISTRIBUIDORA DE GÁS", [930, 570], 22, "left", 2.2, "facelabel dark"), [947, 552, 0], "distribuidora");
