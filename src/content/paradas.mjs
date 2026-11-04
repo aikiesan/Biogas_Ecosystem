@@ -63,8 +63,8 @@ export const STOPS = [
       before: { title: "Aterro", steps: [{ icon: "waste" }, { icon: "landfill" }, { icon: "cloud", label: "CH₄ escapa", tone: "bad" }] },
       after: { title: "Coleta + biodigestão", steps: [{ icon: "waste" }, { icon: "tank" }, { icon: "flame", label: "gás + adubo", tone: "good" }] } },
     text: [`No Brasil, ${String(RSU_ORGANICO_BR).replace(".", ",")}% do lixo coletado é matéria orgânica (Planares). Separá-la na fonte evita metano no aterro e entrega um resíduo limpo ao biodigestor.`],
-    more: ["Em São Paulo, levantamentos históricos indicavam 50–60% de orgânicos; estudos recentes em Campinas, Piracicaba e Baixada Santista encontraram menos de 50%. O valor real varia por município.", "O lodo das estações de esgoto também é digerido para gerar biogás."],
-    sources: ["planares", "abrema"],
+    more: ["Em São Paulo, o Plano Estadual de Resíduos (2020) registra a faixa histórica de 50–60% de orgânicos, mas não como média estadual atual única: estudos recentes em Campinas, Piracicaba e Baixada Santista encontraram menos de 50%. O valor real varia por município.", "O lodo das estações de esgoto também é digerido para gerar biogás."],
+    sources: ["planares", "planoSP", "abrema"],
     tags: ["urb"], streams: ["substrato"], anchor: [76, 757, 32], focus: [0, 688, 250, 920],
   },
 
@@ -82,7 +82,7 @@ export const STOPS = [
     figure: { type: "stages", steps: ["Hidrólise", "Acidogênese", "Acetogênese", "Metanogênese"], chips: [`≈ ${CSTR.meso} °C`, "sem O₂", `${CSTR.trhMin}–${CSTR.trhMax} dias`] },
     text: ["CSTR é um tanque de mistura completa e fluxo contínuo: entra resíduo e sai digestato todos os dias. Cada porção fica, em média, de 15 a 30 dias lá dentro."],
     more: [`Mesofílico: ${CSTR.mesoMin}–${CSTR.mesoMax} °C, o mais comum. Termofílico: ${CSTR.termoMin}–${CSTR.termoMax} °C, com degradação mais rápida e melhor higienização, mas exige mais aquecimento e controle.`, "O tempo de retenção hidráulica (TRH) depende da carga orgânica, do substrato e dos sólidos; lodos sem aquecimento podem exigir cerca de 40 dias."],
-    sources: ["giz", "revisoesAD", "simulador"],
+    sources: ["giz", "zhang", "van", "simulador"],
     tags: ["cstr"], streams: ["substrato", "biogas", "calor"], anchor: [440, 390, 52], focus: [380, 240, 520, 545],
     link: { href: FONTES.simulador.u, label: "Abrir o Simulador CSTR do CP2b" },
   },
@@ -103,7 +103,7 @@ export const STOPS = [
       note: `Motores de 0,5–2 MW. Eficiência total: ${CHP.total[0]}–${CHP.total[1]}%.` },
     text: ["A eletricidade segue pelas torres até a rede; parte do calor volta para aquecer o biodigestor."],
     more: ["Só conta como útil o calor que tem uso: sem demanda térmica contínua, parte do calor recuperável é rejeitada.", `O Simulador CSTR do CP2b usa ${CHP.simuladorEletrica}% de eficiência elétrica, no limite conservador da faixa.`],
-    sources: ["epaChp", "simulador"],
+    sources: ["epaChp", "epaCatalog", "simulador"],
     tags: ["chp", "subestacao"], streams: ["biogas", "eletricidade", "calor"], anchor: [543, 309, 22], focus: [480, 190, 1000, 420],
   },
   {
@@ -113,7 +113,7 @@ export const STOPS = [
       { label: "Biogás", parts: [{ k: "ch4", v: BIOGAS.ch4Tipico }, { k: "co2", v: 100 - BIOGAS.ch4Tipico }] },
       { label: "Biometano", parts: [{ k: "ch4", v: 92, label: `CH₄ ≥ ${BIOMETANO_CH4_MIN}%` }, { k: "neutral", v: 8, label: "" }] }], arrow: "membranas", note: `Resolução ANP nº 1.006/2026: CH₄ ≥ ${BIOMETANO_SPEC.ch4Min}%, CO₂ ≤ ${BIOMETANO_SPEC.co2Max}%, H₂S ≤ ${BIOMETANO_SPEC.h2sMax} mg/m³.` },
     text: ["O biometano é intercambiável com o gás natural fóssil: mesmos dutos, fogões, caldeiras e motores."],
-    sources: ["anp1006"],
+    sources: ["anp1006", "anp1006Noticia", "anp1006Texto"],
     tags: ["upgrading"], streams: ["biogas", "biometano", "co2"], anchor: [550, 397, 38], focus: [500, 360, 660, 460],
   },
   {
@@ -147,7 +147,7 @@ export const STOPS = [
       { label: "Biometano (plantas certificadas no RenovaBio)", v: INTENSIDADE.biometano, tone: "biometano" }] },
     text: ["Comprimido (bio-GNV) abastece ônibus e caminhões; liquefeito (bio-GNL) serve a longas distâncias."],
     more: ["A comparação é por unidade de energia do combustível. Não é uma projeção de frota: em cenários de longo prazo da EPE, o efeito agregado depende de quanto da frota de fato usa gás.", "O resultado varia com a matéria-prima, as emissões fugitivas de metano, as distâncias de transporte e o consumo de energia na purificação."],
-    sources: ["epeIntensidade"],
+    sources: ["epeIntensidade", "epeMotorizacoes"],
     tags: ["posto"], streams: ["biometano"], anchor: [835, 235, 30], focus: [690, 170, 900, 330],
   },
   {
