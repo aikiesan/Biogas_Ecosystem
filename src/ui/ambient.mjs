@@ -22,40 +22,74 @@ export function createAmbient(stage, { night, onTick }) {
   
   const lights = document.getElementById("L-lights");
   const lightsLayer = document.getElementById("ly-lights");
-  const lamps = night.lamps.map(([x, y]) => `<circle class="lamp-glow" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`).join("");
+  const skyNight = document.getElementById("sky-night");
+  const P = (p) => iso(p).map((v) => v.toFixed(1));
+  // --- tudo o que brilha à noite é desenhado UMA vez; o ciclo só muda a opacidade
+  const defs = `<defs>
+    <radialGradient id="lg-lamp"><stop offset="0" stop-color="#FFD978" stop-opacity=".75"/><stop offset=".45" stop-color="#FFC24D" stop-opacity=".28"/><stop offset="1" stop-color="#FFC24D" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg-flood"><stop offset="0" stop-color="#FFF4D6" stop-opacity=".55"/><stop offset=".5" stop-color="#FFE7A8" stop-opacity=".18"/><stop offset="1" stop-color="#FFE7A8" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg-flare"><stop offset="0" stop-color="#FFC24D" stop-opacity=".9"/><stop offset=".35" stop-color="#E69F00" stop-opacity=".45"/><stop offset="1" stop-color="#D55E00" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg-green"><stop offset="0" stop-color="#B6E03B" stop-opacity=".6"/><stop offset="1" stop-color="#009E73" stop-opacity="0"/></radialGradient>
+    <filter id="lg-blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>
+  </defs>`;
+  // postes: poça de luz no chão + lâmpada
+  const lamps = night.lamps.map(([x, y]) => {
+    const [gx, gy] = P([x, y, 1.8]), [lx, ly] = P([x, y, 14.4]);
+    return `<ellipse cx="${gx}" cy="${gy}" rx="17" ry="8.5" fill="url(#lg-lamp)"/><circle cx="${lx}" cy="${ly}" r="4.5" fill="url(#lg-lamp)"/><circle class="lamp-core" cx="${lx}" cy="${ly}" r="1.3"/>`;
+  }).join("");
+  // refletores e locais iluminados (usina, city gate, posto, ETE, indústria, universidade, serraria)
+  const floods = [[440, 340, 70], [545, 260, 55], [560, 430, 60], [610, 520, 50], [430, 600, 55], [1060, 238, 45], [835, 235, 50], [610, 830, 55], [800, 55, 60], [975, 45, 45], [172, 728, 50], [620, -205, 40], [490, 800, 50], [960, 212, 40]]
+    .map(([x, y, r]) => { const [cx, cy] = P([x, y, 2]); return `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r / 2}" fill="url(#lg-flood)"/>`; }).join("");
+  // bioenergia acesa: chama do flare, aro de LEDs verdes nos biodigestores, CHP e purificação
+  const [fx, fy] = P([636, 200, 48]);
+  let bio = `<circle cx="${fx}" cy="${fy}" r="30" fill="url(#lg-flare)"/>`;
+  for (const [cx, cy] of [[440, 290], [440, 390], [440, 495]]) {
+    for (let k = 0; k < 9; k++) { const a = Math.PI / 4 - 1.3 + (k / 8) * 2.6; const [lx, ly] = P([cx + 36.5 * Math.cos(a), cy + 36.5 * Math.sin(a), 30]); bio += `<circle class="led" cx="${lx}" cy="${ly}" r="1"/>`; }
+    const [gx, gy] = P([cx, cy, 30]); bio += `<ellipse cx="${gx}" cy="${gy}" rx="48" ry="24" fill="url(#lg-green)" opacity=".35"/>`;
+  }
+  for (const p of [[543, 309, 8], [550, 397, 14], [622, 441, 6], [1060, 258, 6], [670, 800, 14]]) { const [gx, gy] = P(p); bio += `<circle cx="${gx}" cy="${gy}" r="14" fill="url(#lg-green)"/>`; }
   // cozinhas: uma pequena chama azul na janela de cada casa
   const kitchens = night.houses.map(([x, y, w, d, h], i) => {
     const [sx, sy] = iso([x + w, y + d * 0.35, 3.2]);
     return `<g class="kitchen" data-i="${i}"><circle class="kglow" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4"/><path class="flame blue" d="M${sx.toFixed(1)},${(sy + 1).toFixed(1)} c-1.2,-1.6 -.8,-3.6 0,-5 c.8,1.6 1.2,3.4 0,5Z"/></g>`;
   }).join("");
-  lights.innerHTML = `<path class="win-night" d="${night.windows}"/>${lamps}${kitchens}`;
+  lights.innerHTML = defs + floods + lamps + `<path class="win-glow" d="${night.windows}" filter="url(#lg-blur)"/><path class="win-night" d="${night.windows}"/>` + bio + kitchens;
   const kEls = [...lights.querySelectorAll(".kitchen")];
   const order = kEls.map((_, i) => i).sort((a, b) => ((a * 7) % 11) - ((b * 7) % 11));
 
   const gh = root.querySelector(".gasholder");
+  if (gh) { const [x, y] = iso([548, 232, 2]); gh.style.transformOrigin = `${x}px ${y}px`; }
   
 
   let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
   let base = 10 * (DAY_S / 24) + 5 * DAY_S; // começa às 10h de junho
   let last = 0, clock = 0, lastMonth = -1;
 
-  function render(t) {
+  // a cada quadro: só opacidades de camadas (feitas pela GPU) e o gasômetro
+  let lastN = -1;
+  function smoothFrame(h, n) {
+    if (Math.abs(n - lastN) > 0.002) {
+      lastN = n;
+      // camadas noturnas saem da composição de dia (não custam nada)
+      const vis = n > 0.004;
+      if (vis !== smoothFrame.vis) { smoothFrame.vis = vis; lightsLayer.style.display = skyNight.style.display = vis ? "" : "none"; }
+      lightsLayer.style.opacity = n.toFixed(3);
+      skyNight.style.opacity = (n * 0.96).toFixed(3);
+      stage.setNight(n);
+    }
+    if (gh) {
+      const level = 0.55 + 0.35 * Math.cos((2 * Math.PI * (h - 8)) / 24);
+      gh.style.transform = `scale(${(0.97 + 0.05 * level).toFixed(4)}, ${(0.78 + 0.3 * level).toFixed(4)})`;
+    }
+  }
+  function render(t, heavy = true) {
     const total = base + clock;
     const h = ((total / DAY_S) * 24) % 24;
     const m = Math.floor(total / DAY_S) % 12;
     const n = nightOf(h), dem = demandOf(h);
-    
-    
-    const lv = n.toFixed(2); if (lv !== render.lv) { render.lv = lv; lightsLayer.style.opacity = lv; }
-    if (n.toFixed(2) !== render.sky) { render.sky = n.toFixed(2); map.style.setProperty("--sky1", mixHex("#F2F7F4", "#1F3B52", n)); map.style.setProperty("--sky2", mixHex("#DDEAE4", "#0E2233", n)); }
-    // gasômetro: enche quando o consumo é baixo, esvazia no pico do jantar
-    if (gh) {
-      const level = 0.55 + 0.35 * Math.cos((2 * Math.PI * (h - 8)) / 24);
-      const [x, y] = iso([548, 232, 2]);
-      gh.style.transformOrigin = `${x}px ${y}px`;
-      const tf = `scale(${(0.97 + 0.05 * level).toFixed(3)}, ${(0.78 + 0.3 * level).toFixed(3)})`;
-      if (tf !== render.tf) { render.tf = tf; gh.style.transform = tf; }
-    }
+    if (!heavy) { smoothFrame(h, n); return; }
+    smoothFrame(h, n);
+
     // cozinhas acesas proporcionais à demanda (mais à noite)
     const lit = Math.round(kEls.length * Math.max(0, (dem - 0.3) / 0.9));
     if (lit !== render.lit) { render.lit = lit; order.forEach((idx, k) => kEls[idx].classList.toggle("on", k < lit)); }
@@ -76,7 +110,8 @@ export function createAmbient(stage, { night, onTick }) {
   stage.onFrame((t) => {
     const dt = last ? Math.min(0.1, t - last) : 0; last = t;
     if (running) clock += dt;
-    if (!render.acc || t - render.acc > 0.25) { render.acc = t; render(t); }
+    // valores contínuos a cada quadro; o resto (relógio, cozinhas, safra) a cada 0,25 s
+    if (!render.acc || t - render.acc > 0.25) { render.acc = t; render(t, true); } else render(t, false);
   });
 
   return {

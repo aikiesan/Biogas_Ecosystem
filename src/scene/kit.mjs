@@ -185,7 +185,7 @@ export function windows(x, y, w, d, z0, z1, face, cols, rows, cls = "win", lit =
     const qd = pathOf(q, true);
     s += `<path class="${cls}${on}" d="${qd}"/>`;
     // à noite, cerca de 40% das janelas acendem (sempre as mesmas)
-    if (cls === "win" && ((c * 5 + r * 11 + Math.round(x * 3 + y)) % 5) < 2) NIGHT.windows.push(qd);
+    if (cls === "win" && ((c * 5 + r * 11 + Math.round(x * 3 + y)) % 20) < 11) NIGHT.windows.push(qd);
   }
   return s;
 }

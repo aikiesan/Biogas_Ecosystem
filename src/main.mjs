@@ -185,3 +185,21 @@ if (fromHash && STOPS.some((s) => s.id === fromHash)) {
   if (STOPS.find((s) => s.id === fromHash).tourOnly) { setMode("tour"); show(tourStops.findIndex((s) => s.id === fromHash)); }
   else open(fromHash);
 } else showIndex();
+
+// ---------- medidor de desempenho: abra a página com ?fps na URL
+if (new URLSearchParams(location.search).has("fps")) {
+  const el = document.createElement("div");
+  el.className = "fps-meter";
+  document.body.appendChild(el);
+  let frames = 0, t0 = performance.now(), js0 = 0, n0 = 0;
+  (function loop(now) {
+    frames++;
+    if (now - t0 >= 1000) {
+      const p = window.__perf || { ms: 0, n: 1 };
+      const js = (p.ms - js0) / Math.max(1, p.n - n0);
+      el.textContent = `${Math.round((frames * 1000) / (now - t0))} fps · JS ${js.toFixed(1)} ms/quadro`;
+      frames = 0; t0 = now; js0 = p.ms; n0 = p.n;
+    }
+    requestAnimationFrame(loop);
+  })(performance.now());
+}

@@ -13,7 +13,7 @@ Público: público geral, empresas, indústria e decisores públicos. Idioma: po
 - **Passe o mouse** sobre qualquer peça: ela ganha contorno e as tubulações ligadas a ela acendem. Assim fica claro o que está conectado a quê.
 - **Siga o carbono.** Uma partícula percorre o ciclo curto do carbono: do ar à cana, de caminhão à usina, pelo biodigestor e pela purificação, pela rede até o fogão, e de volta ao ar. Cada trecho tem legenda e destaca a zona por onde passa.
 - **Contador ao vivo.** Mostra quanto metano os resíduos de SP poderiam gerar desde que a página foi aberta (mediana CP2b, ≈ 189 m³/s), comparado à capacidade de biometano instalada hoje (ANP, ≈ 4,6 m³/s).
-- **Relógio do diorama.** Um dia passa em 60 s e um mês por dia. À noite, janelas e postes acendem e as cozinhas acendem conforme a demanda de gás. O gasômetro enche e esvazia com o consumo, e a safra da cana (abr–nov) liga e desliga a colheita.
+- **Relógio do diorama.** Um dia passa em 60 s e um mês por dia, com transição contínua. À noite a cidade se ilumina: janelas, postes ao longo de todas as estradas, refletores da usina, LEDs verdes nos biodigestores, a chama do flare, faróis dos veículos e brilho nos fluxos de energia. As cozinhas acendem conforme a demanda de gás. O gasômetro enche e esvazia com o consumo, e a safra da cana (abr–nov) liga e desliga a colheita.
 - **Território paulista.** O mapa tem rio com mata ciliar, Mata Atlântica com nascente, floresta plantada de eucalipto com serraria, uma represa com veleiros e açudes. A cidade tem parque com lago e calçadas arborizadas.
 - **Gás canalizado.** O gás chega pelo gasoduto de transporte ao city gate e segue para a rede da distribuidora. Onde não há duto, o biometano vai comprimido em cilindros (gasoduto virtual).
 - **Resíduos urbanos ao lado da cidade.** A coleta leva o lixo à triagem: recicláveis voltam à indústria, orgânicos vão para o biodigestor e rejeitos vão para o aterro, que tem captação de gás. A ETE trata o esgoto e digere o lodo.
@@ -75,6 +75,9 @@ docs/ARQUITETURA.md   como editar e os princípios das figuras
 - **Contorno de destaque:** é renderizado uma vez como imagem quando a seleção muda.
 - **Câmera do tour:** voa com `transform` sobre as camadas já prontas e redesenha nítido ao chegar.
 - **Tracejados animados:** são atualizados a 20 Hz por um único relógio; as animações escondidas ficam pausadas.
+
+- **Noite:** as luzes (janelas, postes, refletores e LEDs da usina) ficam numa camada desenhada uma vez; o ciclo dia/noite só muda a opacidade dela, a cada quadro, sem degraus. Os faróis e o brilho dos fluxos usam sprites no canvas.
+- **Medidor:** abra `…/?fps` para ver quadros por segundo e o custo de JavaScript por quadro.
 
 ## Publicação
 

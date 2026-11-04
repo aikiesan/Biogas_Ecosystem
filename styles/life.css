@@ -67,14 +67,18 @@ body.journey #ly-pins { opacity: .35; }
 }
 
 /* ---------- dia e noite */
-.map { background: radial-gradient(120% 100% at 45% 40%, var(--sky1, #F2F7F4) 0%, var(--sky2, #DDEAE4) 100%) !important; transition: background 1s; }
-#night-tint-rect { fill: #0B2236; opacity: .34; mix-blend-mode: multiply; }
+.sky-night { position: absolute; inset: 0; opacity: 0; pointer-events: none; will-change: opacity;
+  background: radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 28% 8%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 44% 14%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 63% 6%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 78% 20%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 90% 9%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 6% 40%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 95% 38%, #fff 50%, transparent 51%), radial-gradient(120% 100% at 45% 40%, #22415A 0%, #0B1D2C 100%); }
+#night-tint-rect { fill: #071828; opacity: .5; }
 #ly-lights { opacity: 0; }
-.win-night { fill: #FFD873; }
-.lamp-glow { fill: #FFE7A0; opacity: .85; filter: blur(2px); }
+.win-night { fill: #FFE08A; }
+.win-glow { fill: none; stroke: #FFC94D; stroke-width: 2.2; opacity: .8; }
+.lamp-core { fill: #FFF6D0; }
+.led { fill: #D7F57A; }
+
 .kitchen { opacity: 0; transition: opacity .8s; }
 .kitchen.on { opacity: 1; }
-.kitchen .kglow { fill: #5AA9E6; opacity: .35; filter: blur(1.5px); }
+.kitchen .kglow { fill: #5AA9E6; opacity: .45; }
 body.entressafra .vehicle.safra { visibility: hidden; }
 .canerow { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--cane, 1)); }
 

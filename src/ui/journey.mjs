@@ -32,7 +32,7 @@ export function createJourney(stage, { caption, onState }) {
 
   layer.innerHTML = `<path class="jtrail" id="jtrail"/><g id="jtok" class="jtok"><circle class="jglow" r="20"/><circle class="jcore" r="9"/><text class="jt" y="0.5">C</text></g>`;
   const tok = layer.querySelector("#jtok"), trail = layer.querySelector("#jtrail");
-  layer.style.display = "none";
+  layer.closest("svg").style.display = "none";
 
   const at = (leg, d) => {
     const s = leg.segs.find((g) => d <= g.start + g.len) || leg.segs[leg.segs.length - 1];
@@ -60,7 +60,7 @@ export function createJourney(stage, { caption, onState }) {
     tok.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)})`);
   });
 
-  function start() { running = true; legIdx = -1; t0 = performance.now() / 1000; layer.style.display = ""; onState(true); }
-  function stop() { running = false; layer.style.display = "none"; stage.hover(null); caption(null); onState(false); }
+  function start() { running = true; legIdx = -1; t0 = performance.now() / 1000; layer.closest("svg").style.display = ""; onState(true); }
+  function stop() { running = false; layer.closest("svg").style.display = "none"; stage.hover(null); caption(null); onState(false); }
   return { start, stop, get running() { return running; } };
 }

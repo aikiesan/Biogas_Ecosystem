@@ -1,5 +1,5 @@
 // Composição do diorama: base, lotes, ruas, zonas, fluxos e veículos.
-import { createScene, slab, groundRect, groundLine, zoneLabel, pine, tree, iso, gradients, takeShadows, pathOf, box, NIGHT } from "./kit.mjs";
+import { createScene, slab, groundRect, groundLine, zoneLabel, pine, tree, iso, gradients, takeShadows, pathOf, box, NIGHT, streetLight } from "./kit.mjs";
 import { BASE, PLOTS, ROADS_X, ROADS_Y, ROAD_W } from "./layout.mjs";
 import { buildFontes } from "./zones/fontes.mjs";
 import { buildUsina } from "./zones/usina.mjs";
@@ -58,6 +58,13 @@ export function buildWorld() {
   buildResiduos(S);
   buildNatureza(S);
 
+  // iluminação pública ao longo das estradas (acende à noite)
+  for (let y = 84; y < 850; y += 64) S.add(streetLight(262, y, [1, 0]), [262, y, 0]);
+  for (let x = 310; x < 690; x += 62) S.add(streetLight(x, 735, [0, 1]), [x, 735, 0]);
+  for (let y = -100; y < 930; y += 64) if (y < -60 || y > 0) S.add(streetLight(697, y, [1, 0]), [697, y, 0]);
+  for (let x = 740; x < 1100; x += 60) S.add(streetLight(x, 333, [0, 1]), [x, 333, 0]);
+  for (let x = 930; x < 1100; x += 56) S.add(streetLight(x, 513, [0, 1]), [x, 513, 0]);
+
   // vegetação de borda
   for (const [x, y] of [[-20, 300], [-22, 560], [-24, 640], [-20, 860], [-20, 40], [1110, 200], [1110, 760], [1112, 520], [1110, 880], [160, 940], [420, 944], [600, 944], [-22, 940]]) S.add(pine(x, y, 1.3), [x, y, 0]);
   for (const [x, y] of [[300, 200], [300, 700], [300, 40], [690, 20], [690, 700], [300, 590], [300, 120], [690, 160], [300, 400], [300, 300]]) S.add(tree(x, y, 1.3), [x, y, 0]);
@@ -83,7 +90,7 @@ export function buildWorld() {
     layers: { sky: clouds, ground: scene.ground, under: scene.under, dyn: scene.dyn, pipes: flows.pipes, cores: flows.cores, vehicles: vehicles.filter((v) => !v.top).map((v) => v.svg).join(""), vehiclesTop: vehicles.filter((v) => v.top).map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
     vehicles,
     flows: flows.ids,
-    night: { windows: NIGHT.windows.join(""), lamps: NIGHT.lamps.map(iso), houses: NIGHT.houses.slice() },
+    night: { windows: NIGHT.windows.join(""), lamps: NIGHT.lamps.slice(), houses: NIGHT.houses.slice() },
   };
 }
 

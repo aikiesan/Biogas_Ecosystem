@@ -57,22 +57,21 @@ export function createStage(svg, { stops, onPick }) {
   root.insertAdjacentHTML("beforeend", `<div class="cam" id="cam">` +
     `<div id="ly-world-bg" class="worldhtml">${W.layers.sky}</div>` +
     L("ly-ground", `<defs>${W.defs}</defs><g id="L-ground">${W.layers.ground}</g><g id="L-pipes">${W.layers.pipes}</g>`, { cls: "static interactive" }) +
-    L("ly-cores", `<g id="L-under">${W.layers.under}</g><g id="halo-plots"></g><g id="L-cores">${W.layers.cores}</g>`, { cls: "anim" }) +
+    L("ly-cores", `<defs>${W.defs}</defs><g id="L-under">${W.layers.under}</g><g id="halo-plots"></g><g id="L-cores">${W.layers.cores}</g><g id="L-vehicles">${W.layers.vehicles}</g>`, { cls: "anim" }) +
     L("ly-particles", "", { kind: "canvas" }) +
-    L("ly-vehicles", `<defs>${W.defs}</defs><g id="L-vehicles">${W.layers.vehicles}</g>`, { cls: "anim" }) +
     `<img id="ly-halo" class="layer static" alt="" hidden>` +
     `<img id="ly-halo-hover" class="layer static" alt="" hidden>` +
     L("ly-objects", `<defs>${W.defs}</defs><g id="L-objects">${W.layers.objects}</g>`, { cls: "static interactive" }) +
     L("ly-over", `<defs>${W.defs}</defs><g id="L-dyn">${W.layers.dyn}</g><g id="L-vehicles-top">${W.layers.vehiclesTop}</g><g id="L-life"></g><g id="L-overhead">${W.layers.overhead}</g><g id="L-fx">${fx.join("")}</g>`, { cls: "anim" }) +
-    L("ly-particles-air", "", { kind: "canvas" }) +
     L("ly-lights", `<rect id="night-tint-rect" x="-4000" y="-4000" width="9000" height="9000"/><g id="L-lights"></g>`, { cls: "fade" }) +
+    L("ly-top", "", { kind: "canvas" }) +
     L("ly-pins", `<g id="L-pins">${pins}</g>`, { cls: "pins" }) +
     L("ly-journey", `<g id="L-journey"></g>`, { cls: "anim" }) +
     `<div id="ly-world-fg" class="worldhtml"></div>` +
     `</div>`);
   const cam = document.getElementById("cam");
   const svgs = [...cam.querySelectorAll("svg.layer")];
-  const canvases = [document.getElementById("ly-particles"), document.getElementById("ly-particles-air")];
+  const canvases = [document.getElementById("ly-particles"), document.getElementById("ly-top")];
 
   // ---------- câmera
   // Na visão geral o quadro é fixo. No tour, o voo usa só transform CSS sobre
@@ -213,7 +212,17 @@ export function createStage(svg, { stops, onPick }) {
     for (let i = 0; i < count; i++) particles.push({ id: `cur${ci}`, tab, n, L: len, d: ((i + ci * 0.37) / count) * len, stream: "agua", air: false, color: "rgba(255,255,255,.8)", r: 0.9, noStroke: true, speed: 9 + (ci % 3) * 3 });
   });
   const drawers = [];
+  let night = 0;
   const clockFns = [];
+  const sprites = new Map();
+  function sprite(color) {
+    if (sprites.has(color)) return sprites.get(color);
+    const c = document.createElement("canvas"); c.width = c.height = 32;
+    const x = c.getContext("2d"), g = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+    g.addColorStop(0, color); g.addColorStop(0.25, color); g.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = g; x.globalAlpha = 1; x.fillRect(0, 0, 32, 32);
+    sprites.set(color, c); return c;
+  }
   let hotIds = null;
   const ctxs = canvases.map((c) => c.getContext("2d"));
   function drawParticles(dt) {
@@ -238,6 +247,25 @@ export function createStage(svg, { stops, onPick }) {
       ctx.fillStyle = g.color; ctx.fill();
       if (g.stroke) { ctx.lineWidth = 0.7; ctx.strokeStyle = "#fff"; ctx.stroke(); }
     }
+    // à noite (canvas acima do véu noturno): faróis e brilho dos fluxos de energia,
+    // com sprites pré-renderizados (drawImage é bem mais barato que arcos com blur)
+    const nctx = ctxs[1];
+    if (night > 0.05) {
+      nctx.globalAlpha = 0.55 * night;
+      for (const g of groups.values()) {
+        if (!g.stroke) continue;
+        const spr = sprite(g.color), R = g.r * 2.6;
+        for (let j = 0; j < g.pts.length; j += 2) nctx.drawImage(spr, g.pts[j] - R, g.pts[j + 1] - R, R * 2, R * 2);
+      }
+      const head = sprite("#FFE7A0");
+      for (const v of vehicles) {
+        if (v.hx === undefined || (v.op ?? 1) < 0.05 || (v.safra && document.body.classList.contains("entressafra"))) continue;
+        nctx.globalAlpha = 0.85 * night * (v.op ?? 1);
+        const fx = v.hx + v.dx * 9, fy = v.hy + v.dy * 9 - 2.5;
+        nctx.drawImage(head, fx + v.dx * 5 - 9, fy + v.dy * 5 - 9, 18, 18);
+      }
+      nctx.globalAlpha = 1;
+    }
     for (const fn of drawers) fn(ctxs[0], ctxs[1], dt, performance.now() / 1000);
   }
   const vehicles = W.vehicles.map((v, i) => {
@@ -252,13 +280,15 @@ export function createStage(svg, { stops, onPick }) {
     }
     const variants = Object.fromEntries(["px", "nx", "py", "ny"].map((h) => [h, el.querySelector(`.veh-${h}`)]));
     const loop = v.pts[0][0] === v.pts[v.pts.length - 1][0] && v.pts[0][1] === v.pts[v.pts.length - 1][1];
-    return { el, segs, total, variants, loop, cur: null, off: i * 173, speed: v.speed ?? (v.kind === "car" ? 46 : 32) };
+    return { el, segs, total, variants, loop, safra: v.season === "safra", cur: null, off: i * 173, speed: v.speed ?? (v.kind === "car" ? 46 : 32) };
   });
   function place(v, d) {
     const s = v.segs.find((sg) => d <= sg.start + sg.len) || v.segs[v.segs.length - 1];
     const u = s.len ? (d - s.start) / s.len : 0;
     if (v.cur !== s.head) { if (v.cur) v.variants[v.cur].style.display = "none"; v.variants[s.head].style.display = ""; v.cur = s.head; }
-    const tr = `translate(${(s.a[0] + (s.b[0] - s.a[0]) * u).toFixed(1)} ${(s.a[1] + (s.b[1] - s.a[1]) * u).toFixed(1)})`;
+    v.hx = s.a[0] + (s.b[0] - s.a[0]) * u; v.hy = s.a[1] + (s.b[1] - s.a[1]) * u;
+    v.dx = (s.b[0] - s.a[0]) / (s.len || 1); v.dy = (s.b[1] - s.a[1]) / (s.len || 1);
+    const tr = `translate(${v.hx.toFixed(1)} ${v.hy.toFixed(1)})`;
     if (tr !== v.tr) { v.el.setAttribute("transform", tr); v.tr = tr; }
   }
   // Tracejados animados (fluxos, correnteza, bordas) atualizados a 30 Hz por JS:
@@ -279,7 +309,9 @@ export function createStage(svg, { stops, onPick }) {
   const frameFns = [];
   const speedMul = {};
   let lastT = 0;
+  const perf = (window.__perf = { n: 0, ms: 0 });
   function tick(now) {
+    const t0p = performance.now();
     if (tween) tween(now);
     const dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0; lastT = now;
     if (!document.hidden) {
@@ -298,6 +330,7 @@ export function createStage(svg, { stops, onPick }) {
         }
       }
     }
+    perf.n++; perf.ms += performance.now() - t0p;
     requestAnimationFrame(tick);
   }
   sizeCanvases();
@@ -340,6 +373,7 @@ export function createStage(svg, { stops, onPick }) {
     night: W.night,
     onFrame(fn) { frameFns.push(fn); },
     addDrawer(fn) { drawers.push(fn); },
+    setNight(n) { night = n; },
     onClock(fn) { clockFns.push(fn); },
     emitClock(h) { for (const fn of clockFns) fn(h); },
     refreshDash,
