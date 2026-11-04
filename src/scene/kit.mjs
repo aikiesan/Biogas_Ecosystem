@@ -43,8 +43,27 @@ export function solidSvg(paths, mat, cls = "") {
   return s;
 }
 export const slab = (plan, z, h, mat, cls, steps = 8) => solidSvg(K.slabOf(plan, z, h, P, steps), mat, cls);
-export const box = (x, y, w, d, z, h, mat, o = {}) => solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0.6 }, z, h, P, o.steps ?? 2), mat, o.cls);
-export const cyl = (cx, cy, r, z, h, mat, o = {}) => solidSvg(K.cylinder(cx, cy, r, z, h, P, o.steps ?? 36), mat, o.cls);
+// ------------------------------------------------------------ sombras projetadas
+// Luz vem da esquerda (lado -x/+y); a sombra cai para a direita (+x/-y).
+// Cada sólido apoiado no chão registra sua sombra; world.mjs desenha todas
+// numa única camada translúcida, para que sombras sobrepostas não escureçam.
+const SHADOWS = [];
+const SH = [0.62, -0.42];
+export function castShadow(ring, h, z = 1.7) {
+  if (h < 2) return;
+  const pts = ring.concat(ring.map(([x, y]) => [x + SH[0] * h, y + SH[1] * h])).map(([x, y]) => iso([x, y, z]));
+  const hh = hull(pts);
+  SHADOWS.push(`M${hh.map(([x, y]) => `${R(x)},${R(y)}`).join("L")}Z`);
+}
+export function takeShadows() { const d = SHADOWS.join(""); SHADOWS.length = 0; return d; }
+export const box = (x, y, w, d, z, h, mat, o = {}) => {
+  if (z <= 2 && !o.noShadow) castShadow([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + z);
+  return solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0.6 }, z, h, P, o.steps ?? 2), mat, o.cls);
+};
+export const cyl = (cx, cy, r, z, h, mat, o = {}) => {
+  if (z <= 2 && !o.noShadow && r > 1.5) castShadow(K.circleRing(cx, cy, r, 16), h + z + (o.extra ?? 0));
+  return solidSvg(K.cylinder(cx, cy, r, z, h, P, o.steps ?? 36), mat, o.cls);
+};
 export const prism = (ring, z, h, mat, o = {}) => solidSvg(K.extrude(ring, z, h, P, { convex: o.convex ?? true }), mat, o.cls);
 
 function hull(points) {
@@ -181,6 +200,10 @@ export function tower(x, y, w, d, h, o = {}) {
   s += box(x + w * 0.2 + 0.6, y + d * 0.2 + 0.6, 4.8, 4.8, h + 6, 0.8, "steelDark");
   // condensadoras de ar-condicionado
   for (let i = 0; i < Math.min(3, Math.floor(w / 10)); i++) s += box(x + w - 6 - i * 5, y + d - 6, 3.4, 3, h + 1, 2, "steel");
+  // painéis solares no teto
+  if (o.solar) for (let i = 0; i < Math.floor((w - 16) / 7); i++) for (let j = 0; j < 2; j++) s += box(x + w * 0.2 + 9 + i * 7, y + 3 + j * 5, 6, 4, h + 1, 0.7, "solar", { noShadow: true });
+  // varandas (faixas horizontais na fachada principal)
+  if (o.balcony) for (let z = 10; z < h - 3; z += 5.5) s += box(x + 2, y + d, w - 4, 1.8, z, 0.6, "steel", { noShadow: true }) + `<path class="ln rail" d="${pathOf([[x + 2, y + d + 1.8, z + 2], [x + w - 2, y + d + 1.8, z + 2]])}"/>`;
   return s;
 }
 // Casa térrea com telhado, porta, janelas, muro e quintal.
@@ -190,6 +213,7 @@ export function house(x, y, o = {}) {
   let s = "";
   s += `<path class="yard" d="${pathOf([[x - 3, y - 3, 1.7], [x + w + 3, y - 3, 1.7], [x + w + 3, y + d + 4, 1.7], [x - 3, y + d + 4, 1.7]], true)}"/>`;
   s += gable(x, y, w, d, h, 5.5, o.wall ?? "wall", o.roof ?? "roofRed", ridge);
+  if (o.solar) s += `<path class="solarp" d="${pathOf(ridge === "x" ? [[x + 3, y + d * 0.62, h + 3.6], [x + 9, y + d * 0.62, h + 3.6], [x + 9, y + d * 0.9, h + 1.4], [x + 3, y + d * 0.9, h + 1.4]] : [[x + w * 0.62, y + 3, h + 3.6], [x + w * 0.9, y + 3, h + 1.4], [x + w * 0.9, y + 9, h + 1.4], [x + w * 0.62, y + 9, h + 3.6]], true)}"/>`;
   s += windows(x, y, w, d, 1.5, h - 1, "y", 2, 1, "win", 1) + door(x, y, w, d, "x", d * 0.55, 2.6, 5);
   s += windows(x, y, w, d, 1.5, h - 1, "x", 1, 1, "win");
   // muro baixo na frente
@@ -205,10 +229,19 @@ export function groundText(text, x, y, size, cls = "gt", along = "x", z = 0.2) {
 export function sideText(text, at, z, face, size, cls = "facelogo") {
   return `<text class="${cls}" transform="${K.sideMatrix(at, z, P, face)}" font-size="${size}">${text}</text>`;
 }
-export function tree(x, y, s = 1, mat = "leaf") {
-  return cyl(x, y, 0.9 * s, 0, 5 * s, "trunk", { steps: 10 }) + sphere([x, y, 9 * s], 5 * s, mat);
+const LEAVES = ["leaf", "leafDark", "leafLight"];
+export function tree(x, y, s = 1, mat) {
+  const k = Math.abs(Math.round(x * 7 + y * 13)) % 3;
+  const m = mat ?? LEAVES[k];
+  castShadow(K.circleRing(x, y, 4.6 * s, 12), 12 * s);
+  let t = cyl(x, y, 0.9 * s, 0, 5 * s, "trunk", { steps: 10, noShadow: true });
+  t += sphere([x - 2.2 * s, y - 1.4 * s, 8.6 * s], 3.6 * s, LEAVES[(k + 1) % 3]);
+  t += sphere([x, y, 9.4 * s], 4.8 * s, m);
+  t += sphere([x + 1.8 * s, y + 2.2 * s, 8 * s], 3.2 * s, LEAVES[(k + 2) % 3]);
+  return t;
 }
 export function pine(x, y, s = 1) {
+  castShadow(K.circleRing(x, y, 4 * s, 10), 16 * s);
   return cyl(x, y, 0.8 * s, 0, 4 * s, "trunk", { steps: 8 }) + dome(x, y, 4.2 * s, 3 * s, "roofGreen", { squash: 3.2, bands: 0 });
 }
 export function streetLight(x, y, dir = [1, 0]) {
@@ -256,7 +289,7 @@ export const zoneLabel = (text, x, y, size = 9) => groundText(text, x, y, size, 
 
 // Gradientes radiais para cúpulas, esferas e cones.
 export function gradients() {
-  const mats = ["wall", "steel", "lima", "roofGreen", "leaf", "leafDark", "green", "grassDark", "straw", "bagasse", "digestate", "amber", "lamp", "concrete", "soil"];
+  const mats = ["wall", "steel", "lima", "roofGreen", "leaf", "leafDark", "leafLight", "cloud", "green", "grassDark", "straw", "bagasse", "digestate", "amber", "lamp", "concrete", "soil"];
   let g = "";
   for (const m of mats) {
     const c = MATERIALS[m];

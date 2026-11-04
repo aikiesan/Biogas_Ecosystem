@@ -5,7 +5,8 @@
 // - more:    detalhes opcionais (recolhidos em "Saiba mais")
 // - tags:    zonas destacadas no diorama · streams: fluxos em evidência
 // - anchor:  posição do pino (mundo) · focus: enquadramento do tour
-import { METANO_POR_TONELADA as T, POTENCIAL_SP as SP, POTENCIAL_SP_DIA, CAPACIDADE_SP_DIA, BIOGAS, BIOMETANO_CH4_MIN, CHP, CBIO, CGOB } from "../data/numeros.mjs";
+import { METANO_POR_TONELADA as T, POTENCIAL_SP as SP, POTENCIAL_SP_DIA, CAPACIDADE_SP_DIA, BIOGAS, BIOMETANO_CH4_MIN, BIOMETANO_SPEC, CHP, CSTR, INTENSIDADE, REDUCAO_DIESEL, RSU_ORGANICO_BR, CBIO, CGOB } from "../data/numeros.mjs";
+const mid = ([a, b]) => (a + b) / 2;
 import { FONTES } from "../data/fontes.mjs";
 
 const fmt = (n, d = 1) => n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -61,7 +62,9 @@ export const STOPS = [
     figure: { type: "beforeAfter",
       before: { title: "Aterro", steps: [{ icon: "waste" }, { icon: "landfill" }, { icon: "cloud", label: "CH₄ escapa", tone: "bad" }] },
       after: { title: "Coleta + biodigestão", steps: [{ icon: "waste" }, { icon: "tank" }, { icon: "flame", label: "gás + adubo", tone: "good" }] } },
-    text: ["Separar o orgânico na fonte evita metano no aterro e entrega um resíduo limpo ao biodigestor. O lodo das estações de esgoto segue o mesmo caminho."],
+    text: [`No Brasil, ${String(RSU_ORGANICO_BR).replace(".", ",")}% do lixo coletado é matéria orgânica (Planares). Separá-la na fonte evita metano no aterro e entrega um resíduo limpo ao biodigestor.`],
+    more: ["Em São Paulo, levantamentos históricos indicavam 50–60% de orgânicos; estudos recentes em Campinas, Piracicaba e Baixada Santista encontraram menos de 50%. O valor real varia por município.", "O lodo das estações de esgoto também é digerido para gerar biogás."],
+    sources: ["planares", "abrema"],
     tags: ["urb"], streams: ["substrato"], anchor: [76, 757, 32], focus: [0, 688, 250, 920],
   },
 
@@ -76,8 +79,10 @@ export const STOPS = [
   {
     id: "cstr", chapter: "usina", n: 6, kicker: "Biodigestor CSTR",
     message: "Sem oxigênio, microrganismos transformam matéria orgânica em metano.",
-    figure: { type: "stages", steps: ["Hidrólise", "Acidogênese", "Acetogênese", "Metanogênese"], chips: ["≈ 37 °C", "sem O₂", "mistura contínua"] },
-    text: ["CSTR é um tanque de mistura completa e fluxo contínuo: entra resíduo e sai digestato todos os dias."],
+    figure: { type: "stages", steps: ["Hidrólise", "Acidogênese", "Acetogênese", "Metanogênese"], chips: [`≈ ${CSTR.meso} °C`, "sem O₂", `${CSTR.trhMin}–${CSTR.trhMax} dias`] },
+    text: ["CSTR é um tanque de mistura completa e fluxo contínuo: entra resíduo e sai digestato todos os dias. Cada porção fica, em média, de 15 a 30 dias lá dentro."],
+    more: [`Mesofílico: ${CSTR.mesoMin}–${CSTR.mesoMax} °C, o mais comum. Termofílico: ${CSTR.termoMin}–${CSTR.termoMax} °C, com degradação mais rápida e melhor higienização, mas exige mais aquecimento e controle.`, "O tempo de retenção hidráulica (TRH) depende da carga orgânica, do substrato e dos sólidos; lodos sem aquecimento podem exigir cerca de 40 dias."],
+    sources: ["giz", "revisoesAD", "simulador"],
     tags: ["cstr"], streams: ["substrato", "biogas", "calor"], anchor: [440, 390, 52], focus: [380, 240, 520, 545],
     link: { href: FONTES.simulador.u, label: "Abrir o Simulador CSTR do CP2b" },
   },
@@ -90,9 +95,15 @@ export const STOPS = [
   },
   {
     id: "chp", chapter: "usina", n: 8, kicker: "Caminho A · Cogeração",
-    message: "Um motor converte biogás em eletricidade e calor.",
-    figure: { type: "sankey", input: "Energia do biogás", outs: [{ k: "eletricidade", label: "Eletricidade", v: CHP.eletrica }, { k: "calor", label: "Calor", v: CHP.termica }, { k: "perdas", label: "Perdas", v: CHP.perdas }], note: "Eletricidade: 35% (Simulador CSTR). Calor e perdas: valores típicos." },
+    message: "Um motor converte biogás em eletricidade e calor útil.",
+    figure: { type: "sankey", input: "Energia do biogás", outs: [
+      { k: "eletricidade", label: "Eletricidade", v: mid(CHP.eletrica), txt: `${CHP.eletrica[0]}–${CHP.eletrica[1]}%` },
+      { k: "calor", label: "Calor útil", v: mid(CHP.termica), txt: `${CHP.termica[0]}–${CHP.termica[1]}%` },
+      { k: "perdas", label: "Perdas", v: mid(CHP.perdas), txt: `${CHP.perdas[0]}–${CHP.perdas[1]}%` }],
+      note: `Motores de 0,5–2 MW. Eficiência total: ${CHP.total[0]}–${CHP.total[1]}%.` },
     text: ["A eletricidade segue pelas torres até a rede; parte do calor volta para aquecer o biodigestor."],
+    more: ["Só conta como útil o calor que tem uso: sem demanda térmica contínua, parte do calor recuperável é rejeitada.", `O Simulador CSTR do CP2b usa ${CHP.simuladorEletrica}% de eficiência elétrica, no limite conservador da faixa.`],
+    sources: ["epaChp", "simulador"],
     tags: ["chp", "subestacao"], streams: ["biogas", "eletricidade", "calor"], anchor: [543, 309, 22], focus: [480, 190, 1000, 420],
   },
   {
@@ -100,8 +111,9 @@ export const STOPS = [
     message: `Retirar o CO₂ transforma biogás em biometano (≥ ${BIOMETANO_CH4_MIN}% CH₄).`,
     figure: { type: "composition", rows: [
       { label: "Biogás", parts: [{ k: "ch4", v: BIOGAS.ch4Tipico }, { k: "co2", v: 100 - BIOGAS.ch4Tipico }] },
-      { label: "Biometano", parts: [{ k: "ch4", v: 92, label: `CH₄ ≥ ${BIOMETANO_CH4_MIN}%` }, { k: "neutral", v: 8, label: "" }] }], arrow: "membranas", note: `Especificação ANP: mínimo de ${BIOMETANO_CH4_MIN}% de metano.` },
+      { label: "Biometano", parts: [{ k: "ch4", v: 92, label: `CH₄ ≥ ${BIOMETANO_CH4_MIN}%` }, { k: "neutral", v: 8, label: "" }] }], arrow: "membranas", note: `Resolução ANP nº 1.006/2026: CH₄ ≥ ${BIOMETANO_SPEC.ch4Min}%, CO₂ ≤ ${BIOMETANO_SPEC.co2Max}%, H₂S ≤ ${BIOMETANO_SPEC.h2sMax} mg/m³.` },
     text: ["O biometano é intercambiável com o gás natural fóssil: mesmos dutos, fogões, caldeiras e motores."],
+    sources: ["anp1006"],
     tags: ["upgrading"], streams: ["biogas", "biometano", "co2"], anchor: [550, 397, 38], focus: [500, 360, 660, 460],
   },
   {
@@ -129,9 +141,13 @@ export const STOPS = [
   },
   {
     id: "posto", chapter: "destino", n: 13, kicker: "Mobilidade",
-    message: "Biometano substitui o diesel em ônibus, caminhões e tratores.",
-    figure: { type: "fork", input: { icon: "flame", label: "Biometano" }, outs: [{ icon: "bus", label: "bio-GNV", note: "comprimido, para frotas urbanas" }, { icon: "truck", label: "bio-GNL", note: "liquefeito, para longas distâncias" }] },
-    text: ["Para quem roda com frotas pesadas, é a troca mais direta de combustível fóssil por renovável."],
+    message: "Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.",
+    figure: { type: "compare", unit: "gCO₂e por MJ de combustível, ciclo poço à roda (EPE)", ratioLabel: `−${REDUCAO_DIESEL}%`, rows: [
+      { label: "Diesel B", v: INTENSIDADE.dieselB, tone: "neutral", prefix: "< " },
+      { label: "Biometano (plantas certificadas no RenovaBio)", v: INTENSIDADE.biometano, tone: "biometano" }] },
+    text: ["Comprimido (bio-GNV) abastece ônibus e caminhões; liquefeito (bio-GNL) serve a longas distâncias."],
+    more: ["A comparação é por unidade de energia do combustível. Não é uma projeção de frota: em cenários de longo prazo da EPE, o efeito agregado depende de quanto da frota de fato usa gás.", "O resultado varia com a matéria-prima, as emissões fugitivas de metano, as distâncias de transporte e o consumo de energia na purificação."],
+    sources: ["epeIntensidade"],
     tags: ["posto"], streams: ["biometano"], anchor: [835, 235, 30], focus: [690, 170, 900, 330],
   },
   {
@@ -139,7 +155,7 @@ export const STOPS = [
     message: "A chama do seu fogão pode vir de resíduos.",
     figure: { type: "chain", steps: [{ icon: "waste", label: "Resto de comida" }, { icon: "tank", label: "Biodigestor" }, { icon: "pipe", label: "Rede" }, { icon: "flame", label: "Seu fogão" }] },
     text: ["Gás para cozinhar e aquecer água pela rede; luz pela rede elétrica."],
-    tags: ["casa", "cidade"], streams: ["biometano", "eletricidade"], anchor: [743, 862, 22], focus: [712, 640, 905, 930],
+    tags: ["casa"], streams: ["biometano", "eletricidade"], anchor: [743, 862, 22], focus: [712, 640, 905, 930],
   },
 
   // ---------------- VALOR AMBIENTAL

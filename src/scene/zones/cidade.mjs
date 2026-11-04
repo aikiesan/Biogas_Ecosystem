@@ -54,17 +54,17 @@ export function buildCidade(S) {
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
     if (i === 0 && j === 3) continue;
     const x = 730 + i * 42, y = 662 + j * 62;
-    S.add(house(x, y, { wall: walls[n % 4], roof: roofs[n % 5], ridge: n % 2 ? "x" : "y" }), [x + 8, y + 7, 0], "cidade");
+    S.add(house(x, y, { wall: walls[n % 4], roof: roofs[n % 5], ridge: n % 2 ? "x" : "y", solar: n % 3 === 0 }), [x + 8, y + 7, 0], "cidade");
     n++;
   }
   // a "sua casa" — maior, com medidor de gás na frente
-  S.add(house(HOME.x, HOME.y, { w: 22, d: 20, h: 10, wall: "wallWarm", roof: "roofRed", ridge: "y" }) + box(HOME.x + 23.4, HOME.y + 5, 2, 3, 0, 5, "amber") + sideText("MEU LAR", [HOME.x + 4, HOME.y + 20], 13, "left", 2.6, "facelabel dark"), [HOME.x + 11, HOME.y + 10, 0], "casa");
+  S.add(house(HOME.x, HOME.y, { w: 22, d: 20, h: 10, wall: "wallWarm", roof: "roofRed", ridge: "y", solar: true }) + box(HOME.x + 23.4, HOME.y + 5, 2, 3, 0, 5, "amber") + sideText("MEU LAR", [HOME.x + 4, HOME.y + 20], 13, "left", 2.6, "facelabel dark"), [HOME.x + 11, HOME.y + 10, 0], "casa");
 
   // prédios (leste da rua 910)
   const blds = [[928, 382, 36, 30, 64, "wall"], [976, 384, 30, 30, 46, "wallBlue"], [1026, 380, 44, 34, 78, "wall"], [1078, 386, 18, 26, 30, "wallSand"],
     [928, 536, 40, 34, 40, "wallSand"], [1034, 540, 46, 34, 52, "wall"],
     [928, 660, 36, 32, 54, "wall"], [980, 656, 32, 36, 70, "wallBlue"], [1036, 664, 44, 30, 42, "wallSand"], [940, 742, 30, 30, 32, "wall"], [988, 744, 42, 34, 48, "wall"], [1048, 736, 36, 40, 60, "wallBlue"], [936, 826, 42, 40, 26, "wallSand"], [996, 830, 36, 32, 38, "wall"], [1048, 830, 40, 40, 30, "wall"]];
-  for (const [x, y, w, d, h, mat] of blds) S.add(tower(x, y, w, d, h, { mat }), [x + w / 2, y + d / 2, 0], "cidade");
+  for (const [x, y, w, d, h, mat] of blds) S.add(tower(x, y, w, d, h, { mat, balcony: h > 40 && x % 3 !== 1, solar: w >= 36 }), [x + w / 2, y + d / 2, 0], "cidade");
   // praça com coreto
   S.floor(groundRect(978, 534, 50, 44, "park"));
   S.add(cyl(1003, 556, 8, 1.6, 1.4, "concrete", { steps: 24 }) + dome(1003, 556, 8.5, 9, "roofGreen", { squash: 0.35, bands: 0 }), [1003, 556, 0], "cidade");

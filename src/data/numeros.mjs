@@ -28,12 +28,28 @@ export const CAPACIDADE_SP_DIA = 0.4;
 
 // Composição típica (medianas dos substratos, feedstocks.yaml).
 export const BIOGAS = { ch4Min: 52, ch4Max: 72, ch4Tipico: 60 };
-// Especificação do biometano (ANP): metano mínimo de 90%.
-export const BIOMETANO_CH4_MIN = 90;
+// Especificação do biometano: Resolução ANP nº 1.006/2026 (vigente desde 13/08/2026;
+// revogou as Res. 886/2022 e 906/2022). Base seca, 20 °C e 1 atm.
+export const BIOMETANO_CH4_MIN = 90; // % mol, mínimo
+export const BIOMETANO_SPEC = { ch4Min: 90, co2Max: 3, h2sMax: 10 }; // % mol, % mol, mg/m³
 
-// Cogeração: eficiência elétrica de 35% usada no Simulador CSTR do CP2b.
-// Fração térmica e perdas são valores típicos de motores a gás (a confirmar).
-export const CHP = { eletrica: 35, termica: 45, perdas: 20 };
+// Cogeração com motores a biogás de 0,5–2 MW (EPA; dados de fabricante).
+// Faixas típicas; a largura das barras usa o ponto médio normalizado.
+export const CHP = {
+  eletrica: [35, 43], termica: [35, 45], perdas: [12, 25], total: [70, 82],
+  simuladorEletrica: 35, // valor usado no Simulador CSTR do CP2b
+};
+
+// Biodigestor CSTR (GIZ/Probiogás; revisões Zhang et al. 2024, Van et al. 2020)
+export const CSTR = { mesoMin: 30, mesoMax: 38, meso: 35, termoMin: 50, termoMax: 55, trhMin: 15, trhMax: 30 };
+
+// Intensidade de carbono "poço à roda" (EPE), gCO₂e/MJ.
+export const INTENSIDADE = { dieselB: 80, biometano: 9.32 }; // diesel B: "inferior a 80"
+export const REDUCAO_DIESEL = Math.round((1 - INTENSIDADE.biometano / INTENSIDADE.dieselB) * 100); // ≈ 88%
+
+// Fração orgânica dos RSU coletados no Brasil (Planares).
+export const RSU_ORGANICO_BR = 45.3; // %
+export const RSU_RECICLAVEL_BR = 33.6; // %
 
 // RenovaBio / CBIO
 export const CBIO = {

@@ -20,7 +20,7 @@ export function renderIndex(stops, chapters) {
 export function renderStop(stop, { index, total, inTour }) {
   const streams = stop.streams && stop.streams !== "all" ? `<div class="tags">${stop.streams.map((k) => `<span class="tag"><i style="background:${STREAMS[k].color}"></i>${STREAMS[k].label}</span>`).join("")}</div>` : "";
   const more = stop.more ? `<details class="more"><summary>Saiba mais</summary>${stop.more.map((p) => `<p>${p}</p>`).join("")}</details>` : "";
-  const src = stop.sources ? `<details class="sources"><summary>Fontes</summary><ul>${stop.sources.map((id) => FONTES[id]).filter(Boolean).map((f) => `<li><a href="${f.u}" target="_blank" rel="noopener">${f.t}</a></li>`).join("")}</ul></details>` : "";
+  const src = stop.sources ? `<details class="sources"><summary>Fontes</summary><ul>${stop.sources.map((id) => FONTES[id]).filter(Boolean).map((f) => (f.u ? `<li><a href="${f.u}" target="_blank" rel="noopener">${f.t}</a></li>` : `<li>${f.t}</li>`)).join("")}</ul></details>` : "";
   const back = inTour ? "" : `<button type="button" class="back" data-home>‹ Todas as etapas</button>`;
   return `${back}
     <div class="kicker">${stop.n ? `<span class="num ${stop.badge ? "hex" : ""}">${stop.badge ? stop.badge.tag : stop.n}</span>` : ""}${stop.kicker}${inTour ? `<span class="count">${index + 1}/${total}</span>` : ""}</div>

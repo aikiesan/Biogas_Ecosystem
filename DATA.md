@@ -25,10 +25,46 @@ Calculado como BMP × ST × SV/ST, usando as medianas de `Pilar-2b/cp2b-workspac
 - **645 municípios.**
 - **Capacidade instalada de biometano em SP:** ≈ 0,4 milhão de Nm³ por dia (ANP 2024). Fonte: `RESULTADOS_SP_PARA_PAPER_2026-07-30.md`.
 
-## Cogeração
+## Cogeração (motores a biogás de 0,5–2 MW)
 
-- **Eficiência elétrica de 35%.** É o valor do Simulador CSTR do CP2b.
-- **Calor (45%) e perdas (20%)** são valores típicos de motores a gás. Precisam de confirmação e aparecem marcados como "valores típicos" na figura.
+| Parcela da energia do biogás | Faixa típica |
+|---|---|
+| Eletricidade líquida | 35–43% |
+| Calor útil recuperável | 35–45% |
+| Perdas | 12–25% |
+| Eficiência total (elétrica + térmica útil) | 70–82% |
+
+- Fontes: EPA (benefícios do CHP e *Biomass CHP Catalog of Technologies*) e dados de fabricante (grupo de cerca de 760 kWe com 42,5–43,1% de eficiência elétrica).
+- O Simulador CSTR usa 35% de eficiência elétrica.
+- A largura das faixas na figura usa o ponto médio de cada intervalo.
+
+## Biometano: Resolução ANP nº 1.006/2026
+
+Em vigor desde 13/08/2026, revogou as Resoluções 886/2022 e 906/2022. Valores em base seca, a 20 °C e 1 atm:
+- CH₄ ≥ 90,0% mol
+- CO₂ ≤ 3,0% mol
+- H₂S ≤ 10 mg/m³
+
+## Biodigestor CSTR
+
+- **Faixas de temperatura:**
+  - mesofílico: 30–38 °C, tipicamente ≈ 35 °C;
+  - termofílico: 50–55 °C.
+- **Tempo de retenção hidráulica (TRH):** 15–30 dias, com frequência 20–25. Lodos sem aquecimento podem exigir cerca de 40 dias.
+- **Fontes:** GIZ/Probiogás; Zhang et al. (2024); Van et al. (2020).
+
+## Biometano versus diesel (EPE, poço à roda)
+
+- Diesel B: < 80 gCO₂e/MJ.
+- Biometano de plantas certificadas no RenovaBio: ≈ 9,32 gCO₂e/MJ.
+- Redução: 1 − 9,32/80 ≈ **88%** por MJ.
+- Não é uma projeção de frota: num cenário da EPE para 2050, o efeito agregado sobre a frota é de cerca de 5%.
+
+## Fração orgânica dos resíduos sólidos urbanos
+
+- **Brasil:** 45,3% de matéria orgânica nos RSU coletados; recicláveis secos, 33,6% (Planares).
+- **São Paulo:** a faixa histórica é de 50–60%, mas estudos recentes encontraram menos de 50%. O valor varia por município.
+- **Planejamento (ABREMA):** a premissa é de cerca de 50%.
 
 ## Certificados (verificados em 2026)
 

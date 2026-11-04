@@ -5,6 +5,7 @@ import { materialCss } from "../scene/materials.mjs";
 import { HOME } from "../scene/zones/cidade.mjs";
 import { DIGESTERS } from "../scene/zones/usina.mjs";
 import { STREAMS, CERT } from "./palette.mjs";
+import { PLOTS } from "../scene/layout.mjs";
 
 const NS = "http://www.w3.org/2000/svg";
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -45,15 +46,23 @@ export function createStage(svg, { stops, onPick }) {
   { const [x, y] = iso([960, 210, 26]); fx.push(`<path class="spark" d="M${x},${y} l3,-6 l-2,0 l3,-6"/>`); }
 
   svg.insertAdjacentHTML("beforeend", `
-    <defs>${W.defs}</defs>
+    <defs>${W.defs}
+      <filter id="halo" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="1.6" result="d1"/>
+        <feFlood flood-color="#00573A"/><feComposite in2="d1" operator="in" result="o1"/>
+        <feMorphology in="SourceAlpha" operator="dilate" radius="4.5" result="d2"/>
+        <feGaussianBlur in="d2" stdDeviation="2.2" result="b2"/>
+        <feFlood flood-color="#B6E03B"/><feComposite in2="b2" operator="in" result="o2"/>
+        <feMerge><feMergeNode in="o2"/><feMergeNode in="o1"/></feMerge>
+      </filter></defs>
+    <g id="L-sky">${W.layers.sky}</g>
     <g id="L-ground">${W.layers.ground}</g>
     <g id="L-pipes">${W.layers.pipes}<g class="particles" id="particles"></g></g>
     <g id="L-vehicles">${W.layers.vehicles}</g>
+    <g id="L-halo"><g id="halo-plots"></g><g id="halo-objs" filter="url(#halo)"></g></g>
     <g id="L-objects">${W.layers.objects}</g>
     <g id="L-overhead">${W.layers.overhead}<g class="particles" id="particles-air"></g></g>
     <g id="L-fx">${fx.join("")}</g>
-    <rect id="veil" x="-3000" y="-3000" width="8000" height="8000"/>
-    <g id="L-hl"></g>
     <g id="L-pins">${pins}</g>`);
 
   // gasômetro "respira"
@@ -104,14 +113,17 @@ export function createStage(svg, { stops, onPick }) {
     current = stop;
     const on = stop && stop.tags;
     svg.classList.toggle("focus", !!on);
-    // camada de destaque: o que importa é redesenhado acima de um véu claro
-    const hl = on ? tagged.filter((el) => stop.tags.includes(el.dataset.tag)) : [];
-    const plots = hl.filter((el) => el.classList.contains("plotg")), objs = hl.filter((el) => !el.classList.contains("plotg"));
-    document.getElementById("L-hl").innerHTML = on ? plots.map((el) => `<use href="#${el.id}"/>`).join("") + `<use href="#L-pipes"/>` + objs.map((el) => `<use href="#${el.id}"/>`).join("") + `<use href="#L-overhead"/><use href="#L-fx"/>` : "";
+    // destaque SEM esmaecer: contorno verde + brilho lima atrás dos objetos
+    // da etapa e borda animada no lote da zona. O resto do mapa fica intacto.
+    const hl = on ? tagged.filter((el) => stop.tags.includes(el.dataset.tag) && !el.classList.contains("plotg")) : [];
+    document.getElementById("halo-objs").innerHTML = hl.map((el) => `<use href="#${el.id}"/>`).join("");
+    document.getElementById("halo-plots").innerHTML = on ? PLOTS.filter((p) => stop.tags.includes(p.id)).map((p) => {
+      const d = "M" + [[p.x, p.y], [p.x + p.w, p.y], [p.x + p.w, p.y + p.d], [p.x, p.y + p.d]].map(([x, y]) => iso([x, y, 1.7]).map((v) => v.toFixed(1)).join(",")).join("L") + "Z";
+      return `<path class="plot-hl" d="${d}"/><path class="plot-ants" d="${d}"/>`;
+    }).join("") : "";
     const streams = stop && stop.streams && stop.streams !== "all" ? stop.streams : null;
-    svg.classList.toggle("focus-flows", !!streams);
-    for (const g of flows) g.classList.toggle("dim", !!streams && !streams.includes(g.dataset.stream));
-    for (const p of particles) p.el.classList.toggle("dim", !!streams && !streams.includes(p.stream));
+    for (const g of flows) g.classList.toggle("em", !!streams && streams.includes(g.dataset.stream));
+    for (const p of particles) p.el.classList.toggle("em", !!streams && streams.includes(p.stream));
     for (const p of svg.querySelectorAll(".pin")) p.classList.toggle("on", !!stop && p.dataset.stop === stop.id);
   }
   const hidden = new Set();

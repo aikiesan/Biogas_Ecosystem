@@ -128,14 +128,14 @@ const F = {
     return svg(h, b, rows.map((r) => r.label).join(", "));
   },
   sankey({ input, outs, note }) {
-    const total = outs.reduce((a, o) => a + o.v, 0), H = 120, x0 = 70, x1 = 230;
+    const total = outs.reduce((a, o) => a + o.v, 0), H = 120, x0 = 60, x1 = 210;
     let b = label(`${input} = 100%`, 0, 12, "fl", "start") + `<rect x="0" y="22" width="18" height="${H}" rx="3" fill="${STREAMS.biogas.color}"/>`;
     let yl = 22, yr = 18;
     outs.forEach((o, i) => {
       const h = (o.v / total) * H;
       const c = KEY[o.k];
       b += `<path class="band pop d${i}" d="M18,${yl} C${x0 + 60},${yl} ${x1 - 60},${yr} ${x1},${yr} L${x1},${yr + h} C${x1 - 60},${yr + h} ${x0 + 60},${yl + h} 18,${yl + h} Z" fill="${c}" fill-opacity=".85"/>`;
-      b += label(`${o.v}%`, x1 + 8, yr + h / 2 + 2, "fv", "start") + label(o.label, x1 + 46, yr + h / 2 + 2, "fl", "start");
+      b += label(o.txt ?? `${o.v}%`, x1 + 8, yr + h / 2 + 2, "fv", "start") + label(o.label, x1 + 58, yr + h / 2 + 2, "fl", "start");
       yl += h; yr += h + 7;
     });
     if (note) b += label(note, 0, H + 50, "fu", "start");
@@ -200,7 +200,7 @@ const F = {
     html += `<div class="markets">${outputs.map((m) => `<span>${m}</span>`).join("")}</div>`;
     return html;
   },
-  compare({ rows, unit }) {
+  compare({ rows, unit, ratioLabel }) {
     const lx = 0, bw = W - 60, max = Math.max(...rows.map((r) => r.hi ?? r.v));
     let b = "";
     rows.forEach((r, i) => {
@@ -209,11 +209,11 @@ const F = {
       b += label(r.label, 0, y - 6, "fl", "start");
       b += `<rect class="grow d${i}" x="${lx}" y="${y}" width="${w}" height="24" rx="3" fill="${toneColor(r.tone)}"/>`;
       if (r.lo) b += `<path class="whisk" d="M${(r.lo / max) * bw},${y + 12} H${(r.hi / max) * bw} M${(r.lo / max) * bw},${y + 6} v12 M${(r.hi / max) * bw},${y + 6} v12"/>`;
-      b += label(fmt(r.v, 1), w + 6 + (r.hi ? ((r.hi - r.v) / max) * bw : 0), y + 17, "fbig", "start");
+      b += label((r.prefix ?? "") + fmt(r.v, r.v >= 20 ? 0 : 1).replace(/,0$/, ""), w + 6 + (r.hi ? ((r.hi - r.v) / max) * bw : 0), y + 17, "fbig", "start");
     });
-    const ratio = Math.round(rows[0].v / rows[1].v);
-    b += label(`≈ ${ratio}×`, bw * 0.5, 138, "fhuge") + label(unit, W, 160, "fu", "end");
-    return svg(166, b, `${rows[0].label}: ${fmt(rows[0].v, 1)}; ${rows[1].label}: ${fmt(rows[1].v, 1)}`);
+    const big = ratioLabel ?? `≈ ${Math.round(rows[0].v / rows[1].v)}×`;
+    b += label(big, bw * 0.5, 146, "fhuge") + label(unit, W, 166, "fu", "end");
+    return svg(172, b, `${rows[0].label}: ${fmt(rows[0].v, 1)}; ${rows[1].label}: ${fmt(rows[1].v, 1)}`);
   },
 };
 

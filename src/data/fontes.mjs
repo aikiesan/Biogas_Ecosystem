@@ -18,5 +18,12 @@ export const FONTES = {
   anpCgob: { t: "ANP · emissão e rastreabilidade do CGOB", u: "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/combustivel-do-futuro-anp-fara-consulta-e-audiencia-publicas-sobre-regulamentacao-dos-certificados-de-garantia-de-origem-do-biometano-cgob" },
   lei15042: { t: "Lei nº 15.042/2024 · SBCE", u: "https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=2841698&filename=Tramitacao-213-PL-182-2024-%28N%C2%BA-Anterior:-PL-2148-2015" },
   goldStandard: { t: "Gold Standard · metodologias de resíduos e biogás", u: "https://globalgoals.goldstandard.org/documents/methodology/13-waste/" },
+  epaChp: { t: "EPA · CHP: benefícios e eficiência; Biomass CHP Catalog of Technologies", u: "https://www.epa.gov/chp" },
+  anp1006: { t: "ANP · Resolução nº 1.006/2026 (especificação do biometano)", u: "" },
+  giz: { t: "GIZ/Probiogás · Tecnologias de digestão anaeróbia relevantes para o Brasil", u: "" },
+  revisoesAD: { t: "Zhang et al. (2024); Van et al. (2020) · revisões sobre digestão anaeróbia", u: "" },
+  epeIntensidade: { t: "EPE · Intensidade de carbono do transporte rodoviário (poço à roda)", u: "https://www.epe.gov.br" },
+  planares: { t: "Planares · Plano Nacional de Resíduos Sólidos", u: "" },
+  abrema: { t: "ABREMA · Panorama dos Resíduos Sólidos no Brasil 2025", u: "https://www.abrema.org.br" },
   verra: { t: "Verra · metodologias", u: "https://verra.org/methodologies/" },
 };
