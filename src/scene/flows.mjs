@@ -34,6 +34,13 @@ export const PIPES = [
   { id: "f-digout", tags: ["digestato"], stream: "digestato", pts: [[476, 510], [490, 510], [490, 548], [492, 548]] },
   { id: "f-digout2", tags: ["digestato"], stream: "digestato", pts: [[492, 552], [436, 552], [436, 577]] },
   { id: "f-digout3", tags: ["digestato"], stream: "digestato", pts: [[518, 556], [518, 604]] },
+  { id: "f-aterro", tags: ["aterro", "biogas"], stream: "biogas", pts: [[432, 800], [446, 800], [446, 738], [500, 738], [500, 495]] },
+  { id: "f-ete", tags: ["ete", "biogas"], stream: "biogas", pts: [[670, 787], [670, 738], [500, 738]] },
+  { id: "f-esgoto", tags: ["ete", "cidade"], stream: "esgoto", pts: [[880, 905], [716, 905], [716, 798], [644, 798]] },
+  { id: "f-esgoto2", tags: ["ete", "cidade"], stream: "esgoto", pts: [[716, 860], [880, 860]] },
+  { id: "f-gn", tags: ["citygate"], stream: "gasnatural", pts: [[1126, 232], [1094, 232], [1072, 232]] },
+  { id: "f-gn2", tags: ["citygate", "cidade", "distribuidora"], stream: "gasnatural", pts: [[1052, 286], [1052, 356], [926, 356], [926, 646], [912, 652]] },
+  { id: "f-gnc", tags: ["gnc", "upgrading"], stream: "biometano", pts: [[590, 441], [590, 474], [576, 474]] },
   { id: "f-eGrid", tags: ["subestacao", "cidade"], stream: "eletricidade", pts: [[1012, 240], [1012, 330], [1100, 330]] },
   { id: "f-eGrid2", tags: ["subestacao", "cidade"], stream: "eletricidade", pts: [[1012, 330], [918, 330], [918, 640], [1090, 640]] },
   { id: "f-eGrid3", tags: ["subestacao", "cidade"], stream: "eletricidade", pts: [[918, 520], [868, 520], [868, 432], [852, 432]] },
@@ -57,7 +64,7 @@ export function buildFlows() {
   for (let i = 0; i < wire.length - 1; i++) overhead.push({ id: `w-${i}`, tags: ["chp", "subestacao"], stream: "eletricidade", d: pathOf(arc(wire[i], wire[i + 1], -6, 12)) });
 
   // pontes de conhecimento do CP2b (arcos altos)
-  const cp2b = [518, 800, 34];
+  const cp2b = [172, 727, 34];
   const links = [
     { id: "k-usina", tags: ["cp2b", "cstr"], to: [499, 451, 14] },
     { id: "k-gov", tags: ["cp2b", "governo"], to: [804, 573, 30] },

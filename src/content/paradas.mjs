@@ -32,7 +32,7 @@ export const STOPS = [
 
   // ---------------- ORIGEM
   {
-    id: "agro", chapter: "origem", n: 1, kicker: "Agricultura",
+    id: "agro", chapter: "origem", kicker: "Agricultura",
     message: "A cana responde por 4 de cada 5 m³ do potencial paulista.",
     figure: { type: "share", unit: "% do potencial de metano de SP (mediana)", parts: [
       { label: "Palha", v: SP.cana.palha, tone: "agricola" }, { label: "Torta", v: SP.cana.torta, tone: "agricola", shade: 1 },
@@ -43,7 +43,7 @@ export const STOPS = [
     tags: ["agro", "ind"], streams: ["substrato"], anchor: [110, 100, 18], focus: [0, 0, 250, 215], sources: ["cp2bEvidencia", "conab"],
   },
   {
-    id: "pec", chapter: "origem", n: 2, kicker: "Pecuária",
+    id: "pec", chapter: "origem", kicker: "Pecuária",
     message: "Esterco a céu aberto emite metano; no biodigestor, vira energia.",
     figure: { type: "beforeAfter",
       before: { title: "Lagoa aberta", steps: [{ icon: "cow" }, { icon: "pond" }, { icon: "cloud", label: "CH₄ no ar", tone: "bad" }] },
@@ -52,34 +52,55 @@ export const STOPS = [
     tags: ["pec"], streams: ["substrato"], anchor: [76, 300, 20], focus: [0, 232, 250, 442],
   },
   {
-    id: "ind", chapter: "origem", n: 3, kicker: "Agroindústria",
+    id: "ind", chapter: "origem", kicker: "Agroindústria",
     message: "Por tonelada, gorduras e restos de alimentos rendem mais metano.",
     figure: { type: "bars", unit: "m³ de metano por tonelada de resíduo (mediana)", rows: T, highlight: ["industria", "agricola"], cap: 100 },
     text: ["Mas volume importa: a vinhaça rende pouco por tonelada, porém sai das usinas aos milhões de m³."],
     tags: ["ind"], streams: ["substrato"], anchor: [180, 500, 26], focus: [0, 459, 250, 671], sources: ["pilar"],
   },
   {
-    id: "urb", chapter: "origem", n: 4, kicker: "Cidades",
-    message: "Lixo orgânico e esgoto também são combustível.",
-    figure: { type: "beforeAfter",
-      before: { title: "Aterro", steps: [{ icon: "waste" }, { icon: "landfill" }, { icon: "cloud", label: "CH₄ escapa", tone: "bad" }] },
-      after: { title: "Coleta + biodigestão", steps: [{ icon: "waste" }, { icon: "tank" }, { icon: "flame", label: "gás + adubo", tone: "good" }] } },
+    id: "florestas", chapter: "origem", kicker: "Florestas e água",
+    message: "A floresta plantada fornece biomassa; a nativa protege a água.",
+    figure: { type: "twoCols", cols: [
+      { title: "Floresta plantada", icon: "leaf", note: "Eucalipto: galhos, cascas e serragem viram energia na caldeira da serraria.", tag: "silvicultura" },
+      { title: "Floresta nativa", icon: "drop", note: "Mata Atlântica e mata ciliar protegem nascentes, rios e represas.", tag: "nativa" }] },
+    text: ["São Paulo tem muita água: rios, represas e nascentes. Proteger as matas ciliares garante água para cidades, lavouras e indústrias."],
+    more: ["Resíduos florestais também entram no potencial de biogás estimado pelo CP2b (cerca de 240 milhões de m³ de CH₄ por ano no cenário real), embora a madeira se degrade devagar sem pré-tratamento. Por isso, o uso mais comum é queimá-la ou gaseificá-la.", "As faixas de mata nas margens dos rios são Áreas de Preservação Permanente (APP)."],
+    sources: ["pilarResultados"],
+    tags: ["silvicultura", "nativa", "agua"], streams: [], anchor: [440, -180, 34], focus: [-40, -300, 1130, 0],
+  },
+  {
+    id: "urb", chapter: "origem", kicker: "Resíduos urbanos",
+    message: "A coleta separa recicláveis, orgânicos e rejeitos.",
+    figure: { type: "fork", input: { icon: "waste", label: "Lixo da cidade" }, outs: [
+      { icon: "factory", label: "Recicláveis", note: "papel, plástico, metal e vidro voltam à indústria", tag: "urb" },
+      { icon: "tank", label: "Orgânicos", note: "vão para o biodigestor e viram biogás", tag: "cstr" },
+      { icon: "landfill", label: "Rejeitos", note: "aterro sanitário com captação do gás", tag: "aterro" }] },
     text: [`No Brasil, ${String(RSU_ORGANICO_BR).replace(".", ",")}% do lixo coletado é matéria orgânica (Planares). Separá-la na fonte evita metano no aterro e entrega um resíduo limpo ao biodigestor.`],
-    more: ["Em São Paulo, o Plano Estadual de Resíduos (2020) registra a faixa histórica de 50–60% de orgânicos, mas não como média estadual atual única: estudos recentes em Campinas, Piracicaba e Baixada Santista encontraram menos de 50%. O valor real varia por município.", "O lodo das estações de esgoto também é digerido para gerar biogás."],
+    more: ["Em São Paulo, o Plano Estadual de Resíduos (2020) registra a faixa histórica de 50–60% de orgânicos, mas não como média estadual atual única: estudos recentes em Campinas, Piracicaba e Baixada Santista encontraram menos de 50%. O valor real varia por município.", "No aterro, poços captam o gás do lixo enterrado; ele pode ser queimado ou aproveitado como biogás."],
     sources: ["planares", "planoSP", "abrema"],
-    tags: ["urb"], streams: ["substrato"], anchor: [76, 757, 32], focus: [0, 688, 250, 920],
+    tags: ["urb", "aterro"], streams: ["substrato", "biogas"], anchor: [495, 790, 30], focus: [290, 700, 720, 930],
   },
 
   // ---------------- USINA
   {
-    id: "recepcao", chapter: "usina", n: 5, kicker: "Recepção",
+    id: "ete", chapter: "origem", kicker: "Esgoto (ETE)",
+    message: "O lodo do esgoto também vira biogás.",
+    figure: { type: "chain", steps: [{ icon: "city", label: "Rede de esgoto", tag: "cidade" }, { icon: "drop", label: "Tratamento (ETE)", tag: "ete" }, { icon: "tank", label: "Digestor de lodo", tag: "ete" }, { icon: "flame", label: "Biogás", tag: "biogas" }] },
+    text: ["Na estação de tratamento, a matéria orgânica do esgoto vira lodo. Digerido sem oxigênio, ele gera biogás e fica mais estável para o destino final."],
+    more: [`Lodo primário de esgoto: cerca de ${T.find((r) => r.id === "lodo").m3} m³ de metano por tonelada (mediana, PILAR-2b).`, "O digestor em forma de ovo é comum em ETEs: a forma favorece a mistura e evita depósitos."],
+    sources: ["pilar"],
+    tags: ["ete"], streams: ["esgoto", "biogas"], anchor: [670, 800, 46], focus: [540, 740, 940, 930],
+  },
+  {
+    id: "recepcao", chapter: "usina", kicker: "Recepção",
     message: "Misturar resíduos equilibra a dieta dos microrganismos.",
     figure: { type: "merge", inputs: [{ icon: "leaf", label: "palha", note: "rica em carbono" }, { icon: "cow", label: "esterco", note: "rico em nitrogênio" }], output: { icon: "tank", label: "codigestão", note: "mais gás, processo estável" } },
     text: ["Os caminhões passam pela balança, descarregam e a mistura é triturada e homogeneizada antes de entrar no biodigestor."],
     tags: ["recepcao"], streams: ["substrato"], anchor: [357, 452, 20], focus: [300, 330, 420, 500],
   },
   {
-    id: "cstr", chapter: "usina", n: 6, kicker: "Biodigestor CSTR",
+    id: "cstr", chapter: "usina", kicker: "Biodigestor CSTR",
     message: "Sem oxigênio, microrganismos transformam matéria orgânica em metano.",
     figure: { type: "stages", steps: ["Hidrólise", "Acidogênese", "Acetogênese", "Metanogênese"], chips: [`≈ ${CSTR.meso} °C`, "sem O₂", `${CSTR.trhMin}–${CSTR.trhMax} dias`] },
     text: ["CSTR é um tanque de mistura completa e fluxo contínuo: entra resíduo e sai digestato todos os dias. Cada porção fica, em média, de 15 a 30 dias lá dentro."],
@@ -89,14 +110,14 @@ export const STOPS = [
     link: { href: FONTES.simulador.u, label: "Abrir o Simulador CSTR do CP2b" },
   },
   {
-    id: "biogas", chapter: "usina", n: 7, kicker: "Biogás",
+    id: "biogas", chapter: "usina", kicker: "Biogás",
     message: `Biogás ≈ ${BIOGAS.ch4Tipico}% metano + ${100 - BIOGAS.ch4Tipico}% CO₂.`,
     figure: { type: "composition", rows: [{ label: "Biogás", parts: [{ k: "ch4", v: BIOGAS.ch4Tipico }, { k: "co2", v: 100 - BIOGAS.ch4Tipico }] }], note: `Faixa nas medianas dos substratos: ${BIOGAS.ch4Min}–${BIOGAS.ch4Max}% de CH₄.` },
     text: ["O gasômetro guarda o biogás. Por segurança, o excedente é queimado no flare, nunca liberado cru."],
     tags: ["biogas"], streams: ["biogas"], anchor: [548, 232, 26], focus: [490, 180, 660, 290], sources: ["pilar"],
   },
   {
-    id: "chp", chapter: "usina", n: 8, kicker: "Caminho A · Cogeração",
+    id: "chp", chapter: "usina", kicker: "Caminho A · Cogeração",
     message: "Um motor converte biogás em eletricidade e calor útil.",
     figure: { type: "sankey", input: "Energia do biogás", outs: [
       { k: "eletricidade", label: "Eletricidade", v: mid(CHP.eletrica), txt: `${CHP.eletrica[0]}–${CHP.eletrica[1]}%` },
@@ -109,7 +130,7 @@ export const STOPS = [
     tags: ["chp", "subestacao"], streams: ["biogas", "eletricidade", "calor"], anchor: [543, 309, 22], focus: [480, 190, 1000, 420],
   },
   {
-    id: "upgrading", chapter: "usina", n: 9, kicker: "Caminho B · Purificação",
+    id: "upgrading", chapter: "usina", kicker: "Caminho B · Purificação",
     message: `Retirar o CO₂ transforma biogás em biometano (≥ ${BIOMETANO_CH4_MIN}% CH₄).`,
     figure: { type: "composition", rows: [
       { label: "Biogás", parts: [{ k: "ch4", v: BIOGAS.ch4Tipico }, { k: "co2", v: 100 - BIOGAS.ch4Tipico }] },
@@ -120,14 +141,14 @@ export const STOPS = [
     tags: ["upgrading"], streams: ["biogas", "biometano", "co2"], anchor: [550, 397, 38], focus: [500, 360, 660, 460],
   },
   {
-    id: "co2", chapter: "usina", n: 10, kicker: "Coproduto · CO₂",
+    id: "co2", chapter: "usina", kicker: "Coproduto · CO₂",
     message: "O CO₂ separado pode ser vendido ou guardado no subsolo.",
     figure: { type: "fork", input: { icon: "co2", label: "CO₂ biogênico" }, outs: [{ icon: "factory", label: "Uso", note: "bebidas, alimentos, estufas" }, { icon: "well", label: "Armazenamento", note: "remoção de carbono (BECCS)" }] },
     text: ["Esse CO₂ veio de plantas que o retiraram do ar. Guardá-lo de forma permanente tira carbono da atmosfera."],
     tags: ["co2", "industria"], streams: ["co2"], anchor: [600, 505, 44], focus: [560, 0, 1000, 600],
   },
   {
-    id: "digestato", chapter: "usina", n: 11, kicker: "Coproduto · Digestato",
+    id: "digestato", chapter: "usina", kicker: "Coproduto · Digestato",
     message: "O digestato devolve nutrientes ao campo.",
     figure: { type: "cycle", steps: [{ icon: "leaf", label: "Lavoura" }, { icon: "truck", label: "Resíduo" }, { icon: "tank", label: "Biodigestor" }, { icon: "sprout", label: "Biofertilizante" }], chips: ["N", "P", "K"], kpis: [{ v: `${fmt(DIGESTATO.liquidoMistura.n)}`, l: "kg de N por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.p2o5)}`, l: "kg de P₂O₅ por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.k2o)}`, l: "kg de K₂O por m³" }], kpiNote: "Digestato líquido de usina com mistura agropecuária (Embrapa). Ordem de grandeza: cada lote precisa de análise." },
     more: [`Dejetos suínos (líquido): N ${fmt(DIGESTATO.liquidoSuino.n)} · P₂O₅ ${fmt(DIGESTATO.liquidoSuino.p2o5)} · K₂O ${fmt(DIGESTATO.liquidoSuino.k2o)} kg/m³. Composto sólido: N ${DIGESTATO.compostoSolido.n} · P₂O₅ ${DIGESTATO.compostoSolido.p2o5} · K₂O ${DIGESTATO.compostoSolido.k2o} kg/t.`, "A separação sólido-líquido concentra fósforo e matéria orgânica no sólido; o líquido guarda a maior parte do nitrogênio amoniacal e do potássio."],
@@ -138,14 +159,30 @@ export const STOPS = [
 
   // ---------------- DESTINO
   {
-    id: "injecao", chapter: "destino", n: 12, kicker: "Rede de gás",
+    id: "injecao", chapter: "destino", kicker: "Rede de gás",
     message: "O biometano entra na mesma rede do gás natural.",
     figure: { type: "chain", steps: [{ icon: "gauge", label: "Medição", tag: "injecao" }, { icon: "drop", label: "Odorização", tag: "injecao" }, { icon: "pipe", label: "Gasoduto", tag: "cidade" }, { icon: "city", label: "Indústrias e casas", tag: "industria" }] },
     text: ["O odorante dá o cheiro característico que ajuda a perceber vazamentos."],
     tags: ["injecao", "cidade", "casa", "governo", "industria"], streams: ["biometano"], anchor: [622, 441, 20], focus: [590, 380, 1100, 930],
   },
   {
-    id: "posto", chapter: "destino", n: 13, kicker: "Mobilidade",
+    id: "citygate", chapter: "destino", kicker: "City gate e distribuidora",
+    message: "A distribuidora recebe o gás no city gate e o leva a cada consumidor.",
+    figure: { type: "chain", steps: [{ icon: "pipe", label: "Gasoduto de transporte", tag: "citygate" }, { icon: "gauge", label: "City gate", tag: "citygate" }, { icon: "check", label: "Distribuidora", tag: "distribuidora" }, { icon: "city", label: "Consumidores", tag: "cidade" }] },
+    text: ["No city gate, o gás é filtrado, aquecido, tem a pressão reduzida, é medido e odorizado. Daí em diante, a concessionária (em boa parte de SP, a Comgás) opera, mantém e monitora a rede 24 horas, sob regulação da ARSESP."],
+    more: ["O biometano injetado pela usina entra nessa mesma rede de distribuição e se mistura ao gás natural.", "Equipes de manutenção percorrem a rede; o centro de operação acompanha pressão e vazão em tempo real."],
+    tags: ["citygate", "distribuidora"], streams: ["gasnatural", "biometano"], anchor: [1060, 238, 26], focus: [860, 170, 1130, 680],
+  },
+  {
+    id: "gnc", chapter: "destino", kicker: "Gasoduto virtual",
+    message: "Onde não há duto, o biometano viaja comprimido em cilindros.",
+    figure: { type: "chain", steps: [{ icon: "gauge", label: "Compressão", tag: "gnc" }, { icon: "tank", label: "Cilindros (GNC)", tag: "gnc" }, { icon: "truck", label: "Carreta", tag: "gnc" }, { icon: "cow", label: "Fazendas e indústrias", tag: "pec" }] },
+    text: ["Feixes de cilindros de alta pressão vão de carreta até quem não está ligado à rede: fazendas, indústrias e frotas."],
+    more: ["Atenção: o botijão de cozinha comum é GLP (gás liquefeito de petróleo), outro combustível. O biometano é guardado comprimido (GNC) ou liquefeito (GNL)."],
+    tags: ["gnc", "pec"], streams: ["biometano"], anchor: [552, 483, 26], focus: [230, 230, 700, 560],
+  },
+  {
+    id: "posto", chapter: "destino", kicker: "Mobilidade",
     message: "Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.",
     figure: { type: "compare", unit: "gCO₂e por MJ de combustível, ciclo poço à roda (EPE)", ratioLabel: `−${REDUCAO_DIESEL}%`, rows: [
       { label: "Diesel B", v: INTENSIDADE.dieselB, tone: "neutral", prefix: "< " },
@@ -156,7 +193,7 @@ export const STOPS = [
     tags: ["posto"], streams: ["biometano"], anchor: [835, 235, 30], focus: [690, 170, 900, 330],
   },
   {
-    id: "casa", chapter: "destino", n: 14, kicker: "Chegada",
+    id: "casa", chapter: "destino", kicker: "Chegada",
     message: "A chama do seu fogão pode vir de resíduos.",
     figure: { type: "chain", steps: [{ icon: "waste", label: "Resto de comida", tag: "urb" }, { icon: "tank", label: "Biodigestor", tag: "cstr" }, { icon: "pipe", label: "Rede", tag: "injecao" }, { icon: "flame", label: "Seu fogão", tag: "casa" }] },
     text: [`Uma casa paulista com medidor individual usa, em média, cerca de ${fmt(CASA_M3_MES)} m³ de gás por mês (ARSESP).`, "Gás para cozinhar e aquecer água pela rede; luz pela rede elétrica."],
@@ -166,7 +203,7 @@ export const STOPS = [
 
   // ---------------- VALOR AMBIENTAL
   {
-    id: "cbio", chapter: "valor", n: 15, kicker: "RenovaBio · CBIO", badge: { tag: "CBIO", at: [790, 250, 48] },
+    id: "cbio", chapter: "valor", kicker: "RenovaBio · CBIO", badge: { tag: "CBIO", at: [790, 250, 48] },
     message: "1 CBIO = 1 tonelada de CO₂e evitada pelo uso de biocombustível.",
     figure: { type: "flowCert", color: "cbio",
       steps: [{ icon: "factory", label: "Produtor certificado", note: "nota RenovaCalc × volume vendido" }, { icon: "doc", label: "Emite CBIO" }, { icon: "chart", label: "Negocia na B3" }, { icon: "fuel", label: "Distribuidoras", note: "aposentam para cumprir metas" }],
@@ -180,7 +217,7 @@ export const STOPS = [
     sources: ["lei13576", "mmeRenovabio", "cnpe14", "mmeBalanco", "anpRenovabio2026", "b3", "epe"],
   },
   {
-    id: "cgob", chapter: "valor", n: 16, kicker: "Combustível do Futuro · CGOB", badge: { tag: "CGOB", at: [700, 500, 30] },
+    id: "cgob", chapter: "valor", kicker: "Combustível do Futuro · CGOB", badge: { tag: "CGOB", at: [700, 500, 30] },
     message: "O CGOB garante a origem do biometano e serve à meta do gás natural.",
     figure: { type: "flowCert", color: "cgob",
       steps: [{ icon: "tank", label: "Produção certificada", note: "unidade e volumes" }, { icon: "check", label: "Certificador", note: "credenciado pela ANP" }, { icon: "doc", label: "Registro", note: "escrituração do CGOB" }, { icon: "pipe", label: "Gás natural", note: "produtores e importadores aposentam" }],
@@ -195,7 +232,7 @@ export const STOPS = [
     sources: ["lei14993", "dec12614", "cnpe4", "anp995", "anp996", "anpCgob"],
   },
   {
-    id: "carbono", chapter: "valor", n: 17, kicker: "Créditos de carbono", badge: { tag: "CO₂e", at: [440, 290, 66] },
+    id: "carbono", chapter: "valor", kicker: "Créditos de carbono", badge: { tag: "CO₂e", at: [440, 290, 66] },
     message: "Metano evitado e CO₂ removido podem virar créditos, com verificação.",
     figure: { type: "twoCols", cols: [
       { title: "Redução", icon: "cloud", note: "metano de aterro, dejetos e efluentes capturado e usado", tone: "co2" },
@@ -206,17 +243,17 @@ export const STOPS = [
       "Créditos voluntários são diferentes de CBIOs e CGOBs. Se o mesmo benefício climático for reivindicado em mais de um sistema, há sobreposição.",
       "No SBCE, o BECCS pode contar como remoção quando o CO₂ é capturado, medido, transportado e armazenado de forma permanente, conforme a regulamentação e a metodologia.",
     ],
-    tags: ["cstr", "co2", "pec", "urb"], streams: ["co2", "biogas"], focus: [0, 170, 680, 760],
+    tags: ["cstr", "co2", "pec", "aterro"], streams: ["co2", "biogas"], focus: [0, 170, 700, 930],
     sources: ["goldStandard", "verra", "lei15042"],
   },
 
   // ---------------- CIÊNCIA
   {
-    id: "cp2b", chapter: "ciencia", n: 18, kicker: "CP2b · Centro de pesquisa",
+    id: "cp2b", chapter: "ciencia", kicker: "CP2b · Centro de pesquisa",
     message: "O CP2b conecta ciência a quem decide.",
     figure: { type: "hub", center: "CP2b", nodes: [{ icon: "factory", label: "Empresas e indústria" }, { icon: "gov", label: "Governo e políticas públicas" }, { icon: "tank", label: "Operação de usinas" }], outputs: ["Dados e mapas (PILAR-2b)", "Modelos e simuladores", "Formação de pessoas"] },
     text: ["Na universidade, o CP2b estuda biogás e bioprodutos e transforma evidência em apoio a investimentos e políticas."],
-    tags: ["cp2b", "governo", "industria"], streams: ["conhecimento"], anchor: [518, 801, 44], focus: [290, 380, 1000, 930],
+    tags: ["cp2b", "governo", "industria"], streams: ["conhecimento"], anchor: [172, 727, 44], focus: [-40, 380, 1000, 930],
     link: { href: FONTES.pilar.u, label: "Conhecer a plataforma PILAR-2b" },
   },
 
@@ -230,3 +267,7 @@ export const STOPS = [
     focus: "all", streams: "all", sources: ["cp2bEvidencia"],
   },
 ];
+
+// Numeração automática na ordem das etapas (as de tour apenas não recebem número).
+let _n = 0;
+for (const st of STOPS) if (!st.tourOnly) st.n = ++_n;

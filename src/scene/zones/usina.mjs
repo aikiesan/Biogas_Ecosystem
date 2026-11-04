@@ -52,6 +52,12 @@ export function buildUsina(S) {
   S.add(box(606, 430, 32, 22, 0, 9, "wall") + stripe(606, 430, 32, 22, 0.5, 2.5, "brandband") + windows(606, 430, 32, 22, 3, 8, "y", 3, 1, "louvre") + box(604, 428, 36, 26, 9, 1.4, "petrol"), [622, 441, 0], "injecao");
   S.add(cyl(648, 440, 2.4, 0, 12, "amber", { steps: 12 }) + cyl(648, 440, 3.6, 12, 2.4, "amber", { steps: 12 }) + cyl(648, 454, 2.4, 0, 8, "amber", { steps: 12 }), [648, 446, 0], "injecao");
 
+  // ---------- GNC: compressor e feixes de cilindros (gasoduto virtual)
+  S.add(box(530, 466, 14, 30, 0, 9, "wall") + windows(530, 466, 14, 30, 2, 8, "x", 3, 1, "louvre"), [537, 481, 0], "gnc");
+  S.add(box(548, 466, 28, 30, 0, 2, "concrete"), [562, 481, 0], "gnc");
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) S.add(box(550, 468 + r * 9, 24, 3.6, 2 + c * 4, 3.6, "lima", { r: 1.6, steps: 4, noShadow: c > 0 }), [562, 470 + r * 9, 2 + c * 4], "gnc");
+  S.add(box(548, 466, 2, 30, 2, 12, "steelDark") + box(574, 466, 2, 30, 2, 12, "steelDark"), [562, 497, 0], "gnc");
+
   // ---------- CO2: tanques criogênicos, liquefação e poço de injeção
   for (const [x, y] of [[588, 505], [612, 505]]) S.add(cyl(x, y, 8, 0, 36, "wall", { steps: 28 }) + band(x, y, 8, 12) + dome(x, y, 8, 36, "wall", { squash: 0.5, bands: 0 }) + sideText("CO₂", [x - 4, y + 7.6], 22, "left", 4, "facelabel dark"), [x, y, 0], "co2");
   S.add(box(578, 524, 44, 12, 0, 7, "steelDark") + windows(578, 524, 44, 12, 2, 6, "y", 4, 1, "louvre"), [600, 530, 0], "co2");

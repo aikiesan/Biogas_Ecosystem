@@ -144,13 +144,14 @@ const F = {
     return svg(H + 58, b, outs.map((o) => `${o.label} ${o.v}%`).join(", "));
   },
   fork({ input, outs }) {
-    let b = DEFS + node(input.icon, 34, 60, 24, null, "pop d0") + wrap(input.label, 34, 100, 12, "fl");
+    const gap = outs.length > 2 ? 54 : 68, top = 26, mid = top + ((outs.length - 1) * gap) / 2;
+    let b = DEFS + node(input.icon, 34, mid, 24, null, "pop d0") + wrap(input.label, 34, mid + 40, 12, "fl");
     outs.forEach((o, i) => {
-      const y = 26 + i * 68;
-      b += `<path class="arr flowing" d="M62,60 C100,60 100,${y} 140,${y}" marker-end="url(#ah)"/>`;
-      b += node(o.icon, 166, y, 20, STREAMS.biometano.color, `pop d${i + 1}`) + label(o.label, 194, y - 2, "fl strong", "start") + wrap(o.note, 194, y + 13, 24, "fn start", 12).replaceAll('text-anchor="middle"', 'text-anchor="start"');
+      const y = top + i * gap;
+      b += `<path class="arr flowing" d="M62,${mid} C100,${mid} 100,${y} 140,${y}" marker-end="url(#ah)"/>`;
+      b += node(o.icon, 166, y, 20, STREAMS.biometano.color, `pop d${i + 1}`, o.tag) + label(o.label, 194, y - 2, "fl strong", "start") + wrap(o.note, 194, y + 13, 24, "fn start", 12).replaceAll('text-anchor="middle"', 'text-anchor="start"');
     });
-    return svg(128, b, `${input.label}: ${outs.map((o) => o.label).join(" ou ")}`);
+    return svg(top + (outs.length - 1) * gap + 50, b, `${input.label}: ${outs.map((o) => o.label).join(", ")}`);
   },
   cycle({ steps, chips, kpis, kpiNote }) {
     const cx = W / 2, cy = 92, r = 64;
@@ -183,12 +184,12 @@ const F = {
     html += `<div class="kpis">${kpis.map((k) => `<div class="kpi" style="--k:${c}"><div class="kv">${k.v}</div><div class="kl">${k.l}</div>${k.gauge ? gauge(k.gauge, c) : ""}${k.sub ? `<div class="ks">${k.sub}</div>` : ""}</div>`).join("")}</div>`;
     return html;
   },
-  twoCols({ cols, steps, markets }) {
-    let html = `<div class="cols">${cols.map((c) => `<div class="col"><svg viewBox="0 0 48 48" class="colic">${icon(c.icon, 24, 24, 34, "ic")}</svg><div class="ct">${c.title}</div><div class="cn">${c.note}</div></div>`).join("")}</div>`;
+  twoCols({ cols, steps = [], markets = [] }) {
+    let html = `<div class="cols">${cols.map((c) => `<div class="col"${c.tag ? ` data-tag="${c.tag}"` : ""}><svg viewBox="0 0 48 48" class="colic">${icon(c.icon, 24, 24, 34, "ic")}</svg><div class="ct">${c.title}</div><div class="cn">${c.note}</div></div>`).join("")}</div>`;
     let b = DEFS; const gw = W / steps.length;
     steps.forEach((s, i) => { const x = gw * (i + 0.5); b += `<circle class="pop d${i}" cx="${x}" cy="14" r="8" fill="${i === steps.length - 1 ? CERT.carbono : NEUTRAL}"/>` + label(String(i + 1), x, 18, "fv on") + wrap(s, x, 40, 13, "fn", 11); if (i < steps.length - 1) b += arrow(x + 11, 14, x + gw - 12, 14, "arr flowing"); });
-    html += svg(64, b, steps.join(" → "));
-    html += `<div class="markets">${markets.map((m) => `<span>${m}</span>`).join("")}</div>`;
+    if (steps.length) html += svg(64, b, steps.join(" → "));
+    if (markets.length) html += `<div class="markets">${markets.map((m) => `<span>${m}</span>`).join("")}</div>`;
     return html;
   },
   hub({ center, nodes, outputs }) {

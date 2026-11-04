@@ -40,7 +40,7 @@ export function createStage(svg, { stops, onPick }) {
   fx.push(smoke([34, 488, 88]), smoke([54, 488, 78], [0.8, 2.5, 4.2]), smoke([560, 309, 33], [0.4, 2.1, 3.8]), smoke([1050, 40, 50], [1.2, 2.9, 4.6]));
   // metano escapando: esterqueira aberta e aterro (o problema que o biodigestor resolve)
   const ch4 = (p, delays) => { const [x, y] = iso(p); return delays.map((d) => `<g class="ch4" style="animation-delay:${d}s"><circle cx="${x}" cy="${y}" r="5.5"/><text x="${x}" y="${y + 0.5}">CH₄</text></g>`).join(""); };
-  fx.push(`<g data-fx="pec">${ch4([52, 380, 8], [0, 2.2])}${ch4([72, 392, 8], [1.1, 3.3])}</g>`, `<g data-fx="urb">${ch4([70, 745, 34], [0.5, 2.7])}${ch4([96, 765, 34], [1.6, 3.8])}</g>`);
+  fx.push(`<g data-fx="pec">${ch4([52, 380, 8], [0, 2.2])}${ch4([72, 392, 8], [1.1, 3.3])}</g>`, `<g data-fx="urb">${ch4([362, 816, 34], [0.5, 2.7])}${ch4([390, 840, 34], [1.6, 3.8])}</g>`);
   DIGESTERS.slice(0, 2).forEach(([cx, cy], k) => { for (let i = 0; i < 4; i++) { const [x, y] = iso([cx - 14 + i * 9, cy + 10 - i * 4, 46]); fx.push(`<circle class="bubble" cx="${x}" cy="${y}" r="1.4" style="animation-delay:${(i * 0.8 + k * 0.5).toFixed(1)}s"/>`); } });
   // raios de eletricidade na subestação
   { const [x, y] = iso([960, 210, 26]); fx.push(`<path class="spark" d="M${x},${y} l3,-6 l-2,0 l3,-6"/>`); }
@@ -212,13 +212,13 @@ export function createStage(svg, { stops, onPick }) {
   const flowTags = Object.fromEntries(W.flows.map((f) => [f.id, f.tags || []]));
   const flowGroupsByTag = (tag) => W.flows.filter((f) => (f.tags || []).includes(tag)).map((f) => document.getElementById(f.id));
   let hoverTag = null;
-  function hover(tag) {
+  function hover(tag, { halo = true } = {}) {
     if (tag === hoverTag) return;
     hoverTag = tag;
     svg.dataset.hover = tag || "";
     svg.querySelectorAll(".core.hot").forEach((el) => el.classList.remove("hot"));
     particles.forEach((p) => p.el.classList.remove("hot"));
-    const els = tag ? tagged.filter((el) => el.dataset.tag === tag && !el.classList.contains("plotg")) : [];
+    const els = tag && halo ? tagged.filter((el) => el.dataset.tag === tag && !el.classList.contains("plotg")) : [];
     document.getElementById("halo-hover").innerHTML = els.map((el) => `<use href="#${el.id}"/>`).join("");
     if (!tag) return;
     const hot = new Set(flowGroupsByTag(tag).filter(Boolean));

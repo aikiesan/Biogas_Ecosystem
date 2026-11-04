@@ -136,3 +136,22 @@
 [data-tag] { cursor: pointer; }
 .cow { animation: graze 10s ease-in-out infinite; }
 @keyframes graze { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(2.5px, 1px); } 60% { transform: translate(-1.5px, 1.6px); } }
+
+/* ---------- água e floresta */
+.river { fill: #6FB3D2; }
+.lake { fill: #6FB3D2; animation: shimmer2 6s ease-in-out infinite; }
+@keyframes shimmer2 { 50% { fill: #84C2DC; } }
+.bank, .bankfill { fill: #E8DDBF; }
+.pond { fill: #7DBAD6; animation: shimmer2 5s ease-in-out infinite; }
+.current { fill: none; stroke: #fff; stroke-width: .9; stroke-dasharray: 6 26; opacity: .55; animation: current 6s linear infinite; vector-effect: non-scaling-stroke; }
+.current.c1 { animation-duration: 8s; stroke-dasharray: 4 30; } .current.c2 { animation-duration: 10s; stroke-dasharray: 10 40; }
+@keyframes current { to { stroke-dashoffset: -64; } }
+.creek { fill: none; stroke: #6FB3D2; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.spring { fill: #84C2DC; stroke: #fff; stroke-width: .6; }
+.euca-trunk { stroke: #CFC2AE; stroke-width: 1; }
+.euca-crown { fill: #8DB86B; stroke: #5E8C46; stroke-width: .5; vector-effect: non-scaling-stroke; }
+.euca-crown.b { fill: #7CAA5C; }
+.gasband { fill: #E69F00; }
+.boat .hull { fill: #fff; stroke: #1E3E4C; stroke-width: .5; }
+.boat .sail { fill: #fff; stroke: #9aaab2; stroke-width: .4; }
+.boat .sail.s2 { fill: #B6E03B; }

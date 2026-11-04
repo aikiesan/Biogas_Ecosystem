@@ -79,7 +79,7 @@ $("journey-btn").onclick = () => (journey.running ? journey.stop() : (stage.fram
 
 // ---------- passar o mouse: rótulo da peça e conexões acesas
 const LABELS = Object.fromEntries(STOPS.filter((s) => s.tags && !s.badge).map((s) => [s.tags[0], s.kicker]));
-Object.assign(LABELS, { usina: "Usina de biogás", cidade: "Cidade", governo: "Governo e políticas públicas", industria: "Indústria", subestacao: "Subestação de energia", posto: "Posto de biometano" });
+Object.assign(LABELS, { aterro: "Aterro sanitário", nativa: "Mata Atlântica (floresta nativa)", agua: "Rio, represa e mata ciliar", distribuidora: "Distribuidora de gás canalizado", usina: "Usina de biogás", cidade: "Cidade", governo: "Governo e políticas públicas", industria: "Indústria", subestacao: "Subestação de energia", posto: "Posto de biometano" });
 const tip = $("tip");
 svg.addEventListener("pointermove", (e) => {
   if (journey.running || e.pointerType === "touch") return;

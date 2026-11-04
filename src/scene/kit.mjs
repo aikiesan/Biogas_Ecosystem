@@ -296,7 +296,7 @@ export const zoneLabel = (text, x, y, size = 9) => groundText(text, x, y, size, 
 
 // Gradientes radiais para cúpulas, esferas e cones.
 export function gradients() {
-  const mats = ["wall", "steel", "lima", "roofGreen", "leaf", "leafDark", "leafLight", "cloud", "green", "grassDark", "straw", "bagasse", "digestate", "amber", "lamp", "concrete", "soil"];
+  const mats = ["wall", "steel", "lima", "roofGreen", "leaf", "leafDark", "leafLight", "cloud", "euca", "eucaDark", "ipeYellow", "ipePink", "log", "green", "grassDark", "straw", "bagasse", "digestate", "amber", "lamp", "concrete", "soil"];
   let g = "";
   for (const m of mats) {
     const c = MATERIALS[m];

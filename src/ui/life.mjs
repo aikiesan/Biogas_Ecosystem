@@ -2,6 +2,7 @@
 // raspadoras dos decantadores da ETE, bolhas no tanque de aeração, pássaros,
 // pulsos de chegada na recepção e brilho no fogão da "sua casa".
 import { DIGESTERS } from "../scene/zones/usina.mjs";
+import { CLARIFIERS } from "../scene/zones/residuos.mjs";
 
 const ring = (iso, cx, cy, r, z, n = 48) => "M" + Array.from({ length: n + 1 }, (_, i) => { const a = (i / n) * Math.PI * 2; const [x, y] = iso([cx + r * Math.cos(a), cy + r * Math.sin(a), z]); return `${x.toFixed(1)},${y.toFixed(1)}`; }).join("L");
 
@@ -18,7 +19,7 @@ export function addLife(stage) {
 
   // 2) bolhas no tanque de aeração da ETE
   for (let i = 0; i < 14; i++) {
-    const x = 152 + ((i * 37) % 80), y = 819 + ((i * 17) % 30);
+    const x = 558 + ((i * 37) % 80), y = 775 + ((i * 17) % 28);
     const [sx, sy] = iso([x, y, 6.8]);
     html += `<circle class="aer" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="1" style="animation-delay:-${(i * 0.37) % 2.4}s"/>`;
   }
@@ -73,14 +74,25 @@ export function addLife(stage) {
   { const [rx, ry] = iso([110, 100, 80]); let rain = ""; for (let k = 0; k < 18; k++) rain += `<line class="drop" x1="${(rx - 40 + (k * 9) % 80).toFixed(1)}" y1="${(ry + 8 + (k * 7) % 14).toFixed(1)}" x2="${(rx - 43 + (k * 9) % 80).toFixed(1)}" y2="${(ry + 20 + (k * 7) % 14).toFixed(1)}" style="animation-delay:-${(k * 0.13).toFixed(2)}s"/>`;
     html += `<g class="raincloud"><g class="cloud"><ellipse cx="${rx}" cy="${ry}" rx="44" ry="13"/><ellipse cx="${rx - 18}" cy="${ry - 7}" rx="22" ry="13"/><ellipse cx="${rx + 14}" cy="${ry - 10}" rx="24" ry="15"/></g>${rain}</g>`; }
 
+  // 12) veleiros na represa
+  html += [0, 1, 2].map((k) => `<g class="boat" id="boat-${k}"><path class="hull" d="M-5,0 L5,0 L3.5,2.2 L-3.5,2.2Z"/><path class="sail" d="M0,-0.5 L0,-11 L5.5,-1.5Z"/><path class="sail s2" d="M-0.8,-0.5 L-0.8,-8 L-4.5,-1.5Z"/></g>`).join("");
+
   layer.innerHTML = html;
+  const boats = [0, 1, 2].map((k) => ({ el: layer.querySelector(`#boat-${k}`), k }));
+  stage.onFrame((t) => {
+    boats.forEach(({ el, k }) => {
+      const a = t * (0.05 + k * 0.012) + k * 2.1;
+      const [x, y] = iso([928 + Math.cos(a) * (95 - k * 22), -172 + Math.sin(a) * (52 - k * 12), 0.6]);
+      el.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})${Math.sin(a) > 0 ? " scale(-1 1)" : ""}`);
+    });
+  });
   const blades = DIGESTERS.slice(0, 2).map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#blade-${i}`) }));
   const drops = layer.querySelector("#drops");
   const DROPS = 26;
   drops.innerHTML = Array.from({ length: DROPS }, () => `<circle class="drop-dig" r="1.1"/>`).join("");
   const dEls = [...drops.children];
 
-  const arms = [[180, 722], [180, 772]].map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#arm-${i}`) }));
+  const arms = CLARIFIERS.map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#arm-${i}`) }));
   stage.onFrame((t) => {
     // pás do agitador girando (dentro do corte)
     blades.forEach(({ cx, cy, el }, i) => {
@@ -104,7 +116,7 @@ export function addLife(stage) {
     }
     arms.forEach(({ cx, cy, el }, i) => {
       const a = t * 0.25 + i * 1.7;
-      const p0 = iso([cx, cy, 8.2]), p1 = iso([cx + 18 * Math.cos(a), cy + 18 * Math.sin(a), 8.2]);
+      const p0 = iso([cx, cy, 8.2]), p1 = iso([cx + 17 * Math.cos(a), cy + 17 * Math.sin(a), 8.2]);
       el.setAttribute("d", `M${p0[0].toFixed(1)},${p0[1].toFixed(1)}L${p1[0].toFixed(1)},${p1[1].toFixed(1)}`);
     });
   });

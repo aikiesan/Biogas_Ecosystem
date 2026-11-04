@@ -53,7 +53,7 @@ export function createJourney(stage, { caption, onState }) {
       tok.querySelector(".jt").textContent = leg.stream === "co2" ? "CO₂" : leg.stream === "substrato" ? "C" : "CH₄";
       trail.setAttribute("d", leg.d); trail.style.setProperty("--c", c);
       caption(leg.text, i, legs.length);
-      stage.hover(leg.tag);
+      stage.hover(leg.tag, { halo: false });
     }
     const [x, y] = at(leg, Math.min(leg.total, e * SPEED));
     const k = stage.scale();

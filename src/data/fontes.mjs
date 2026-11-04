@@ -38,5 +38,6 @@ export const FONTES = {
   comfrota: { t: "Prefeitura de São Paulo · Comfrota: parâmetros de consumo e emissão de ônibus", u: "" },
   gasbus: { t: "Projeto GASBUS · teste de ônibus urbano a GNV", u: "" },
   anpPci: { t: "ANP · Informe técnico sobre PCI e RenovaCalc", u: "" },
+  pilarResultados: { t: "PILAR-2b · Resultados do potencial de SP (cenário real, 2026)", u: "" },
   verra: { t: "Verra · metodologias", u: "https://verra.org/methodologies/" },
 };

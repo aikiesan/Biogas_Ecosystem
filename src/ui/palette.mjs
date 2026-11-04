@@ -8,6 +8,8 @@ export const STREAMS = {
   digestato: { label: "Digestato", color: "#6E7F2B" },
   eletricidade: { label: "Eletricidade", color: "#E5BE00" },
   calor: { label: "Calor", color: "#D55E00" },
+  esgoto: { label: "Esgoto", color: "#CC79A7" },
+  gasnatural: { label: "Gás natural (rede)", color: "#54666E" },
   conhecimento: { label: "Conhecimento", color: "#0072B2" },
 };
 export const SECTORS = {

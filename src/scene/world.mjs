@@ -4,6 +4,8 @@ import { BASE, PLOTS, ROADS_X, ROADS_Y, ROAD_W } from "./layout.mjs";
 import { buildFontes } from "./zones/fontes.mjs";
 import { buildUsina } from "./zones/usina.mjs";
 import { buildCidade, buildUniversidade } from "./zones/cidade.mjs";
+import { buildResiduos } from "./zones/residuos.mjs";
+import { buildNatureza } from "./zones/natureza.mjs";
 import { buildFlows } from "./flows.mjs";
 import { buildVehicles } from "./vehicles.mjs";
 
@@ -45,7 +47,7 @@ export function buildWorld() {
     for (let i = 1; i < n; i++) S.floor(groundLine([[x + (i * w) / n, y + 1], [x + (i * w) / n, y + d * 0.42]], "stall", 1.78) + groundLine([[x + (i * w) / n, y + d - 1], [x + (i * w) / n, y + d * 0.58]], "stall", 1.78));
     for (const [k, row, mat] of cars) S.add(box(x + (k + 0.5) * (w / n) - 2.2, y + (row ? d - 9.5 : 1.5), 4.4, 8, 1.7, 3, mat, { r: 1 }) + box(x + (k + 0.5) * (w / n) - 2, y + (row ? d - 7.6 : 3.4), 4, 4.2, 4.7, 1.8, "glass", { r: 0.8, noShadow: true }), [x + (k + 0.5) * (w / n), y + (row ? d - 5 : 5), 0]);
   };
-  parking(596, 846, 80, 24, 8, [[0, 0, "red"], [2, 1, "wall"], [3, 0, "urban"], [6, 1, "steelDark"], [7, 0, "lima"]]);
+  parking(124, 880, 100, 24, 10, [[0, 0, "red"], [2, 1, "wall"], [3, 0, "urban"], [6, 1, "steelDark"], [8, 0, "lima"]]);
   parking(1000, 76, 90, 24, 9, [[1, 0, "wall"], [2, 1, "petrol"], [5, 0, "red"], [7, 1, "steel"]]);
   parking(588, 588, 60, 24, 6, [[0, 0, "wall"], [3, 1, "urban"]]);
 
@@ -53,10 +55,12 @@ export function buildWorld() {
   buildUsina(S);
   buildCidade(S);
   buildUniversidade(S);
+  buildResiduos(S);
+  buildNatureza(S);
 
   // vegetação de borda
-  for (const [x, y] of [[-20, 300], [-22, 560], [-24, 640], [-20, 860], [300, -20], [380, -22], [470, -18], [620, -20], [-20, 40], [1110, 200], [1110, 760], [1112, 520], [1110, 880], [160, 940], [420, 944], [600, 944], [-22, 940]]) S.add(pine(x, y, 1.3), [x, y, 0]);
-  for (const [x, y] of [[300, 200], [300, 700], [300, 40], [690, 20], [690, 700], [300, 590]]) S.add(tree(x, y, 1.3), [x, y, 0]);
+  for (const [x, y] of [[-20, 300], [-22, 560], [-24, 640], [-20, 860], [-20, 40], [1110, 200], [1110, 760], [1112, 520], [1110, 880], [160, 940], [420, 944], [600, 944], [-22, 940]]) S.add(pine(x, y, 1.3), [x, y, 0]);
+  for (const [x, y] of [[300, 200], [300, 700], [300, 40], [690, 20], [690, 700], [300, 590], [300, 120], [690, 160], [300, 400], [300, 300]]) S.add(tree(x, y, 1.3), [x, y, 0]);
 
   // sombras projetadas: uma camada, logo acima do chão
   S.floor(`<path class="shadow" d="${takeShadows()}"/>`);

@@ -1,5 +1,5 @@
 // Zonas de origem dos resíduos: agricultura, pecuária, agroindústria e cidade.
-import { box, cyl, prism, dome, cone, gable, sawtooth, windows, door, stripe, band, ladder, silo, tree, pathOf, circleRing, groundRect, groundLine, fence, sideText } from "../kit.mjs";
+import { iso, box, cyl, prism, dome, cone, gable, sawtooth, windows, door, stripe, band, ladder, silo, tree, pathOf, circleRing, groundRect, groundLine, fence, sideText } from "../kit.mjs";
 
 const liquid = (cx, cy, r, z, cls) => `<path class="liquid ${cls}" d="${pathOf(circleRing(cx, cy, r, 56).map(([a, b]) => [a, b, z]), true)}"/>`;
 
@@ -37,7 +37,9 @@ export function buildFontes(S) {
   // esterqueira a céu aberto (emite metano!)
   S.add(cyl(60, 382, 32, 0, 5, "concrete", { steps: 56 }) + liquid(60, 382, 29, 4.6, "manure"), [60, 382, 0], "pec");
   S.add(cyl(130, 392, 12, 0, 14, "steel") + band(130, 392, 12, 7) + ladder(130, 392, 12, 0, 14), [130, 392, 0], "pec");
-  for (const [x, y] of [[236, 380], [210, 428], [118, 432], [10, 330]]) S.add(tree(x, y, 1.15), [x, y, 0]);
+  // açude (represinha da fazenda)
+  S.floor(`<ellipse class="bankfill" cx="${iso([206, 404, 1.7])[0].toFixed(1)}" cy="${iso([206, 404, 1.7])[1].toFixed(1)}" rx="27" ry="13.5"/><ellipse class="pond" cx="${iso([206, 404, 1.75])[0].toFixed(1)}" cy="${iso([206, 404, 1.75])[1].toFixed(1)}" rx="23" ry="11.5"/>`);
+  for (const [x, y] of [[238, 384], [236, 430], [118, 432], [10, 330], [180, 430]]) S.add(tree(x, y, 1.15), [x, y, 0]);
 
   // ================= AGROINDÚSTRIA: usina de cana, vinhaça, alimentos
   // pátio de cana
@@ -55,19 +57,4 @@ export function buildFontes(S) {
   // fábrica de alimentos (sheds)
   S.add(sawtooth(132, 584, 96, 52, 14, 5, "wall", "roofGreen") + stripe(132, 584, 96, 52, 0.5, 5, "storefront") + door(132, 584, 96, 52, "y", 60, 10, 7, "gate"), [180, 610, 0], "ind");
   for (const [x, y] of [[240, 476], [240, 652], [10, 652], [120, 650]]) S.add(tree(x, y, 1.15), [x, y, 0]);
-
-  // ================= RESÍDUOS URBANOS: aterro, ETE, triagem/compostagem
-  for (let i = 0; i < 4; i++) {
-    const s = i * 10;
-    S.add(box(14 + s, 702 + s, 124 - 2 * s, 110 - 2 * s, i * 7, 7, i === 3 ? "grassDark" : "soil", { r: 6, steps: 4 }), [76, 757, i * 7], "urb");
-  }
-  for (const [x, y] of [[60, 737], [92, 747], [76, 772], [104, 772]]) S.add(cyl(x, y, 1.3, 28, 9, "steelDark", { steps: 10 }) + cyl(x, y, 2, 37, 1.2, "steelDark", { steps: 10 }), [x, y, 30], "urb");
-  // ETE: decantadores com ponte, tanque de aeração e digestor de lodo
-  for (const [x, y] of [[180, 722], [180, 772]]) S.add(cyl(x, y, 20, 0, 7, "concrete", { steps: 56 }) + liquid(x, y, 18, 6.6, "water") + box(x - 1, y - 19, 2, 38, 7, 1.4, "steelDark") + cyl(x, y, 2.4, 7, 2.4, "steelDark", { steps: 12 }), [x, y, 0], "urb");
-  S.add(box(146, 814, 92, 40, 0, 7, "concrete") + groundRect(149, 817, 86, 34, "liquid water aer", 6.6) + box(146, 832, 92, 2, 7, 1.2, "steelDark"), [192, 834, 0], "urb");
-  S.add(cyl(46, 852, 11, 0, 20, "steel") + dome(46, 852, 11, 20, "steel", { squash: 0.45, bands: 0 }) + ladder(46, 852, 11, 0, 20), [46, 852, 0], "urb");
-  // galpão de triagem do orgânico
-  S.add(gable(74, 836, 46, 30, 10, 6, "wallBlue", "roofGrey", "x") + door(74, 836, 46, 30, "y", 8, 12, 8, "gate") + door(74, 836, 46, 30, "y", 28, 12, 8, "gate"), [97, 851, 0], "urb");
-  S.add(box(130, 880, 20, 14, 0, 9, "green") + box(152, 880, 20, 14, 0, 9, "steelDark") + box(174, 880, 20, 14, 0, 9, "urban"), [162, 887, 0], "urb");
-  for (const [x, y] of [[14, 900], [240, 700], [222, 906], [240, 880]]) S.add(tree(x, y, 1.15), [x, y, 0]);
 }

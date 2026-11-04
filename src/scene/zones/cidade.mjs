@@ -1,5 +1,5 @@
 // Destinos: indústria, posto de biometano, subestação, cidade e universidade (CP2b).
-import { box, cyl, dome, gable, sawtooth, windows, door, stripe, band, ladder, tree, pathOf, groundRect, groundLine, groundText, sideText, fence, streetLight, tower, house, pylon, depth } from "../kit.mjs";
+import { iso, box, cyl, dome, gable, sawtooth, windows, door, stripe, band, ladder, tree, pathOf, groundRect, groundLine, groundText, sideText, fence, streetLight, tower, house, pylon, depth } from "../kit.mjs";
 
 export const PYLONS = [[652, 300], [770, 322], [870, 322], [930, 262]];
 export const PYLON_TOP = 54;
@@ -28,8 +28,17 @@ export function buildCidade(S) {
   S.floor(groundRect(924, 194, 70, 50, "gravel", 1.75));
   S.floor(fence([[924, 194], [994, 194], [994, 244], [924, 244], [924, 194]], 5));
   for (let i = 0; i < 3; i++) S.add(box(932 + i * 20, 204, 12, 12, 1.6, 12, "steelDark") + windows(932 + i * 20, 204, 12, 12, 2, 10, "y", 3, 1, "louvre") + cyl(936 + i * 20, 208, 1.1, 13.6, 7, "wall", { steps: 8 }) + cyl(940 + i * 20, 212, 1.1, 13.6, 7, "wall", { steps: 8 }), [938 + i * 20, 210, 2], "subestacao");
-  S.add(box(1012, 196, 70, 44, 0, 12, "wall") + windows(1012, 196, 70, 44, 2, 10, "y", 6, 1) + box(1010, 194, 74, 48, 12, 1.5, "petrol"), [1047, 218, 0], "subestacao");
-  for (const [x, y] of [[1092, 290], [1000, 296]]) S.add(tree(x, y, 1.15), [x, y, 0]);
+  for (const [x, y] of [[996, 296], [920, 296]]) S.add(tree(x, y, 1.15), [x, y, 0]);
+
+  // ================= CITY GATE: chegada do gasoduto de transporte, filtragem,
+  // aquecimento, redução de pressão, medição e odorização → rede da distribuidora
+  S.floor(groundRect(1024, 190, 70, 96, "gravel", 1.75));
+  S.floor(fence([[1024, 190], [1094, 190], [1094, 286], [1024, 286], [1024, 190]], 5));
+  for (const [x, y] of [[1036, 204], [1048, 204], [1060, 204]]) S.add(cyl(x, y, 3.6, 1.6, 16, "steel", { steps: 16 }) + dome(x, y, 3.6, 17.6, "steel", { squash: 0.6, bands: 0 }), [x, y, 0], "citygate");
+  S.add(box(1032, 222, 40, 14, 1.6, 6, "amber") + box(1036, 224, 32, 10, 7.6, 3, "steelDark"), [1052, 229, 0], "citygate");
+  S.add(box(1030, 244, 22, 16, 1.6, 9, "steel") + windows(1030, 244, 22, 16, 3, 8, "y", 2, 1, "louvre"), [1041, 252, 0], "citygate");
+  S.add(box(1060, 246, 28, 30, 0, 12, "wall") + windows(1060, 246, 28, 30, 3, 10, "y", 3, 1, "win", 2) + box(1058, 244, 32, 34, 12, 1.4, "green") + sideText("CITY GATE", [1062, 276], 13, "left", 2.6, "facelabel"), [1074, 261, 0], "citygate");
+  S.add(cyl(1084, 214, 1, 1.6, 10, "red", { steps: 8 }) + box(1080, 212, 8, 4, 10, 4, "wall"), [1084, 214, 0], "citygate");
 
   // torres de transmissão (CHP -> subestação)
   PYLONS.forEach(([x, y]) => S.add(pylon(x, y, PYLON_TOP), [x, y, 0], "chp"));
@@ -62,37 +71,45 @@ export function buildCidade(S) {
 
   // prédios (leste da rua 910)
   const blds = [[928, 382, 36, 30, 64, "wall"], [976, 384, 30, 30, 46, "wallBlue"], [1026, 380, 44, 34, 78, "wall"], [1078, 386, 18, 26, 30, "wallSand"],
-    [928, 536, 40, 34, 40, "wallSand"], [1034, 540, 46, 34, 52, "wall"],
+    [1034, 540, 46, 34, 52, "wall"],
     [928, 660, 36, 32, 54, "wall"], [980, 656, 32, 36, 70, "wallBlue"], [1036, 664, 44, 30, 42, "wallSand"], [940, 742, 30, 30, 32, "wall"], [988, 744, 42, 34, 48, "wall"], [1048, 736, 36, 40, 60, "wallBlue"], [936, 826, 42, 40, 26, "wallSand"], [996, 830, 36, 32, 38, "wall"], [1048, 830, 40, 40, 30, "wall"]];
   for (const [x, y, w, d, h, mat] of blds) S.add(tower(x, y, w, d, h, { mat, balcony: h > 40 && x % 3 !== 1, solar: w >= 36 }), [x + w / 2, y + d / 2, 0], "cidade");
-  // praça com coreto
-  S.floor(groundRect(978, 534, 50, 44, "park"));
-  S.add(cyl(1003, 556, 8, 1.6, 1.4, "concrete", { steps: 24 }) + dome(1003, 556, 8.5, 9, "roofGreen", { squash: 0.35, bands: 0 }), [1003, 556, 0], "cidade");
-  for (const [x, y] of [[986, 540], [1020, 572], [986, 572]]) S.add(tree(x, y, 1.1), [x, y, 0]);
+  // distribuidora de gás canalizado: centro de operação que monitora a rede
+  S.add(tower(926, 534, 42, 36, 30, { mat: "wallBlue", lit: 3 }) + stripe(926, 534, 42, 36, 26, 28, "gasband") + sideText("DISTRIBUIDORA DE GÁS", [930, 570], 22, "left", 2.2, "facelabel dark"), [947, 552, 0], "distribuidora");
+  S.add(`<path class="ln pole" d="${pathOf([[960, 540, 31], [960, 540, 44]])}"/>` + cyl(960, 540, 3, 44, 0.6, "steel", { steps: 12 }), [960, 540, 31], "distribuidora");
+  // parque com lago (lazer e drenagem urbana)
+  S.floor(groundRect(976, 530, 54, 50, "park"));
+  { const [lx, ly] = iso([1002, 556, 1.75]); S.floor(`<ellipse class="bankfill" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="22" ry="11"/><ellipse class="pond" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="19" ry="9.5"/>`); }
+  for (const [x, y] of [[982, 534], [1024, 576], [982, 578], [1026, 534], [1004, 532]]) S.add(tree(x, y, 1.15), [x, y, 0], "cidade");
   for (const [x, y] of [[870, 400], [870, 470], [870, 520], [1080, 600], [880, 912], [1088, 912], [960, 912], [740, 640 - 8]]) S.add(tree(x, y, 1.15), [x, y, 0]);
+  // arborização das calçadas
+  for (let x = 754; x < 1100; x += 48) if (x < 900 || x > 920) S.add(tree(x, 633, 0.95), [x, 633, 0], "cidade");
+  for (let y = 424; y < 930; y += 52) if (y < 630 || y > 652) S.add(tree(900, y, 0.95), [900, y, 0], "cidade");
+  for (let x = 930; x < 1100; x += 34) S.add(tree(x, 526, 0.85), [x, 526, 0], "cidade");
   // postes de luz
   for (let x = 730; x < 1100; x += 48) S.add(streetLight(x, 631, [0, 1]), [x, 631, 0]);
   for (let y = 400; y < 930; y += 52) S.add(streetLight(901, y, [1, 0]), [901, y, 0]);
 }
 
 export function buildUniversidade(S) {
-  // caminhos
-  S.floor(groundRect(310, 838, 372, 8, "walk") + groundRect(452, 766, 8, 150, "walk"));
+  // lote: x 0–250, y 688–920 (ao lado da estrada principal)
+  S.floor(groundRect(10, 820, 232, 7, "walk") + groundRect(104, 696, 7, 214, "walk"));
   // CP2b: prédio de pesquisa com laboratório e telhado verde
-  let cp = box(470, 774, 96, 54, 0, 24, "wall") + stripe(470, 774, 96, 54, 0.5, 5, "storefront") + windows(470, 774, 96, 54, 7, 22, "y", 12, 2, "win", 4) + windows(470, 774, 96, 54, 7, 22, "x", 6, 2, "win", 3);
-  cp += stripe(470, 774, 96, 54, 23, 24.4, "brandband") + box(470, 774, 96, 54, 24, 1.6, "steel") + box(474, 778, 88, 46, 25.6, 0.8, "grassDark");
-  for (const x of [484, 496, 508]) cp += cyl(x, 784, 1.6, 26.4, 7, "steelDark", { steps: 10 });
-  cp += groundText("CP2b", 520, 818, 13, "facelogo roof", "x", 26.6);
-  cp += sideText("CP2b", [478, 828], 20, "left", 6, "facelabel brand");
-  S.add(cp, [518, 801, 0], "cp2b");
+  let cp = box(124, 700, 96, 54, 0, 24, "wall") + stripe(124, 700, 96, 54, 0.5, 5, "storefront") + windows(124, 700, 96, 54, 7, 22, "y", 12, 2, "win", 4) + windows(124, 700, 96, 54, 7, 22, "x", 6, 2, "win", 3);
+  cp += stripe(124, 700, 96, 54, 23, 24.4, "brandband") + box(124, 700, 96, 54, 24, 1.6, "steel") + box(128, 704, 88, 46, 25.6, 0.8, "grassDark");
+  for (const x of [138, 150, 162]) cp += cyl(x, 710, 1.6, 26.4, 7, "steelDark", { steps: 10 });
+  cp += groundText("CP2b", 174, 744, 13, "facelogo roof", "x", 26.6);
+  cp += sideText("CP2b", [132, 754], 20, "left", 6, "facelabel brand");
+  S.add(cp, [172, 727, 0], "cp2b");
   // planta-piloto: mini biodigestores e gasômetro
-  S.floor(groundRect(588, 772, 86, 52, "gravel", 1.75));
-  for (const [x, y] of [[606, 790], [632, 790]]) S.add(cyl(x, y, 9, 1.6, 12, "green", { steps: 32 }) + band(x, y, 9, 7, "ln band m-green") + dome(x, y, 8.5, 13.6, "wall", { squash: 0.45, bands: 1 }), [x, y, 0], "cp2b");
-  S.add(dome(658, 800, 10, 1.7, "wall", { squash: 0.7, bands: 1 }), [658, 800, 0], "cp2b");
-  S.add(box(596, 806, 30, 14, 0, 8, "wallBlue") + windows(596, 806, 30, 14, 2, 7, "y", 3, 1, "win", 2), [611, 813, 0], "cp2b");
+  S.floor(groundRect(12, 698, 84, 54, "gravel", 1.75));
+  for (const [x, y] of [[28, 714], [52, 714]]) S.add(cyl(x, y, 8, 1.6, 12, "green", { steps: 32 }) + band(x, y, 8, 7, "ln band m-green") + dome(x, y, 7.5, 13.6, "wall", { squash: 0.45, bands: 1 }), [x, y, 0], "cp2b");
+  S.add(dome(78, 722, 9, 1.7, "wall", { squash: 0.7, bands: 1 }), [78, 722, 0], "cp2b");
+  S.add(box(16, 732, 30, 14, 0, 8, "wallBlue") + windows(16, 732, 30, 14, 2, 7, "y", 3, 1, "win", 2), [31, 739, 0], "cp2b");
   // salas de aula e biblioteca
-  S.add(tower(318, 772, 74, 40, 16, { mat: "wallSand", lit: 2 }), [355, 792, 0], "cp2b");
-  S.add(gable(318, 856, 90, 46, 14, 6, "wall", "roofGrey", "x") + windows(318, 856, 90, 46, 3, 12, "y", 9, 1, "win", 2) + windows(318, 856, 90, 46, 3, 12, "x", 4, 1), [363, 879, 0], "cp2b");
-  S.add(tower(470, 858, 60, 50, 12, { mat: "wallBlue", lit: 1 }), [500, 883, 0], "cp2b");
-  for (const [x, y] of [[420, 780], [430, 820], [560, 870], [590, 900], [650, 860], [680, 900], [420, 906], [600, 850]]) S.add(tree(x, y, 1.2), [x, y, 0], "cp2b");
+  S.add(tower(14, 766, 74, 40, 16, { mat: "wallSand", lit: 2, solar: true }), [51, 786, 0], "cp2b");
+  S.add(gable(124, 766, 96, 42, 14, 6, "wall", "roofGrey", "x") + windows(124, 766, 96, 42, 3, 12, "y", 9, 1, "win", 2) + windows(124, 766, 96, 42, 3, 12, "x", 4, 1), [172, 787, 0], "cp2b");
+  S.add(tower(14, 840, 70, 46, 12, { mat: "wallBlue", lit: 1 }), [49, 863, 0], "cp2b");
+  for (const [x, y] of [[100, 760], [232, 714], [236, 800], [96, 900], [120, 834], [236, 840]]) S.add(tree(x, y, 1.2), [x, y, 0], "cp2b");
+
 }
