@@ -40,12 +40,14 @@ const server = http.createServer((req, res) => {
   const page = await browser.newPage({ viewport: { width: W, height: H } });
   await page.clock.install({ time: 0 });
   await page.goto(`http://localhost:${port}/?tela&${EXTRA}`);
+  // pausa o relógio: o tempo só anda quando mandamos (1 quadro por vez)
+  await page.clock.pauseAt(1000);
   await page.clock.runFor(500);
   const total = Math.round((SEG + FADE) * FPS);
   const t0 = Date.now();
   for (let i = 0; i < total; i++) {
     await page.clock.runFor(1000 / FPS);
-    const vt = 500 + ((i + 1) * 1000) / FPS;
+    const vt = 1500 + ((i + 1) * 1000) / FPS;
     // animações CSS (nuvens, fumaça, chamas) sincronizadas com o relógio virtual
     await page.evaluate((t) => document.getAnimations().forEach((a) => { a.pause(); a.currentTime = t; }), vt);
     await page.screenshot({ path: path.join(FRAMES, `f${String(i).padStart(5, "0")}.jpg`), type: "jpeg", quality: 92 });
