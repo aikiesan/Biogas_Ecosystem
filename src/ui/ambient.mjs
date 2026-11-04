@@ -3,7 +3,7 @@
 //
 // 1 dia = 60 s; a cada dia avança 1 mês (1 ano ≈ 12 min).
 // Safra da cana no Centro-Sul: aproximadamente de abril a novembro.
-const DAY_S = 60;
+const DAY_S_DEFAULT = 60;
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const SAFRA = (m) => m >= 3 && m <= 10;
 const PICO = (m) => m >= 5 && m <= 9;
@@ -15,7 +15,8 @@ export const demandOf = (h) => 0.25 + 0.35 * Math.exp(-((h - 7) ** 2) / 2) + 0.7
 
 const mixHex = (a, b, t) => { const A = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16)), B = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16)); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
 
-export function createAmbient(stage, { night, onTick }) {
+export function createAmbient(stage, { night, onTick, daySeconds, startHour = 10, startMonth = 5 }) {
+  const DAY_S = daySeconds > 0 ? daySeconds : DAY_S_DEFAULT;
   const { root, iso } = stage;
   const map = root.closest(".map");
   // camadas: véu noturno (só tinge o céu e a cena levemente) + luzes acima dele
@@ -62,7 +63,7 @@ export function createAmbient(stage, { night, onTick }) {
   
 
   let running = !matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let base = 10 * (DAY_S / 24) + 5 * DAY_S; // começa às 10h de junho
+  let base = startHour * (DAY_S / 24) + startMonth * DAY_S; // padrão: 10h de junho
   let last = 0, clock = 0, lastMonth = -1;
 
   // a cada quadro: só opacidades de camadas (feitas pela GPU) e o gasômetro

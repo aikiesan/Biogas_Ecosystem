@@ -21,6 +21,10 @@ Público: público geral, empresas, indústria e decisores públicos. Idioma: po
 - **Cena viva.** A colhedora e o trator trabalham no canavial, as vacas pastam, os misturadores giram e o gasômetro "respira". Há também pontes raspadoras girando na ETE, bolhas no tanque de aeração, pássaros, nuvens, fumaça, a chama do flare e ondas de chegada na recepção e na sua casa.
 - **Link direto para uma etapa:** `…/#cstr`, `…/#cgob`, `…/#cp2b` etc.
 
+## Papel de parede, proteção de tela e vídeo
+
+Abra com `?tela` para ver só o diorama, sem painéis nem contador. Por exemplo, `?tela&dia=600` deixa um dia com 10 minutos. Para gerar um MP4 em loop, use `node tools/gravar-video.cjs`. Veja [`docs/TELA.md`](docs/TELA.md).
+
 ## Rodar localmente
 
 Não há build nem dependências.

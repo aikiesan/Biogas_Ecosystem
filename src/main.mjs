@@ -14,6 +14,14 @@ import { addPeople } from "./ui/people.mjs";
 import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
+// ---------- modo tela (papel de parede / proteção de tela / vídeo)
+//   ?tela            só o diorama, em tela cheia, sem painéis nem contador
+//   &passeio         a câmera passeia devagar pelas etapas
+//   &dia=300         duração de um dia, em segundos (padrão 60)
+//   &hora=19         hora inicial (padrão 10)
+const params = new URLSearchParams(location.search);
+const TELA = params.has("tela");
+if (TELA) document.body.classList.add("tela");
 const svg = $("world"), panel = $("panel"), body = $("panel-body"), progress = $("progress");
 const mobile = matchMedia("(max-width: 820px)");
 
@@ -53,6 +61,8 @@ $("hud-bar-real").style.width = `${(REAL_S / POT_S) * 100}%`;
 // ---------- relógio: dia/noite, demanda de gás e safra da cana
 const ambient = createAmbient(stage, {
   night: stage.night,
+  daySeconds: Number(params.get("dia")) || undefined,
+  startHour: params.has("hora") ? Number(params.get("hora")) : 10,
   onTick({ h, month, safra, pico, night, gasLevel }) {
     const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 10) * 10;
     $("clk-time").textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
@@ -202,4 +212,22 @@ if (new URLSearchParams(location.search).has("fps")) {
     }
     requestAnimationFrame(loop);
   })(performance.now());
+}
+
+// ---------- modo tela: passeio lento da câmera e cursor escondido
+if (TELA) {
+  if (params.has("passeio")) {
+    const spots = STOPS.filter((s) => Array.isArray(s.focus));
+    let k = 0;
+    const step = () => {
+      k++;
+      const overview = k % 4 === 0;
+      stage.setFollow(!overview);
+      stage.frame(overview ? null : spots[(k * 7) % spots.length], 4500);
+    };
+    setInterval(step, 14000);
+  }
+  let idle;
+  const wake = () => { document.body.classList.remove("idle"); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add("idle"), 2000); };
+  addEventListener("pointermove", wake); wake();
 }
