@@ -56,6 +56,8 @@ export function castShadow(ring, h, z = 1.7) {
   SHADOWS.push(`M${hh.map(([x, y]) => `${R(x)},${R(y)}`).join("L")}Z`);
 }
 export function takeShadows() { const d = SHADOWS.join(""); SHADOWS.length = 0; return d; }
+// Registro de pontos de luz para o ciclo dia/noite e para as cozinhas.
+export const NIGHT = { windows: [], lamps: [], houses: [] };
 export const box = (x, y, w, d, z, h, mat, o = {}) => {
   if (z <= 2 && !o.noShadow) castShadow([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + z);
   return solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0.6 }, z, h, P, o.steps ?? 2), mat, o.cls);
@@ -170,7 +172,10 @@ export function windows(x, y, w, d, z0, z1, face, cols, rows, cls = "win", lit =
       ? [[x + a, y + d, za], [x + b, y + d, za], [x + b, y + d, zb], [x + a, y + d, zb]]
       : [[x + w, y + a, za], [x + w, y + b, za], [x + w, y + b, zb], [x + w, y + a, zb]];
     const on = lit && ((c * 7 + r * 13 + Math.round(x + y)) % 11) < lit ? " lit" : "";
-    s += `<path class="${cls}${on}" d="${pathOf(q, true)}"/>`;
+    const qd = pathOf(q, true);
+    s += `<path class="${cls}${on}" d="${qd}"/>`;
+    // à noite, cerca de 40% das janelas acendem (sempre as mesmas)
+    if (cls === "win" && ((c * 5 + r * 11 + Math.round(x * 3 + y)) % 5) < 2) NIGHT.windows.push(qd);
   }
   return s;
 }
@@ -208,6 +213,7 @@ export function tower(x, y, w, d, h, o = {}) {
 }
 // Casa térrea com telhado, porta, janelas, muro e quintal.
 export function house(x, y, o = {}) {
+  NIGHT.houses.push([x, y, o.w ?? 16, o.d ?? 14, o.h ?? 8]);
   const w = o.w ?? 16, d = o.d ?? 14, h = o.h ?? 8;
   const ridge = o.ridge ?? "x";
   let s = "";
@@ -245,6 +251,7 @@ export function pine(x, y, s = 1) {
   return cyl(x, y, 0.8 * s, 0, 4 * s, "trunk", { steps: 8 }) + dome(x, y, 4.2 * s, 3 * s, "roofGreen", { squash: 3.2, bands: 0 });
 }
 export function streetLight(x, y, dir = [1, 0]) {
+  NIGHT.lamps.push([x + dir[0] * 3, y + dir[1] * 3, 14.4]);
   return `<path class="ln pole" d="${pathOf([[x, y, 1.7], [x, y, 14], [x + dir[0] * 3, y + dir[1] * 3, 14.8]])}"/>` + sphere([x + dir[0] * 3, y + dir[1] * 3, 14.4], 0.9, "lamp");
 }
 // Cerca de alambrado ao longo de uma poligonal.

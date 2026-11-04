@@ -1,5 +1,5 @@
 // Composição do diorama: base, lotes, ruas, zonas, fluxos e veículos.
-import { createScene, slab, groundRect, groundLine, zoneLabel, pine, tree, iso, gradients, takeShadows, pathOf, box } from "./kit.mjs";
+import { createScene, slab, groundRect, groundLine, zoneLabel, pine, tree, iso, gradients, takeShadows, pathOf, box, NIGHT } from "./kit.mjs";
 import { BASE, PLOTS, ROADS_X, ROADS_Y, ROAD_W } from "./layout.mjs";
 import { buildFontes } from "./zones/fontes.mjs";
 import { buildUsina } from "./zones/usina.mjs";
@@ -14,6 +14,7 @@ export function buildWorld() {
   const B = BASE;
 
   takeShadows(); // zera o coletor
+  NIGHT.windows.length = NIGHT.lamps.length = NIGHT.houses.length = 0;
   // base do diorama: camadas de solo visíveis nas laterais (efeito "terrário")
   S.floor(slab({ ...B, r: 18 }, -26, 26, "base", "basebox"));
   const strata = [[-26, -17, "rock"], [-17, -7, "clay"], [-7, -1.5, "topsoil"]];
@@ -77,6 +78,7 @@ export function buildWorld() {
     layers: { sky: clouds, ground: scene.ground, pipes: flows.pipes, vehicles: vehicles.filter((v) => !v.top).map((v) => v.svg).join(""), vehiclesTop: vehicles.filter((v) => v.top).map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
     vehicles,
     flows: flows.ids,
+    night: { windows: NIGHT.windows.join(""), lamps: NIGHT.lamps.map(iso), houses: NIGHT.houses.slice() },
   };
 }
 

@@ -10,7 +10,8 @@ const svg = (h, body, label) => `<svg class="fig" viewBox="0 0 ${W} ${h}" role="
 const shadeOf = (hex, k) => { const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)); return `rgb(${c.map((v) => Math.round(v + (255 - v) * k * 0.22)).join(",")})`; };
 const arrow = (x1, y1, x2, y2, cls = "arr") => `<path class="${cls}" d="M${x1},${y1} L${x2},${y2}" marker-end="url(#ah)"/>`;
 const DEFS = `<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="${MUTED}"/></marker></defs>`;
-const node = (ic, x, y, r = 22, color, cls = "") => `<g class="node ${cls}"><circle cx="${x}" cy="${y}" r="${r}" fill="${color ? color : "#F4F7F8"}" ${color ? `fill-opacity=".14" stroke="${color}"` : `stroke="#E2E8EB"`}/>${icon(ic, x, y, r * 1.05, color ? "ic" : "ic")}</g>`;
+const SETOR_TAG = { agricola: "agro", pecuaria: "pec", urbano: "urb", industria: "ind" };
+const node = (ic, x, y, r = 22, color, cls = "", tag) => `<g class="node ${cls}"${tag ? ` data-tag="${tag}"` : ""}><circle cx="${x}" cy="${y}" r="${r}" fill="${color ? color : "#F4F7F8"}" ${color ? `fill-opacity=".14" stroke="${color}"` : `stroke="#E2E8EB"`}/>${icon(ic, x, y, r * 1.05, color ? "ic" : "ic")}</g>`;
 const label = (t, x, y, cls = "fl", anchor = "middle") => `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${t}</text>`;
 function wrap(t, x, y, max = 14, cls = "fn", lh = 12) {
   const words = String(t).split(" "); const lines = []; let cur = "";
@@ -25,7 +26,7 @@ const F = {
     let b = DEFS;
     steps.forEach((s, i) => {
       const x = gap * (i + 0.5);
-      b += node(s.icon, x, 34, 22, i === n - 1 ? STREAMS.biometano.color : null, `pop d${i}`);
+      b += node(s.icon, x, 34, 22, i === n - 1 ? STREAMS.biometano.color : null, `pop d${i}`, s.tag);
       b += wrap(s.label, x, 76, 13, "fl", 13);
       if (i < n - 1) b += arrow(x + 26, 34, x + gap - 30, 34, "arr flowing");
     });
@@ -38,7 +39,7 @@ const F = {
     parts.forEach((p, i) => {
       const w = (p.v / total) * W;
       const c = p.tone === "neutral" ? NEUTRAL : shadeOf(toneColor(p.tone), p.shade || 0);
-      b += `<rect class="grow d${i}" x="${x}" y="${y}" width="${Math.max(0, w - 1.5)}" height="${h}" fill="${c}" rx="2"/>`;
+      b += `<rect class="grow d${i}" ${p.tone === "agricola" ? 'data-tag="agro"' : ""} x="${x}" y="${y}" width="${Math.max(0, w - 1.5)}" height="${h}" fill="${c}" rx="2"/>`;
       if (w > 34) b += label(`${fmt(p.v, 0)}%`, x + w / 2, y + h / 2 + 4, `fv ${p.tone === "neutral" ? "" : "on"}`);
       b += wrap(p.label, x + w / 2, y + h + 16, 10, "fn");
       x += w;
@@ -57,10 +58,11 @@ const F = {
       const on = highlight.includes(r.setor);
       const c = on ? SECTORS[r.setor].color : NEUTRAL;
       const w = (Math.min(r.m3, cap) / cap) * bw;
+      b += `<g class="row" data-tag="${SETOR_TAG[r.setor]}"><rect class="hit" x="0" y="${y}" width="${W}" height="${rh}"/>`;
       b += label(r.nome, lx - 8, y + 11, `fn ${on ? "strong" : ""}`, "end");
       b += `<rect class="grow d${i}" x="${lx}" y="${y + 2}" width="${Math.max(1.5, w)}" height="${rh - 6}" rx="2" fill="${c}"/>`;
       if (r.m3 > cap) b += `<path class="brk" d="M${lx + w - 14},${y + 1} l5,${rh - 4} M${lx + w - 9},${y + 1} l5,${rh - 4}"/>`;
-      b += label(fmt(r.m3), lx + w + 5, y + 11, "fv", "start");
+      b += label(fmt(r.m3), lx + w + 5, y + 11, "fv", "start") + "</g>";
     });
     const yl = 8 + rows.length * rh + 14;
     let lx2 = 0;
@@ -169,7 +171,7 @@ const F = {
     let b = DEFS;
     steps.forEach((s, i) => {
       const x = gw * (i + 0.5);
-      b += node(s.icon, x, 26, 20, i === 1 ? c : null, `pop d${i}`);
+      b += node(s.icon, x, 26, 20, i === 1 ? c : null, `pop d${i}`, s.tag);
       const nl = Math.ceil(s.label.length / 11);
       b += wrap(s.label, x, 62, 11, "fl", 12);
       if (s.note) b += wrap(s.note, x, 62 + 12 * nl + 2, 14, "fn", 11);

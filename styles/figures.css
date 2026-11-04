@@ -53,3 +53,9 @@
 .markets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .markets span { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--paper-sunken); border: 1px solid var(--line); color: var(--petrol); }
 @media (max-width: 420px) { .kpis { grid-template-columns: 1fr; } }
+
+/* figuras que conversam com o mapa */
+.fig [data-tag] { cursor: pointer; }
+.fig .row .hit { fill: transparent; }
+.fig .row:hover .hit { fill: #F4F7F8; }
+.fig .node[data-tag]:hover circle { stroke: #00573A; stroke-width: 2; }

@@ -9,7 +9,8 @@ import { createStage } from "./ui/stage.mjs";
 import { renderIndex, renderStop, renderLegend } from "./ui/panel.mjs";
 import { addLife } from "./ui/life.mjs";
 import { createJourney } from "./ui/journey.mjs";
-import { POTENCIAL_SP, CAPACIDADE_SP_DIA } from "./data/numeros.mjs";
+import { createAmbient } from "./ui/ambient.mjs";
+import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
 const svg = $("world"), panel = $("panel"), body = $("panel-body"), progress = $("progress");
@@ -35,8 +36,28 @@ stage.onFrame((t) => {
   const s = (performance.now() - t0) / 1000;
   $("hud-pot").textContent = nf.format(s * POT_S);
   $("hud-real").textContent = nf.format(s * REAL_S);
+  $("hud-cbio").textContent = nf.format((s * POT_S * CBIO.porMil_m3) / 1000);
 });
 $("hud-bar-real").style.width = `${(REAL_S / POT_S) * 100}%`;
+
+// ---------- relógio: dia/noite, demanda de gás e safra da cana
+const ambient = createAmbient(stage, {
+  night: stage.night,
+  onTick({ h, month, safra, night, gasLevel }) {
+    const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 10) * 10;
+    $("clk-time").textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    $("clk-ico").textContent = night > 0.5 ? "☾" : h < 8 || h > 17 ? "◐" : "☀";
+    $("clk-month").textContent = month;
+    $("clk-season").textContent = safra ? "safra da cana" : "entressafra";
+    $("clk-season").classList.toggle("off", !safra);
+    $("gas-lvl").style.width = `${Math.round(gasLevel * 100)}%`;
+  },
+});
+$("clk-pause").onclick = () => { const r = ambient.toggle(); $("clk-pause").textContent = r ? "❚❚" : "▶"; $("clk-pause").setAttribute("aria-label", r ? "Pausar o relógio" : "Retomar o relógio"); };
+
+// ---------- figuras do painel conversam com o mapa
+body.addEventListener("pointerover", (e) => { const g = e.target.closest("[data-tag]"); if (g && !journey.running) stage.hover(g.dataset.tag); });
+body.addEventListener("pointerout", (e) => { if (e.target.closest("[data-tag]") && !journey.running) stage.hover(null); });
 
 // ---------- "Siga o carbono"
 const journey = createJourney(stage, {

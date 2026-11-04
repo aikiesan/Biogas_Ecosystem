@@ -2,15 +2,17 @@
 import { box, iso, depth } from "./kit.mjs";
 
 export const ROUTES = [
-  { id: "h-colhedora", kind: "harvester", cargo: "lima", speed: 9, top: true, pts: [[24, 158], [188, 158], [188, 152], [24, 152], [24, 158]] },
-  { id: "t-transbordo", kind: "tractor", cargo: "straw", speed: 9, top: true, pts: [[30, 170], [194, 170], [194, 164], [30, 164], [30, 170]] },
-  { id: "t-agro", kind: "truck", cargo: "straw", pts: [[236, 108], [270, 108], [270, 452], [338, 452]] },
+  { id: "h-colhedora", season: "safra", kind: "harvester", cargo: "lima", speed: 9, top: true, pts: [[24, 158], [188, 158], [188, 152], [24, 152], [24, 158]] },
+  { id: "t-transbordo", season: "safra", kind: "tractor", cargo: "straw", speed: 9, top: true, pts: [[30, 170], [194, 170], [194, 164], [30, 164], [30, 170]] },
+  { id: "t-agro", season: "safra", kind: "truck", cargo: "straw", pts: [[236, 108], [270, 108], [270, 452], [338, 452]] },
   { id: "t-pec", kind: "tanker", cargo: "manure", pts: [[236, 330], [270, 330], [270, 452], [338, 452]] },
-  { id: "t-ind", kind: "tanker", cargo: "steel", pts: [[236, 565], [270, 565], [270, 452], [338, 452]] },
+  { id: "t-ind", season: "safra", kind: "tanker", cargo: "steel", pts: [[236, 565], [270, 565], [270, 452], [338, 452]] },
   { id: "t-urb", kind: "truck", cargo: "urban", pts: [[236, 800], [270, 800], [270, 452], [338, 452]] },
   { id: "t-dig", kind: "tanker", cargo: "digestate", pts: [[338, 452], [264, 452], [264, 120], [236, 120]] },
   { id: "t-dig2", kind: "truck", cargo: "digestate", pts: [[338, 452], [264, 452], [264, 342], [236, 342]] },
   { id: "t-bus", kind: "bus", cargo: "lima", pts: [[699, 940], [699, 334], [1100, 334]] },
+  { id: "t-bus2", kind: "bus", cargo: "lima", season: "always", pts: [[699, 940], [699, 290], [814, 290], [814, 236]] },
+  { id: "t-lixo", kind: "truck", cargo: "green", pts: [[1100, 646], [711, 646], [711, 748], [264, 748], [264, 800], [236, 800]] },
   { id: "c-1", kind: "car", cargo: "urban", pts: [[1100, 646], [711, 646], [711, -30]] },
   { id: "c-2", kind: "car", cargo: "red", pts: [[904, 940], [904, 346], [1100, 346]] },
   { id: "c-3", kind: "car", cargo: "wall", pts: [[916, 340], [916, 940]] },
@@ -42,6 +44,6 @@ function shape(kind, cargo, h) {
 export function buildVehicles() {
   return ROUTES.map((r) => {
     const variants = ["px", "nx", "py", "ny"].map((h) => `<g class="veh-${h}" style="display:none">${shape(r.kind, r.cargo, h)}</g>`).join("");
-    return { ...r, svg: `<g class="vehicle ${r.kind}" id="${r.id}">${variants}</g>`, screen: r.pts.map(([x, y]) => iso([x, y, 1.7])) };
+    return { ...r, svg: `<g class="vehicle ${r.kind}${r.season === "safra" ? " safra" : ""}" id="${r.id}">${variants}</g>`, screen: r.pts.map(([x, y]) => iso([x, y, 1.7])) };
   });
 }

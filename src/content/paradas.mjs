@@ -24,7 +24,7 @@ export const STOPS = [
     id: "intro", chapter: null, tourOnly: true,
     kicker: "Ecossistema do biogás",
     message: "Resíduo é energia fora do lugar.",
-    figure: { type: "chain", steps: [{ icon: "waste", label: "Resíduos" }, { icon: "tank", label: "Biodigestor" }, { icon: "flame", label: "Biogás" }, { icon: "house", label: "Energia, gás e adubo" }] },
+    figure: { type: "chain", steps: [{ icon: "waste", label: "Resíduos", tag: "urb" }, { icon: "tank", label: "Biodigestor", tag: "cstr" }, { icon: "flame", label: "Biogás", tag: "biogas" }, { icon: "house", label: "Energia, gás e adubo", tag: "casa" }] },
     text: ["Siga o caminho dos resíduos do campo e da cidade até a energia que chega às casas, às indústrias e de volta ao campo."],
     focus: "all", streams: "all",
   },
@@ -135,7 +135,7 @@ export const STOPS = [
   {
     id: "injecao", chapter: "destino", n: 12, kicker: "Rede de gás",
     message: "O biometano entra na mesma rede do gás natural.",
-    figure: { type: "chain", steps: [{ icon: "gauge", label: "Medição" }, { icon: "drop", label: "Odorização" }, { icon: "pipe", label: "Gasoduto" }, { icon: "city", label: "Indústrias e casas" }] },
+    figure: { type: "chain", steps: [{ icon: "gauge", label: "Medição", tag: "injecao" }, { icon: "drop", label: "Odorização", tag: "injecao" }, { icon: "pipe", label: "Gasoduto", tag: "cidade" }, { icon: "city", label: "Indústrias e casas", tag: "industria" }] },
     text: ["O odorante dá o cheiro característico que ajuda a perceber vazamentos."],
     tags: ["injecao", "cidade", "casa", "governo", "industria"], streams: ["biometano"], anchor: [622, 441, 20], focus: [590, 380, 1100, 930],
   },
@@ -153,7 +153,7 @@ export const STOPS = [
   {
     id: "casa", chapter: "destino", n: 14, kicker: "Chegada",
     message: "A chama do seu fogão pode vir de resíduos.",
-    figure: { type: "chain", steps: [{ icon: "waste", label: "Resto de comida" }, { icon: "tank", label: "Biodigestor" }, { icon: "pipe", label: "Rede" }, { icon: "flame", label: "Seu fogão" }] },
+    figure: { type: "chain", steps: [{ icon: "waste", label: "Resto de comida", tag: "urb" }, { icon: "tank", label: "Biodigestor", tag: "cstr" }, { icon: "pipe", label: "Rede", tag: "injecao" }, { icon: "flame", label: "Seu fogão", tag: "casa" }] },
     text: ["Gás para cozinhar e aquecer água pela rede; luz pela rede elétrica."],
     tags: ["casa"], streams: ["biometano", "eletricidade"], anchor: [743, 862, 22], focus: [712, 640, 905, 930],
   },

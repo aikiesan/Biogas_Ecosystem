@@ -65,6 +65,8 @@ export function createStage(svg, { stops, onPick }) {
     <g id="L-life"></g>
     <g id="L-overhead">${W.layers.overhead}<g class="particles" id="particles-air"></g></g>
     <g id="L-fx">${fx.join("")}</g>
+    <rect id="night-tint" x="-4000" y="-4000" width="9000" height="9000"/>
+    <g id="L-lights"></g>
     <g id="L-pins">${pins}</g>
     <g id="L-journey"></g>`);
 
@@ -116,6 +118,7 @@ export function createStage(svg, { stops, onPick }) {
   function highlight(stop) {
     current = stop;
     const on = stop && stop.tags;
+    svg.dataset.sel = on ? stop.tags.join(" ") : "";
     svg.classList.toggle("focus", !!on);
     // destaque SEM esmaecer: contorno verde + brilho lima atrás dos objetos
     // da etapa e borda animada no lote da zona. O resto do mapa fica intacto.
@@ -151,7 +154,7 @@ export function createStage(svg, { stops, onPick }) {
       el.setAttribute("r", air ? "1.8" : "2.3");
       el.setAttribute("class", `particle s-${f.stream}`);
       (air ? document.getElementById("particles-air") : document.getElementById("particles")).appendChild(el);
-      particles.push({ el, path, L, off: (i / n) * L, stream: f.stream, speed: f.stream === "eletricidade" ? 70 : f.stream === "conhecimento" ? 45 : 24 });
+      particles.push({ el, path, L, off: (i / n) * L, d: (i / n) * L, stream: f.stream, speed: f.stream === "eletricidade" ? 70 : f.stream === "conhecimento" ? 45 : 24 });
     }
   }
   const vehicles = W.vehicles.map((v, i) => {
@@ -175,14 +178,18 @@ export function createStage(svg, { stops, onPick }) {
     v.el.setAttribute("transform", `translate(${(s.a[0] + (s.b[0] - s.a[0]) * u).toFixed(1)} ${(s.a[1] + (s.b[1] - s.a[1]) * u).toFixed(1)})`);
   }
   const frameFns = [];
+  const speedMul = {};
+  let lastT = 0;
   function tick(now) {
     if (tween) tween(now);
     for (const fn of frameFns) fn(now / 1000);
+    const dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0; lastT = now;
     if (!reduceMotion && !document.hidden) {
       const t = now / 1000;
       for (const p of particles) {
         if (p.el.classList.contains("off")) continue;
-        const q = p.path.getPointAtLength((t * p.speed + p.off) % p.L);
+        p.d = (p.d + dt * p.speed * (speedMul[p.stream] ?? 1)) % p.L;
+        const q = p.path.getPointAtLength(p.d);
         p.el.setAttribute("cx", q.x.toFixed(1)); p.el.setAttribute("cy", q.y.toFixed(1));
       }
       for (const v of vehicles) {
@@ -208,6 +215,7 @@ export function createStage(svg, { stops, onPick }) {
   function hover(tag) {
     if (tag === hoverTag) return;
     hoverTag = tag;
+    svg.dataset.hover = tag || "";
     svg.querySelectorAll(".core.hot").forEach((el) => el.classList.remove("hot"));
     particles.forEach((p) => p.el.classList.remove("hot"));
     const els = tag ? tagged.filter((el) => el.dataset.tag === tag && !el.classList.contains("plotg")) : [];
@@ -231,7 +239,9 @@ export function createStage(svg, { stops, onPick }) {
 
   return {
     svg, iso,
+    night: W.night,
     onFrame(fn) { frameFns.push(fn); },
+    setSpeed(stream, m) { speedMul[stream] = m; },
     scale() { return pinScale; },
     hover,
     tagAt(target) { const g = target.closest && target.closest("[data-tag]"); return g ? g.dataset.tag : null; },
