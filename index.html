@@ -3,56 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Ecossistema do Biogás · CP2B</title>
-  <meta name="description" content="Uma viagem animada e educativa pelo ecossistema do biogás: dos resíduos do campo e da cidade ao biodigestor, ao biometano, aos coprodutos e aos certificados ambientais.">
+  <title>Ecossistema do Biogás · CP2b</title>
+  <meta name="description" content="Do resíduo à energia: um diorama animado do ecossistema do biogás e do biometano, dos coprodutos e dos certificados ambientais. CP2b – Centro Paulista de Estudos em Biogás e Bioprodutos.">
   <meta name="theme-color" content="#1E3E4C">
   <link rel="icon" href="assets/cp2b-logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/scene.css">
+  <link rel="stylesheet" href="styles/panel.css">
+  <link rel="stylesheet" href="styles/figures.css">
 </head>
 <body>
   <header class="top">
-    <a class="brand" href="https://cp2b.unicamp.br" target="_blank" rel="noopener">
-      <img src="assets/cp2b-logo.svg" alt="CP2B — Centro Paulista de Estudos em Biogás e Bioprodutos" width="96" height="37">
+    <a class="brand" href="https://cp2b.unicamp.br/pilar2b/pt-BR" target="_blank" rel="noopener">
+      <img src="assets/cp2b-logo.svg" alt="CP2b — Centro Paulista de Estudos em Biogás e Bioprodutos" width="96" height="37">
     </a>
     <div class="titles">
       <h1>Ecossistema do Biogás</h1>
-      <p>Dos resíduos à energia: uma viagem do campo até a sua casa</p>
+      <p>Do resíduo à energia, aos coprodutos e ao valor ambiental</p>
     </div>
-    <nav class="modes" aria-label="Modo">
-      <button type="button" id="btn-tour" class="pill on">Tour guiado</button>
-      <button type="button" id="btn-explore" class="pill">Explorar</button>
+    <nav class="modes" aria-label="Modo de visualização">
+      <button type="button" id="btn-overview" class="pill on" aria-pressed="true">Visão geral</button>
+      <button type="button" id="btn-tour" class="pill" aria-pressed="false">Tour guiado</button>
     </nav>
   </header>
 
-  <main class="stage" id="stage">
-    <svg id="world" role="img" aria-labelledby="world-title" preserveAspectRatio="xMidYMid meet">
-      <title id="world-title">Diorama isométrico animado do ecossistema do biogás: lavouras, pecuária, agroindústria e cidade enviam resíduos a uma usina de biogás; dela saem eletricidade, biometano para a rede de gás e para um posto, CO₂ e biofertilizante.</title>
-    </svg>
-    <div class="loading" id="loading">Montando o ecossistema…</div>
-
-    <aside class="panel" id="panel" aria-live="polite">
-      <button type="button" class="panel-toggle" id="panel-toggle" aria-label="Recolher painel"><span></span></button>
-      <div class="panel-body" id="panel-body"></div>
-      <footer class="panel-nav" id="panel-nav">
-        <button type="button" id="prev" class="nav-btn" aria-label="Anterior">‹</button>
-        <div class="dots" id="dots" role="tablist" aria-label="Etapas"></div>
-        <button type="button" id="next" class="nav-btn primary" aria-label="Próxima">›</button>
-      </footer>
-    </aside>
-
-    <section class="legend" id="legend" aria-label="Camadas">
-      <div class="legend-title">Camadas</div>
-      <div class="chips" id="chips"></div>
-      <label class="cert-toggle"><input type="checkbox" id="cert-toggle"> <span>Certificados e créditos</span></label>
+  <main class="app">
+    <section class="map" id="map" aria-label="Diorama do ecossistema">
+      <svg id="world" role="img" aria-labelledby="world-title" preserveAspectRatio="xMidYMid meet">
+        <title id="world-title">Diorama isométrico animado: lavouras, pecuária, agroindústria e cidade enviam resíduos a uma usina de biogás; dela saem eletricidade, biometano para a rede e para um posto, CO₂ e biofertilizante. Na universidade, o CP2b conecta a pesquisa a empresas e governo.</title>
+      </svg>
+      <div class="loading" id="loading">Montando o ecossistema…</div>
+      <div class="legend" id="legend" aria-label="Legenda e camadas"></div>
+      <button type="button" class="back-overview" id="back-overview" hidden>⤺ Visão geral</button>
     </section>
 
-    <div class="zoom" aria-label="Zoom">
-      <button type="button" id="zoom-in" aria-label="Aproximar">+</button>
-      <button type="button" id="zoom-out" aria-label="Afastar">−</button>
-      <button type="button" id="zoom-reset" aria-label="Visão geral" title="Visão geral">⌂</button>
-    </div>
+    <aside class="panel" id="panel" aria-live="polite">
+      <button type="button" class="sheet-handle" id="sheet-handle" aria-label="Expandir ou recolher painel"><span></span></button>
+      <div class="panel-body" id="panel-body"></div>
+      <footer class="panel-nav" id="panel-nav">
+        <button type="button" id="prev" class="nav-btn" aria-label="Etapa anterior">‹</button>
+        <div class="progress" id="progress"></div>
+        <button type="button" id="next" class="nav-btn primary" aria-label="Próxima etapa">›</button>
+      </footer>
+    </aside>
   </main>
 
-  <script type="module" src="src/app.mjs"></script>
+  <script type="module" src="src/main.mjs"></script>
 </body>
 </html>

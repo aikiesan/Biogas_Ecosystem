@@ -1,0 +1,266 @@
+// Primitivas isométricas da cena.
+// Câmera, extrusão e sombreamento em 4 tons vêm do kit do Anatomy
+// (src/vendor/iso-kit.mjs, MIT). Aqui ficam as peças "de construção":
+// caixas, cilindros, cúpulas, galpões, janelas, árvores, postes etc.
+import * as K from "../vendor/iso-kit.mjs";
+import { MATERIALS, mix } from "./materials.mjs";
+
+export const P = { origin: [0, 0], scale: 1 };
+export const KS = K.cameraOf(P).k;
+const R = (n) => Math.round(n * 10) / 10;
+export const iso = (p) => K.iso(p, P);
+export const depth = (p) => K.depthOf(p, P);
+const VIEW = K.towardViewer(P);
+const pt = (p) => { const [x, y] = iso(p); return `${R(x)},${R(y)}`; };
+export const pathOf = (pts, closed = false) => "M" + pts.map(pt).join("L") + (closed ? "Z" : "");
+export const circleRing = K.circleRing;
+
+// ------------------------------------------------------------ cena
+// Coleta camadas: "ground" (sempre ao fundo) e objetos ordenados por profundidade.
+export function createScene() {
+  const ground = [];
+  const objs = [];
+  return {
+    ground,
+    objs,
+    floor(svg) { ground.push(svg); },
+    add(svg, at, tag) { objs.push({ d: depth(at), svg, tag }); },
+    addAt(svg, d, tag) { objs.push({ d, svg, tag }); },
+    render() {
+      objs.sort((a, b) => a.d - b.d);
+      return { ground: ground.join(""), objects: objs.map((o, i) => (o.tag ? `<g data-tag="${o.tag}" id="ob${i}">${o.svg}</g>` : o.svg)).join("") };
+    },
+  };
+}
+
+// ------------------------------------------------------------ sólidos
+export function solidSvg(paths, mat, cls = "") {
+  let s = `<g class="sd m-${mat} ${cls}"><path class="f" d="${paths.fill}"/>`;
+  paths.shades.forEach((d, i) => { if (d) s += `<path class="s${i}" d="${d}"/>`; });
+  s += `<path class="t" d="${paths.top}"/>`;
+  if (paths.crease) s += `<path class="ln cr" d="${paths.crease}"/>`;
+  s += `<path class="ln ol" d="${paths.outline}"/></g>`;
+  return s;
+}
+export const slab = (plan, z, h, mat, cls, steps = 8) => solidSvg(K.slabOf(plan, z, h, P, steps), mat, cls);
+export const box = (x, y, w, d, z, h, mat, o = {}) => solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0.6 }, z, h, P, o.steps ?? 2), mat, o.cls);
+export const cyl = (cx, cy, r, z, h, mat, o = {}) => solidSvg(K.cylinder(cx, cy, r, z, h, P, o.steps ?? 36), mat, o.cls);
+export const prism = (ring, z, h, mat, o = {}) => solidSvg(K.extrude(ring, z, h, P, { convex: o.convex ?? true }), mat, o.cls);
+
+function hull(points) {
+  const p = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of p.slice().reverse()) { while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+// Metade da circunferência voltada ao observador (para faixas em tanques).
+export function frontArc(cx, cy, r, z, n = 48) {
+  const a0 = Math.atan2(VIEW[1], VIEW[0]);
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const a = a0 - Math.PI / 2 + (i / n) * Math.PI;
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a), z]);
+  }
+  return pts;
+}
+export const band = (cx, cy, r, z, cls = "ln band") => `<path class="${cls}" d="${pathOf(frontArc(cx, cy, r, z))}"/>`;
+// Escada vertical na face frontal de um tanque.
+export function ladder(cx, cy, r, z0, z1, angle = Math.PI / 4) {
+  const a = Math.atan2(VIEW[1], VIEW[0]) + angle;
+  const p = (dr, z) => [cx + (r + 0.6) * Math.cos(a + dr), cy + (r + 0.6) * Math.sin(a + dr), z];
+  let s = `<path class="ln ladder" d="${pathOf([p(-0.04, z0), p(-0.04, z1)])}M${pathOf([p(0.04, z0), p(0.04, z1)]).slice(1)}"/>`;
+  for (let z = z0 + 2; z < z1; z += 2.4) s += `<path class="ln ladder" d="${pathOf([p(-0.04, z), p(0.04, z)])}"/>`;
+  return s;
+}
+// Cúpula (hemisfério achatado). squash = altura / raio.
+export function dome(cx, cy, r, z, mat, { squash = 1, bands = 2, cls = "" } = {}) {
+  const pts = [];
+  for (let i = 0; i <= 12; i++) {
+    const phi = (i / 12) * Math.PI / 2;
+    for (let j = 0; j < 48; j++) {
+      const th = (j / 48) * Math.PI * 2;
+      pts.push(iso([cx + r * Math.cos(phi) * Math.cos(th), cy + r * Math.cos(phi) * Math.sin(th), z + r * squash * Math.sin(phi)]));
+    }
+  }
+  const h = hull(pts);
+  const d = `M${h.map(([x, y]) => `${R(x)},${R(y)}`).join("L")}Z`;
+  let s = `<g class="dome ${cls}"><path class="dm" fill="url(#g-${mat})" d="${d}"/>`;
+  for (let b = 1; b <= bands; b++) {
+    const phi = (b / (bands + 1)) * Math.PI / 2;
+    s += `<path class="ln band m-${mat}" d="${pathOf(frontArc(cx, cy, r * Math.cos(phi), z + r * squash * Math.sin(phi)))}"/>`;
+  }
+  s += `<path class="ln ol m-${mat}" d="${d}"/></g>`;
+  return s;
+}
+// Cone (telhado de silo, pilha): base circular -> ponta.
+export function cone(cx, cy, r, z, h, mat) {
+  const pts = circleRing(cx, cy, r, 40).map(([x, y]) => iso([x, y, z]));
+  pts.push(iso([cx, cy, z + h]));
+  const hh = hull(pts);
+  const d = `M${hh.map(([x, y]) => `${R(x)},${R(y)}`).join("L")}Z`;
+  return `<g class="dome"><path class="dm" fill="url(#g-${mat})" d="${d}"/><path class="ln ol m-${mat}" d="${d}"/></g>`;
+}
+export function sphere(c, r, mat, cls = "") {
+  const [x, y] = iso(c);
+  return `<circle class="sph m-${mat} ${cls}" cx="${R(x)}" cy="${R(y)}" r="${R(r * KS)}" fill="url(#g-${mat})"/>`;
+}
+// Galpão com telhado de duas águas. ridge: "x" ou "y".
+export function gable(x, y, w, d, h, rh, wallMat, roofMat, ridge = "x", o = {}) {
+  let s = o.noWalls ? "" : box(x, y, w, d, 0, h, wallMat);
+  const ov = o.overhang ?? 1.2;
+  const x0 = x - ov, x1 = x + w + ov, y0 = y - ov, y1 = y + d + ov;
+  const top = h + rh;
+  const roof = (pts, shade) => `<path class="rf m-${roofMat} ${shade}" d="${pathOf(pts, true)}"/>`;
+  if (ridge === "x") {
+    const ym = y + d / 2;
+    s += roof([[x0, y0, h], [x1, y0, h], [x1, ym, top], [x0, ym, top]], "rt");
+    s += `<path class="gb m-${wallMat}" d="${pathOf([[x + w, y, h], [x + w, y + d, h], [x + w, ym, top]], true)}"/>`;
+    s += roof([[x0, ym, top], [x1, ym, top], [x1, y1, h], [x0, y1, h]], "rl");
+    if (o.ridgeVent) s += box(x + 2, ym - 1.2, w - 4, 2.4, top - 0.4, 1.6, roofMat);
+  } else {
+    const xm = x + w / 2;
+    s += roof([[x0, y0, h], [xm, y0, top], [xm, y1, top], [x0, y1, h]], "rt");
+    s += `<path class="gb m-${wallMat}" d="${pathOf([[x, y + d, h], [x + w, y + d, h], [xm, y + d, top]], true)}"/>`;
+    s += roof([[xm, y0, top], [x1, y0, h], [x1, y1, h], [xm, y1, top]], "rl");
+  }
+  return s;
+}
+// Telhado em shed (dente de serra) sobre um galpão; dentes ao longo de x.
+export function sawtooth(x, y, w, d, h, n, wallMat, roofMat) {
+  let s = box(x, y, w, d, 0, h, wallMat);
+  const tw = w / n, rh = Math.min(8, tw * 0.45);
+  for (let i = 0; i < n; i++) {
+    const a = x + i * tw, b = a + tw;
+    s += `<path class="rf m-${roofMat} rl" d="${pathOf([[a, y, h], [b, y, h + rh], [b, y + d, h + rh], [a, y + d, h]], true)}"/>`;
+    s += `<path class="glz" d="${pathOf([[b, y, h], [b, y + d, h], [b, y + d, h + rh], [b, y, h + rh]], true)}"/>`;
+    s += `<path class="gb m-${wallMat}" d="${pathOf([[a, y + d, h], [b, y + d, h], [b, y + d, h + rh]], true)}"/>`;
+  }
+  return s;
+}
+// Janelas em grade numa face vertical (+y ou +x).
+export function windows(x, y, w, d, z0, z1, face, cols, rows, cls = "win", lit = 0) {
+  let s = "";
+  const gw = (face === "y" ? w : d) / cols;
+  const gh = (z1 - z0) / rows;
+  for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) {
+    const a = c * gw + gw * 0.22, b = c * gw + gw * 0.78;
+    const za = z0 + r * gh + gh * 0.26, zb = z0 + r * gh + gh * 0.8;
+    const q = face === "y"
+      ? [[x + a, y + d, za], [x + b, y + d, za], [x + b, y + d, zb], [x + a, y + d, zb]]
+      : [[x + w, y + a, za], [x + w, y + b, za], [x + w, y + b, zb], [x + w, y + a, zb]];
+    const on = lit && ((c * 7 + r * 13 + Math.round(x + y)) % 11) < lit ? " lit" : "";
+    s += `<path class="${cls}${on}" d="${pathOf(q, true)}"/>`;
+  }
+  return s;
+}
+// Faixa horizontal (ex.: vitrine do térreo, frisos) nas duas faces visíveis.
+export function stripe(x, y, w, d, z0, z1, cls = "storefront") {
+  return `<path class="${cls}" d="${pathOf([[x, y + d, z0], [x + w, y + d, z0], [x + w, y + d, z1], [x, y + d, z1]], true)}"/>` +
+    `<path class="${cls} side" d="${pathOf([[x + w, y, z0], [x + w, y + d, z0], [x + w, y + d, z1], [x + w, y, z1]], true)}"/>`;
+}
+export function door(x, y, w, d, face, at, dw = 3, dh = 5, cls = "door") {
+  const q = face === "y"
+    ? [[x + at, y + d, 0], [x + at + dw, y + d, 0], [x + at + dw, y + d, dh], [x + at, y + d, dh]]
+    : [[x + w, y + at, 0], [x + w, y + at + dw, 0], [x + w, y + at + dw, dh], [x + w, y + at, dh]];
+  return `<path class="${cls}" d="${pathOf(q, true)}"/>`;
+}
+// Prédio: bloco com térreo, janelas, platibanda e equipamentos no teto.
+export function tower(x, y, w, d, h, o = {}) {
+  const mat = o.mat ?? "wall";
+  let s = box(x, y, w, d, 0, h, mat);
+  s += stripe(x, y, w, d, 0.4, 4.4, o.ground ?? "storefront");
+  s += windows(x, y, w, d, 6, h - 2, "y", Math.max(2, Math.round(w / 6)), Math.max(1, Math.round((h - 8) / 5.5)), "win", o.lit ?? 3);
+  s += windows(x, y, w, d, 6, h - 2, "x", Math.max(2, Math.round(d / 6)), Math.max(1, Math.round((h - 8) / 5.5)), "win", o.lit ?? 3);
+  // platibanda e teto
+  s += box(x, y, w, d, h, 1.4, o.trim ?? "steel");
+  s += box(x + 1.4, y + 1.4, w - 2.8, d - 2.8, h, 1.0, "roofTop");
+  // caixa d'água e casa de máquinas
+  s += box(x + w * 0.2, y + d * 0.2, 6, 6, h + 1, 5, "concrete");
+  s += box(x + w * 0.2 + 0.6, y + d * 0.2 + 0.6, 4.8, 4.8, h + 6, 0.8, "steelDark");
+  // condensadoras de ar-condicionado
+  for (let i = 0; i < Math.min(3, Math.floor(w / 10)); i++) s += box(x + w - 6 - i * 5, y + d - 6, 3.4, 3, h + 1, 2, "steel");
+  return s;
+}
+// Casa térrea com telhado, porta, janelas, muro e quintal.
+export function house(x, y, o = {}) {
+  const w = o.w ?? 16, d = o.d ?? 14, h = o.h ?? 8;
+  const ridge = o.ridge ?? "x";
+  let s = "";
+  s += `<path class="yard" d="${pathOf([[x - 3, y - 3, 1.7], [x + w + 3, y - 3, 1.7], [x + w + 3, y + d + 4, 1.7], [x - 3, y + d + 4, 1.7]], true)}"/>`;
+  s += gable(x, y, w, d, h, 5.5, o.wall ?? "wall", o.roof ?? "roofRed", ridge);
+  s += windows(x, y, w, d, 1.5, h - 1, "y", 2, 1, "win", 1) + door(x, y, w, d, "x", d * 0.55, 2.6, 5);
+  s += windows(x, y, w, d, 1.5, h - 1, "x", 1, 1, "win");
+  // muro baixo na frente
+  s += `<path class="ln wall-line" d="${pathOf([[x - 3, y + d + 4, 3.2], [x + w + 3, y + d + 4, 3.2], [x + w + 3, y - 3, 3.2]])}"/>`;
+  return s;
+}
+export const groundPoly = (pts, cls, z = 0) => `<path class="${cls}" d="${pathOf(pts.map(([x, y]) => [x, y, z]), true)}"/>`;
+export const groundRect = (x, y, w, d, cls, z = 1.7) => groundPoly([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], cls, z);
+export const groundLine = (pts, cls, z = 0) => `<path class="${cls}" d="${pathOf(pts.map(([x, y, zz]) => [x, y, zz ?? z]))}"/>`;
+export function groundText(text, x, y, size, cls = "gt", along = "x", z = 0.2) {
+  return `<text class="${cls}" transform="${K.topMatrix([x, y], z, P, along)}" font-size="${size}">${text}</text>`;
+}
+export function sideText(text, at, z, face, size, cls = "facelogo") {
+  return `<text class="${cls}" transform="${K.sideMatrix(at, z, P, face)}" font-size="${size}">${text}</text>`;
+}
+export function tree(x, y, s = 1, mat = "leaf") {
+  return cyl(x, y, 0.9 * s, 0, 5 * s, "trunk", { steps: 10 }) + sphere([x, y, 9 * s], 5 * s, mat);
+}
+export function pine(x, y, s = 1) {
+  return cyl(x, y, 0.8 * s, 0, 4 * s, "trunk", { steps: 8 }) + dome(x, y, 4.2 * s, 3 * s, "roofGreen", { squash: 3.2, bands: 0 });
+}
+export function streetLight(x, y, dir = [1, 0]) {
+  return `<path class="ln pole" d="${pathOf([[x, y, 1.7], [x, y, 14], [x + dir[0] * 3, y + dir[1] * 3, 14.8]])}"/>` + sphere([x + dir[0] * 3, y + dir[1] * 3, 14.4], 0.9, "lamp");
+}
+// Cerca de alambrado ao longo de uma poligonal.
+export function fence(pts, h = 4) {
+  let s = `<path class="ln fence-top" d="${pathOf(pts.map(([x, y]) => [x, y, h]))}"/>`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [a, b] = [pts[i], pts[i + 1]];
+    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 12));
+    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; s += `<path class="ln fence-post" d="${pathOf([[x, y, 1.7], [x, y, h]])}"/>`; }
+  }
+  return s;
+}
+// Rack de tubulação elevado com suportes em pórtico.
+export function pipeRack(pts, z = 10, stream = "biogas") {
+  let s = "";
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [a, b] = [pts[i], pts[i + 1]];
+    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 16));
+    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; s += `<path class="ln rack" d="${pathOf([[x, y, 1.7], [x, y, z]])}"/>`; }
+  }
+  return s;
+}
+// Silo com teto cônico (ração, grãos).
+export function silo(x, y, r, h, mat = "steel") {
+  return cyl(x, y, r, 0, h, mat, { steps: 24 }) + band(x, y, r, h * 0.33) + band(x, y, r, h * 0.66) + cone(x, y, r, h, r * 0.8, mat);
+}
+// Torre de transmissão em treliça.
+export function pylon(x, y, top = 54) {
+  let s = "";
+  const legs = [[-4, -4], [4, -4], [4, 4], [-4, 4]];
+  for (const [a, b] of legs) s += `<path class="ln tower" d="${pathOf([[x + a, y + b, 0], [x + a * 0.25, y + b * 0.25, top]])}"/>`;
+  for (let z = 8; z < top - 4; z += 10) {
+    const f = 1 - (z / top) * 0.75, g = 1 - ((z + 10) / top) * 0.75;
+    s += `<path class="ln tower" d="${pathOf([[x - 4 * f, y - 4 * f, z], [x + 4 * g, y + 4 * g, z + 10]])}"/><path class="ln tower" d="${pathOf([[x + 4 * f, y - 4 * f, z], [x - 4 * g, y + 4 * g, z + 10]])}"/>`;
+  }
+  s += `<path class="ln tower" d="${pathOf([[x - 10, y + 10, top - 6], [x + 10, y - 10, top - 6]])}"/><path class="ln tower" d="${pathOf([[x - 7, y + 7, top - 14], [x + 7, y - 7, top - 14]])}"/>`;
+  for (const k of [-10, 10]) s += `<path class="ln insul" d="${pathOf([[x + k, y - k, top - 6], [x + k, y - k, top - 8.5]])}"/>`;
+  return s;
+}
+// Painel de texto pintado no chão de uma zona (nome do lugar).
+export const zoneLabel = (text, x, y, size = 9) => groundText(text, x, y, size, "gt", "x", 1.75);
+
+// Gradientes radiais para cúpulas, esferas e cones.
+export function gradients() {
+  const mats = ["wall", "steel", "lima", "roofGreen", "leaf", "leafDark", "green", "grassDark", "straw", "bagasse", "digestate", "amber", "lamp", "concrete", "soil"];
+  let g = "";
+  for (const m of mats) {
+    const c = MATERIALS[m];
+    g += `<radialGradient id="g-${m}" cx="38%" cy="28%" r="78%"><stop offset="0" stop-color="${mix(c, "#ffffff", 0.55)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${mix(c, "#0b1d25", 0.3)}"/></radialGradient>`;
+  }
+  return g;
+}

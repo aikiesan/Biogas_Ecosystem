@@ -1,0 +1,22 @@
+// Referências citadas nas paradas (id -> rótulo e link).
+export const FONTES = {
+  cp2bEvidencia: { t: "CP2b · método do potencial paulista (N4, v5.1)", u: "https://github.com/aikiesan/cp2b-evidencia" },
+  pilar: { t: "PILAR-2b · banco canônico de parâmetros (CP2b)", u: "https://cp2b.unicamp.br/pilar2b/pt-BR" },
+  simulador: { t: "CP2b · Simulador de biodigestor CSTR", u: "https://aikiesan.github.io/simulador_CSTR/" },
+  mmeRenovabio: { t: "MME · RenovaBio: CBIO, metas e certificação", u: "https://www.gov.br/mme/pt-br/assuntos/secretarias/petroleo-gas-natural-e-biocombustiveis/renovabio-1" },
+  mmeBalanco: { t: "MME · Balanço RenovaBio (metas e preço médio)", u: "https://www.gov.br/mme/pt-br/assuntos/secretarias/petroleo-gas-natural-e-biocombustiveis/renovabio-1/balanco-renovabio" },
+  cnpe14: { t: "Resolução CNPE nº 14/2024 · metas de CBIO 2025–2034", u: "https://www.gov.br/mme/pt-br/assuntos/conselhos-e-comites/cnpe/resolucoes-do-cnpe/2024/PublicaoResoluo14CNPEMetasCompulsrias.pdf" },
+  anpRenovabio2026: { t: "ANP · RenovaBio 2026 (preços médios do CBIO)", u: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/apresentacoes-palestras/2026/arquivos/apresentacao-anp-renovabio-03032026.pdf" },
+  b3: { t: "B3 · Crédito de Descarbonização (CBIO)", u: "https://www.b3.com.br/pt_br/b3/sustentabilidade/produtos-e-servicos-esg/credito-de-descarbonizacao-cbio/" },
+  epe: { t: "EPE · Panorama do Biometano", u: "https://www.epe.gov.br/sites-pt/publicacoes-dados-abertos/publicacoes/PublicacoesArquivos/publicacao-781/Panorama%20de%20Biometano.pdf" },
+  lei13576: { t: "Lei nº 13.576/2017 · RenovaBio", u: "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/lei/l13576.htm" },
+  lei14993: { t: "Lei nº 14.993/2024 · Combustível do Futuro", u: "https://www2.camara.leg.br/legin/fed/lei/2024/lei-14993-8-outubro-2024-796443-publicacaooriginal-173317-pl.html" },
+  dec12614: { t: "Decreto nº 12.614/2025 · Descarbonização do gás natural", u: "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12614.htm" },
+  cnpe4: { t: "Resolução CNPE nº 4/2026 · meta efetiva de 0,5%", u: "https://www.gov.br/mme/pt-br/assuntos/conselhos-e-comites/cnpe/resolucoes-do-cnpe/2026/resolucao-4-publicada.pdf" },
+  anp995: { t: "ANP · Resolução nº 995/2026 (metas individuais de CGOB)", u: "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/combustivel-do-futuro-anp-fara-consulta-e-audiencia-publicas-sobre-individualizacao-das-metas-de-cgob" },
+  anp996: { t: "ANP · Resolução nº 996/2026 e entidade registradora", u: "https://www.gov.br/anp/pt-br/assuntos/programa-incentivo-biometano/entidade-registradora-de-cgob" },
+  anpCgob: { t: "ANP · emissão e rastreabilidade do CGOB", u: "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/combustivel-do-futuro-anp-fara-consulta-e-audiencia-publicas-sobre-regulamentacao-dos-certificados-de-garantia-de-origem-do-biometano-cgob" },
+  lei15042: { t: "Lei nº 15.042/2024 · SBCE", u: "https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=2841698&filename=Tramitacao-213-PL-182-2024-%28N%C2%BA-Anterior:-PL-2148-2015" },
+  goldStandard: { t: "Gold Standard · metodologias de resíduos e biogás", u: "https://globalgoals.goldstandard.org/documents/methodology/13-waste/" },
+  verra: { t: "Verra · metodologias", u: "https://verra.org/methodologies/" },
+};
