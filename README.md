@@ -10,6 +10,10 @@ Público: público geral, empresas, indústria e decisores públicos. Idioma: po
 - **Tour guiado.** São 20 etapas em ordem. Só neste modo a câmera aproxima suavemente cada etapa.
 - **Uma etapa = uma mensagem + uma figura.** O título é a mensagem; a figura a prova; o texto de apoio tem 1 ou 2 frases. Detalhes ficam em “Saiba mais” e as referências em “Fontes”.
 - **Fluxos.** A mesma cor representa o mesmo fluxo em todo lugar (mapa, figuras e legenda). Toque na legenda para ocultar um fluxo.
+- **Passe o mouse** sobre qualquer peça: ela ganha contorno e as tubulações ligadas a ela acendem. Assim fica claro o que está conectado a quê.
+- **Siga o carbono.** Uma partícula percorre o ciclo curto do carbono: do ar à cana, de caminhão à usina, pelo biodigestor e pela purificação, pela rede até o fogão, e de volta ao ar. Cada trecho tem legenda e destaca a zona por onde passa.
+- **Contador ao vivo.** Mostra quanto metano os resíduos de SP poderiam gerar desde que a página foi aberta (mediana CP2b, ≈ 189 m³/s), comparado à capacidade de biometano instalada hoje (ANP, ≈ 4,6 m³/s).
+- **Cena viva.** A colhedora e o trator trabalham no canavial, as vacas pastam, os misturadores giram e o gasômetro "respira". Há também pontes raspadoras girando na ETE, bolhas no tanque de aeração, pássaros, nuvens, fumaça, a chama do flare e ondas de chegada na recepção e na sua casa.
 - **Link direto para uma etapa:** `…/#cstr`, `…/#cgob`, `…/#cp2b` etc.
 
 ## Rodar localmente
@@ -43,7 +47,9 @@ src/
     vehicles.mjs   caminhões, ônibus e carros
     world.mjs      compõe a cena
   ui/
-    stage.mjs      câmera, animação, destaque, pinos
+    stage.mjs      câmera, animação, destaque, pinos, hover
+    life.mjs       vida ambiente (misturadores, ETE, pássaros, ondas)
+    journey.mjs    "Siga o carbono": a jornada animada
     panel.mjs      índice e páginas das etapas
     figures.mjs    figuras do painel (geradas a partir dos dados)
     palette.mjs    codificação de cores única

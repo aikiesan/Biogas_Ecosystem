@@ -128,3 +128,11 @@
 @keyframes drift { from { translate: -40px 0; } to { translate: 60px 0; } }
 .liquid.water { animation: shimmer 5s ease-in-out infinite; }
 @keyframes shimmer { 50% { fill: #A6D3E4; } }
+
+/* ---------- vida: conexões ao passar o mouse */
+#halo-hover { opacity: .75; }
+.flow .core.hot { stroke-width: 3.6; filter: drop-shadow(0 0 2px var(--c)); }
+.particle.hot { r: 3.2; }
+[data-tag] { cursor: pointer; }
+.cow { animation: graze 10s ease-in-out infinite; }
+@keyframes graze { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(2.5px, 1px); } 60% { transform: translate(-1.5px, 1.6px); } }

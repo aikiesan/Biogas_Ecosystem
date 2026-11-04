@@ -12,9 +12,6 @@ export function buildFontes(S) {
     if (cut) S.floor(groundRect(14, y, 182, 5, "strawrow", 1.75));
     else S.add(box(14, y, 182, 5, 1.6, 7 + (i % 3), "cane", { r: 2, steps: 3 }), [105, y + 2.5, 0], "agro");
   }
-  // colhedora + trator com transbordo no talhão colhido
-  S.add(box(150, 152, 22, 12, 1.6, 9, "lima") + box(164, 154, 8, 8, 10.6, 6, "glass") + box(146, 150, 4, 16, 1.6, 4, "petrol") + cyl(156, 152, 1.2, 10, 8, "steelDark", { steps: 8 }), [161, 158, 0], "agro");
-  S.add(box(120, 170, 14, 9, 1.6, 6, "green") + box(126, 171, 6, 7, 7.6, 5, "glass") + box(98, 169, 20, 11, 3, 7, "straw"), [116, 175, 0], "agro");
   // fardos de palha empilhados
   for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) S.add(box(208 + j * 14, 130 + i * 18, 12, 14, 1.6, i === 0 ? 12 : 6, "straw") + `<path class="ln twine" d="${pathOf([[214 + j * 14, 130 + i * 18, (i === 0 ? 13.6 : 7.6)], [214 + j * 14, 144 + i * 18, (i === 0 ? 13.6 : 7.6)]])}"/>`, [214 + j * 14, 137 + i * 18, 0], "agro");
   // galpão de máquinas e sede
@@ -32,7 +29,8 @@ export function buildFontes(S) {
   const cows = [[170, 256, 0], [188, 270, 1], [208, 252, 0], [224, 282, 1], [176, 298, 0], [200, 302, 1], [226, 304, 0], [214, 266, 0]];
   for (const [x, y, c] of cows) {
     const m = c ? "cowBrown" : "cow";
-    S.add(box(x, y, 8, 3.6, 3, 3.6, m) + box(x + 8, y + 0.6, 2.6, 2.4, 5, 2.6, m) + box(x + 1, y + 0.4, 1, 1, 1.7, 1.4, "petrol") + box(x + 6, y + 2.2, 1, 1, 1.7, 1.4, "petrol"), [x + 4, y + 2, 0], "pec");
+    const dl = ((x * 7 + y * 3) % 50) / 10;
+    S.add(`<g class="cow" style="animation-delay:-${dl}s;animation-duration:${9 + (x % 5)}s">` + box(x, y, 8, 3.6, 3, 3.6, m) + `<g class="cowhead">` + box(x + 8, y + 0.6, 2.6, 2.4, 5, 2.6, m) + `</g>` + box(x + 1, y + 0.4, 1, 1, 1.7, 1.4, "petrol") + box(x + 6, y + 2.2, 1, 1, 1.7, 1.4, "petrol") + `</g>`, [x + 4, y + 2, 0], "pec");
   }
   // free-stall do gado leiteiro
   S.add(gable(166, 330, 70, 30, 8, 6, "wall", "roofGreen", "x", { overhang: 2 }), [201, 345, 0], "pec");

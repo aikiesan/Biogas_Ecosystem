@@ -74,7 +74,7 @@ export function buildWorld() {
   return {
     bounds,
     defs: gradients(),
-    layers: { sky: clouds, ground: scene.ground, pipes: flows.pipes, vehicles: vehicles.map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
+    layers: { sky: clouds, ground: scene.ground, pipes: flows.pipes, vehicles: vehicles.filter((v) => !v.top).map((v) => v.svg).join(""), vehiclesTop: vehicles.filter((v) => v.top).map((v) => v.svg).join(""), objects: scene.objects, overhead: flows.overhead },
     vehicles,
     flows: flows.ids,
   };

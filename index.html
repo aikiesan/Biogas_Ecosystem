@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="styles/scene.css">
   <link rel="stylesheet" href="styles/panel.css">
   <link rel="stylesheet" href="styles/figures.css">
+  <link rel="stylesheet" href="styles/life.css">
 </head>
 <body>
   <header class="top">
@@ -33,6 +34,15 @@
         <title id="world-title">Diorama isométrico animado: lavouras, pecuária, agroindústria e cidade enviam resíduos a uma usina de biogás; dela saem eletricidade, biometano para a rede e para um posto, CO₂ e biofertilizante. Na universidade, o CP2b conecta a pesquisa a empresas e governo.</title>
       </svg>
       <div class="loading" id="loading">Montando o ecossistema…</div>
+      <div class="hud" id="hud">
+        <div class="hud-k">Desde que você abriu esta página</div>
+        <div class="hud-row"><span class="hud-v" id="hud-pot">0</span><span class="hud-u">m³ de metano que os resíduos de SP poderiam gerar</span></div>
+        <div class="hud-bar"><i id="hud-bar-real"></i></div>
+        <div class="hud-row small"><span class="hud-v2" id="hud-real">0</span><span class="hud-u">m³ cabem na capacidade de biometano instalada hoje</span></div>
+        <button type="button" class="journey-btn" id="journey-btn">▶ Siga o carbono</button>
+      </div>
+      <div class="caption" id="caption" hidden><div class="cap-step" id="cap-step"></div><div class="cap-text" id="cap-text"></div></div>
+      <div class="tip" id="tip" hidden></div>
       <div class="legend" id="legend" aria-label="Legenda e camadas"></div>
       <button type="button" class="back-overview" id="back-overview" hidden>⤺ Visão geral</button>
     </section>

@@ -7,6 +7,9 @@
 import { STOPS, CHAPTERS } from "./content/paradas.mjs";
 import { createStage } from "./ui/stage.mjs";
 import { renderIndex, renderStop, renderLegend } from "./ui/panel.mjs";
+import { addLife } from "./ui/life.mjs";
+import { createJourney } from "./ui/journey.mjs";
+import { POTENCIAL_SP, CAPACIDADE_SP_DIA } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
 const svg = $("world"), panel = $("panel"), body = $("panel-body"), progress = $("progress");
@@ -19,6 +22,47 @@ const exploreStops = STOPS.filter((s) => !s.tourOnly);
 
 const stage = createStage(svg, { stops: STOPS, onPick: (id) => open(id) });
 $("loading").remove();
+addLife(stage);
+
+// ---------- contador ao vivo (dados CP2b e ANP)
+const POT_S = (POTENCIAL_SP.medianaBiAno * 1e9) / (365 * 86400); // m³ CH₄/s ≈ 189
+const REAL_S = (CAPACIDADE_SP_DIA * 1e6) / 86400; // m³/s ≈ 4,6
+const t0 = performance.now();
+const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+let lastHud = 0;
+stage.onFrame((t) => {
+  if (t - lastHud < 0.1) return; lastHud = t;
+  const s = (performance.now() - t0) / 1000;
+  $("hud-pot").textContent = nf.format(s * POT_S);
+  $("hud-real").textContent = nf.format(s * REAL_S);
+});
+$("hud-bar-real").style.width = `${(REAL_S / POT_S) * 100}%`;
+
+// ---------- "Siga o carbono"
+const journey = createJourney(stage, {
+  caption(text, i, n) {
+    $("caption").hidden = !text;
+    if (text) { $("cap-step").innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join(""); $("cap-text").textContent = text; $("cap-text").classList.remove("in"); void $("cap-text").offsetWidth; $("cap-text").classList.add("in"); }
+  },
+  onState(on) { $("journey-btn").textContent = on ? "■ Parar" : "▶ Siga o carbono"; document.body.classList.toggle("journey", on); },
+});
+$("journey-btn").onclick = () => (journey.running ? journey.stop() : (stage.frame(null, 700), journey.start()));
+
+// ---------- passar o mouse: rótulo da peça e conexões acesas
+const LABELS = Object.fromEntries(STOPS.filter((s) => s.tags && !s.badge).map((s) => [s.tags[0], s.kicker]));
+Object.assign(LABELS, { usina: "Usina de biogás", cidade: "Cidade", governo: "Governo e políticas públicas", industria: "Indústria", subestacao: "Subestação de energia", posto: "Posto de biometano" });
+const tip = $("tip");
+svg.addEventListener("pointermove", (e) => {
+  if (journey.running || e.pointerType === "touch") return;
+  const tag = stage.tagAt(e.target);
+  stage.hover(tag);
+  if (!tag || !LABELS[tag]) { tip.hidden = true; return; }
+  const r = $("map").getBoundingClientRect();
+  tip.hidden = false;
+  tip.innerHTML = `<b>${LABELS[tag]}</b><span>clique para saber mais</span>`;
+  tip.style.transform = `translate(${e.clientX - r.left + 14}px, ${e.clientY - r.top + 14}px)`;
+});
+svg.addEventListener("pointerleave", () => { if (!journey.running) stage.hover(null); tip.hidden = true; });
 
 // legenda / camadas
 $("legend").innerHTML = renderLegend();

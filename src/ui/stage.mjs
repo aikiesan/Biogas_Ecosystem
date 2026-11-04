@@ -59,11 +59,14 @@ export function createStage(svg, { stops, onPick }) {
     <g id="L-ground">${W.layers.ground}</g>
     <g id="L-pipes">${W.layers.pipes}<g class="particles" id="particles"></g></g>
     <g id="L-vehicles">${W.layers.vehicles}</g>
-    <g id="L-halo"><g id="halo-plots"></g><g id="halo-objs" filter="url(#halo)"></g></g>
+    <g id="L-halo"><g id="halo-plots"></g><g id="halo-objs" filter="url(#halo)"></g><g id="halo-hover" filter="url(#halo)"></g></g>
     <g id="L-objects">${W.layers.objects}</g>
+    <g id="L-vehicles-top">${W.layers.vehiclesTop}</g>
+    <g id="L-life"></g>
     <g id="L-overhead">${W.layers.overhead}<g class="particles" id="particles-air"></g></g>
     <g id="L-fx">${fx.join("")}</g>
-    <g id="L-pins">${pins}</g>`);
+    <g id="L-pins">${pins}</g>
+    <g id="L-journey"></g>`);
 
   // gasômetro "respira"
   const gh = svg.querySelector(".gasholder");
@@ -71,13 +74,14 @@ export function createStage(svg, { stops, onPick }) {
 
   // ---------- câmera
   const B = W.bounds;
-  let vb = { ...B }, tween = null, follow = false, viewPad = { top: 0, bottom: 0 };
+  let vb = { ...B }, tween = null, follow = false, viewPad = { top: 0, bottom: 0 }, pinScale = 1;
   const scaled = [...svg.querySelectorAll(".scaled")];
   const size = () => { const r = svg.getBoundingClientRect(); return { w: r.width || 1, h: r.height || 1 }; };
   function apply() {
     const { w } = size();
     svg.setAttribute("viewBox", `${vb.x.toFixed(2)} ${vb.y.toFixed(2)} ${vb.w.toFixed(2)} ${vb.h.toFixed(2)}`);
     const k = Math.min(3.5, Math.max(0.55, vb.w / w));
+    pinScale = k;
     for (const g of scaled) g.setAttribute("transform", `translate(${g.dataset.x} ${g.dataset.y}) scale(${k.toFixed(3)})`);
   }
   function fit(rect, pad = 1) {
@@ -161,7 +165,8 @@ export function createStage(svg, { stops, onPick }) {
       segs.push({ a, b, len, head, start: total }); total += len;
     }
     const variants = Object.fromEntries(["px", "nx", "py", "ny"].map((h) => [h, el.querySelector(`.veh-${h}`)]));
-    return { el, segs, total, variants, cur: null, off: i * 173, speed: v.kind === "car" ? 46 : 32 };
+    const loop = v.pts[0][0] === v.pts[v.pts.length - 1][0] && v.pts[0][1] === v.pts[v.pts.length - 1][1];
+    return { el, segs, total, variants, loop, cur: null, off: i * 173, speed: v.speed ?? (v.kind === "car" ? 46 : 32) };
   });
   function place(v, d) {
     const s = v.segs.find((sg) => d <= sg.start + sg.len) || v.segs[v.segs.length - 1];
@@ -169,8 +174,10 @@ export function createStage(svg, { stops, onPick }) {
     if (v.cur !== s.head) { if (v.cur) v.variants[v.cur].style.display = "none"; v.variants[s.head].style.display = ""; v.cur = s.head; }
     v.el.setAttribute("transform", `translate(${(s.a[0] + (s.b[0] - s.a[0]) * u).toFixed(1)} ${(s.a[1] + (s.b[1] - s.a[1]) * u).toFixed(1)})`);
   }
+  const frameFns = [];
   function tick(now) {
     if (tween) tween(now);
+    for (const fn of frameFns) fn(now / 1000);
     if (!reduceMotion && !document.hidden) {
       const t = now / 1000;
       for (const p of particles) {
@@ -179,6 +186,7 @@ export function createStage(svg, { stops, onPick }) {
         p.el.setAttribute("cx", q.x.toFixed(1)); p.el.setAttribute("cy", q.y.toFixed(1));
       }
       for (const v of vehicles) {
+        if (v.loop) { place(v, (t * v.speed + v.off) % v.total); continue; }
         const cycle = v.total + 70;
         const d = (t * v.speed + v.off) % cycle;
         place(v, Math.min(d, v.total));
@@ -193,6 +201,23 @@ export function createStage(svg, { stops, onPick }) {
   }
   requestAnimationFrame(tick);
 
+  // ---------- passar o mouse: rótulo + contorno + fluxos conectados acendem
+  const flowTags = Object.fromEntries(W.flows.map((f) => [f.id, f.tags || []]));
+  const flowGroupsByTag = (tag) => W.flows.filter((f) => (f.tags || []).includes(tag)).map((f) => document.getElementById(f.id));
+  let hoverTag = null;
+  function hover(tag) {
+    if (tag === hoverTag) return;
+    hoverTag = tag;
+    svg.querySelectorAll(".core.hot").forEach((el) => el.classList.remove("hot"));
+    particles.forEach((p) => p.el.classList.remove("hot"));
+    const els = tag ? tagged.filter((el) => el.dataset.tag === tag && !el.classList.contains("plotg")) : [];
+    document.getElementById("halo-hover").innerHTML = els.map((el) => `<use href="#${el.id}"/>`).join("");
+    if (!tag) return;
+    const hot = new Set(flowGroupsByTag(tag).filter(Boolean));
+    hot.forEach((el) => el.classList.add("hot"));
+    particles.forEach((p) => { if (hot.has(p.path)) p.el.classList.add("hot"); });
+  }
+
   // ---------- interação com pinos
   const activate = (el) => { const fn = () => onPick(el.dataset.stop); el.addEventListener("click", fn); el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }); };
   svg.querySelectorAll(".pin").forEach(activate);
@@ -205,6 +230,11 @@ export function createStage(svg, { stops, onPick }) {
   });
 
   return {
+    svg, iso,
+    onFrame(fn) { frameFns.push(fn); },
+    scale() { return pinScale; },
+    hover,
+    tagAt(target) { const g = target.closest && target.closest("[data-tag]"); return g ? g.dataset.tag : null; },
     setFollow(v) { follow = v; },
     setPadding(p) { viewPad = p; },
     frame,
