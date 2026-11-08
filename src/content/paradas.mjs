@@ -46,8 +46,8 @@ export const STOPS = [
     id: "pec", chapter: "origem", kicker: "Pecuária",
     message: "Esterco a céu aberto emite metano; no biodigestor, vira energia.",
     figure: { type: "beforeAfter",
-      before: { title: "Lagoa aberta", steps: [{ icon: "cow" }, { icon: "pond" }, { icon: "cloud", label: "CH₄ no ar", tone: "bad" }] },
-      after: { title: "Biodigestor", steps: [{ icon: "cow" }, { icon: "tank" }, { icon: "flame", label: "energia", tone: "good" }] } },
+      before: { title: "Lagoa aberta", steps: [{ icon: "cow", tag: "pec" }, { icon: "pond", tag: "pec" }, { icon: "cloud", label: "CH₄ no ar", tone: "bad" }] },
+      after: { title: "Biodigestor", steps: [{ icon: "cow", tag: "pec" }, { icon: "tank", tag: "cstr" }, { icon: "flame", label: "energia", tone: "good", tag: "chp" }] } },
     text: ["O metano aquece o planeta muitas vezes mais que o CO₂. Capturá-lo é ganho duplo: clima e energia."],
     tags: ["pec"], streams: ["substrato"], anchor: [76, 300, 20], focus: [0, 232, 250, 442],
   },
@@ -95,7 +95,7 @@ export const STOPS = [
   {
     id: "recepcao", chapter: "usina", kicker: "Recepção",
     message: "Misturar resíduos equilibra a dieta dos microrganismos.",
-    figure: { type: "merge", inputs: [{ icon: "leaf", label: "palha", note: "rica em carbono" }, { icon: "cow", label: "esterco", note: "rico em nitrogênio" }], output: { icon: "tank", label: "codigestão", note: "mais gás, processo estável" } },
+    figure: { type: "merge", inputs: [{ icon: "leaf", label: "palha", note: "rica em carbono", tag: "agro" }, { icon: "cow", label: "esterco", note: "rico em nitrogênio", tag: "pec" }], output: { icon: "tank", label: "codigestão", note: "mais gás, processo estável", tag: "cstr" } },
     text: ["Os caminhões passam pela balança, descarregam e a mistura é triturada e homogeneizada antes de entrar no biodigestor."],
     tags: ["recepcao"], streams: ["substrato"], anchor: [357, 452, 20], focus: [300, 330, 420, 500],
   },
@@ -143,14 +143,14 @@ export const STOPS = [
   {
     id: "co2", chapter: "usina", kicker: "Coproduto · CO₂",
     message: "O CO₂ separado pode ser vendido ou guardado no subsolo.",
-    figure: { type: "fork", input: { icon: "co2", label: "CO₂ biogênico" }, outs: [{ icon: "factory", label: "Uso", note: "bebidas, alimentos, estufas" }, { icon: "well", label: "Armazenamento", note: "remoção de carbono (BECCS)" }] },
+    figure: { type: "fork", input: { icon: "co2", label: "CO₂ biogênico", tag: "co2" }, outs: [{ icon: "factory", label: "Uso", note: "bebidas, alimentos, estufas", tag: "industria" }, { icon: "well", label: "Armazenamento", note: "remoção de carbono (BECCS)", tag: "co2" }] },
     text: ["Esse CO₂ veio de plantas que o retiraram do ar. Guardá-lo de forma permanente tira carbono da atmosfera."],
     tags: ["co2", "industria"], streams: ["co2"], anchor: [600, 505, 44], focus: [560, 0, 1000, 600],
   },
   {
     id: "digestato", chapter: "usina", kicker: "Coproduto · Digestato",
     message: "O digestato devolve nutrientes ao campo.",
-    figure: { type: "cycle", steps: [{ icon: "leaf", label: "Lavoura" }, { icon: "truck", label: "Resíduo" }, { icon: "tank", label: "Biodigestor" }, { icon: "sprout", label: "Biofertilizante" }], chips: ["N", "P", "K"], kpis: [{ v: `${fmt(DIGESTATO.liquidoMistura.n)}`, l: "kg de N por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.p2o5)}`, l: "kg de P₂O₅ por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.k2o)}`, l: "kg de K₂O por m³" }], kpiNote: "Digestato líquido de usina com mistura agropecuária (Embrapa). Ordem de grandeza: cada lote precisa de análise." },
+    figure: { type: "cycle", steps: [{ icon: "leaf", label: "Lavoura", tag: "agro" }, { icon: "truck", label: "Resíduo", tag: "recepcao" }, { icon: "tank", label: "Biodigestor", tag: "cstr" }, { icon: "sprout", label: "Biofertilizante", tag: "digestato" }], chips: ["N", "P", "K"], kpis: [{ v: `${fmt(DIGESTATO.liquidoMistura.n)}`, l: "kg de N por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.p2o5)}`, l: "kg de P₂O₅ por m³" }, { v: `${fmt(DIGESTATO.liquidoMistura.k2o)}`, l: "kg de K₂O por m³" }], kpiNote: "Digestato líquido de usina com mistura agropecuária (Embrapa). Ordem de grandeza: cada lote precisa de análise." },
     more: [`Dejetos suínos (líquido): N ${fmt(DIGESTATO.liquidoSuino.n)} · P₂O₅ ${fmt(DIGESTATO.liquidoSuino.p2o5)} · K₂O ${fmt(DIGESTATO.liquidoSuino.k2o)} kg/m³. Composto sólido: N ${DIGESTATO.compostoSolido.n} · P₂O₅ ${DIGESTATO.compostoSolido.p2o5} · K₂O ${DIGESTATO.compostoSolido.k2o} kg/t.`, "A separação sólido-líquido concentra fósforo e matéria orgânica no sólido; o líquido guarda a maior parte do nitrogênio amoniacal e do potássio."],
     sources: ["embrapaDigestato", "abiogasDigestato"],
     text: ["Separado em fração sólida e líquida, o digestato substitui parte do adubo mineral e fecha o ciclo."],
@@ -235,8 +235,8 @@ export const STOPS = [
     id: "carbono", chapter: "valor", kicker: "Créditos de carbono", badge: { tag: "CO₂e", at: [440, 290, 66] },
     message: "Metano evitado e CO₂ removido podem virar créditos, com verificação.",
     figure: { type: "twoCols", cols: [
-      { title: "Redução", icon: "cloud", note: "metano de aterro, dejetos e efluentes capturado e usado", tone: "co2" },
-      { title: "Remoção", icon: "well", note: "CO₂ biogênico capturado e armazenado de forma permanente (BECCS)", tone: "co2" }],
+      { title: "Redução", icon: "cloud", note: "metano de aterro, dejetos e efluentes capturado e usado", tone: "co2", tag: "pec" },
+      { title: "Remoção", icon: "well", note: "CO₂ biogênico capturado e armazenado de forma permanente (BECCS)", tone: "co2", tag: "co2" }],
       steps: ["Linha de base", "Monitoramento", "Verificação independente", "Crédito"], markets: ["Mercado voluntário · Gold Standard, Verra", "SBCE · Lei nº 15.042/2024"] },
     text: ["Nem todo projeto é elegível automaticamente: é preciso uma metodologia aceita e verificação."],
     more: [
@@ -251,7 +251,7 @@ export const STOPS = [
   {
     id: "cp2b", chapter: "ciencia", kicker: "CP2b · Centro de pesquisa",
     message: "O CP2b conecta ciência a quem decide.",
-    figure: { type: "hub", center: "CP2b", nodes: [{ icon: "factory", label: "Empresas e indústria" }, { icon: "gov", label: "Governo e políticas públicas" }, { icon: "tank", label: "Operação de usinas" }], outputs: ["Dados e mapas (PILAR-2b)", "Modelos e simuladores", "Formação de pessoas"] },
+    figure: { type: "hub", center: "CP2b", nodes: [{ icon: "factory", label: "Empresas e indústria", tag: "industria" }, { icon: "gov", label: "Governo e políticas públicas", tag: "governo" }, { icon: "tank", label: "Operação de usinas", tag: "cstr" }], outputs: ["Dados e mapas (PILAR-2b)", "Modelos e simuladores", "Formação de pessoas"] },
     text: ["Na universidade, o CP2b estuda biogás e bioprodutos e transforma evidência em apoio a investimentos e políticas."],
     tags: ["cp2b", "governo", "industria"], streams: ["conhecimento"], anchor: [172, 727, 44], focus: [-40, 380, 1000, 930],
     link: { href: FONTES.pilar.u, label: "Conhecer a plataforma PILAR-2b" },

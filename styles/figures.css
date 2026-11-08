@@ -55,8 +55,10 @@
 @media (max-width: 420px) { .kpis { grid-template-columns: 1fr; } }
 
 /* figuras que conversam com o mapa */
-.fig [data-tag] { cursor: pointer; }
+.fig [data-tag], .col[data-tag] { cursor: pointer; transition: transform .15s, background .15s, border-color .15s; }
 .fig .row .hit { fill: transparent; }
 .fig .row:hover .hit { fill: #F4F7F8; }
-.fig .node[data-tag]:hover circle { stroke: #00573A; stroke-width: 2; }
+.fig .node[data-tag]:hover circle { stroke: #00573A; stroke-width: 2.2; fill-opacity: .24; }
+.fig rect[data-tag]:hover { filter: brightness(1.06); stroke: #00573A; stroke-width: 1.2; }
+.col[data-tag]:hover { background: #EAF2EE; border-top-color: var(--verde-escuro); }
 .fignote { font-size: 10.5px; font-style: italic; color: var(--ink-muted); margin-top: 6px; }

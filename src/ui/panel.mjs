@@ -12,7 +12,10 @@ export function renderIndex(stops, chapters) {
     <p class="eyebrow">CP2b · Centro Paulista de Estudos em Biogás e Bioprodutos</p>
     <h2>Do resíduo à energia, num só mapa.</h2>
     <p class="lede">Toque num número no mapa ou escolha uma etapa abaixo. Cada etapa traz uma mensagem e uma figura.</p>
-    <button type="button" class="cta-tour" data-tour>▶ Começar o tour guiado</button>
+    <div class="home-ctas">
+      <button type="button" class="cta-tour" data-tour>▶ Tour guiado</button>
+      <button type="button" class="cta-journey" data-journey>↻ Siga o carbono</button>
+    </div>
     ${groups}
   </div>`;
 }
