@@ -81,11 +81,14 @@ export function createStage(svg, { stops, onPick }) {
   let userZoomed = false, settleTimer = null;
   const viewChangeFns = [];
   const scaled = [...root.querySelectorAll(".scaled")];
-  const size = () => { const r = root.getBoundingClientRect(); return { w: r.width || 1, h: r.height || 1 }; };
-  const dpr = () => Math.min(2, window.devicePixelRatio || 1);
+  let viewW = 1, viewH = 1, viewDpr = 1;
+  const readSize = () => { const r = root.getBoundingClientRect(); viewW = r.width || 1; viewH = r.height || 1; return { w: viewW, h: viewH }; };
+  const size = () => ({ w: viewW, h: viewH });
+  const dpr = () => viewDpr;
   function sizeCanvases() {
-    const { w, h } = size(), d = dpr();
-    for (const c of canvases) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+    const { w, h } = readSize();
+    viewDpr = Math.min(w < 820 ? 1.5 : 1.75, window.devicePixelRatio || 1);
+    for (const c of canvases) { c.width = Math.round(w * viewDpr); c.height = Math.round(h * viewDpr); }
   }
   const emitView = () => { for (const fn of viewChangeFns) fn({ userZoomed, vb }); };
   function apply() {
@@ -272,15 +275,16 @@ export function createStage(svg, { stops, onPick }) {
   }
   let hotIds = null;
   const ctxs = canvases.map((c) => c.getContext("2d"));
+  const groups = new Map();
   function drawParticles(dt) {
-    const { w } = size(), d = dpr(), k = (w / raster.w) * d;
+    const k = (viewW / raster.w) * viewDpr;
     for (const ctx of ctxs) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.setTransform(k, 0, 0, k, -raster.x * k, -raster.y * k); }
-    // agrupa por cor para poucas chamadas de desenho
-    const groups = new Map();
+    // limpa os buffers pré-alocados (zero alocações de memória por quadro a 120 fps)
+    for (const g of groups.values()) g.pts.length = 0;
     for (const p of particles) {
       if (hidden.has(p.stream)) continue;
       p.d = (p.d + dt * p.speed * (speedMul[p.stream] ?? 1)) % p.L;
-      const i = Math.min(p.n - 1, Math.round(p.d / STEP));
+      const i = Math.min(p.n - 1, (p.d / STEP + 0.5) | 0);
       const big = (emStreams && emStreams.has(p.stream)) || (hotIds && hotIds.has(p.id));
       const key = `${p.air ? 1 : 0}|${p.color}|${big ? 1 : 0}`;
       let g = groups.get(key);
@@ -288,6 +292,7 @@ export function createStage(svg, { stops, onPick }) {
       g.pts.push(p.tab[i * 2], p.tab[i * 2 + 1]);
     }
     for (const g of groups.values()) {
+      if (!g.pts.length) continue;
       const { ctx } = g;
       ctx.beginPath();
       for (let j = 0; j < g.pts.length; j += 2) { ctx.moveTo(g.pts[j] + g.r, g.pts[j + 1]); ctx.arc(g.pts[j], g.pts[j + 1], g.r, 0, Math.PI * 2); }
@@ -300,20 +305,22 @@ export function createStage(svg, { stops, onPick }) {
     if (night > 0.05) {
       nctx.globalAlpha = 0.55 * night;
       for (const g of groups.values()) {
-        if (!g.stroke) continue;
+        if (!g.stroke || !g.pts.length) continue;
         const spr = sprite(g.color), R = g.r * 2.6;
         for (let j = 0; j < g.pts.length; j += 2) nctx.drawImage(spr, g.pts[j] - R, g.pts[j + 1] - R, R * 2, R * 2);
       }
       const head = sprite("#FFE7A0");
+      const entressafra = document.body.classList.contains("entressafra");
       for (const v of vehicles) {
-        if (v.hx === undefined || (v.op ?? 1) < 0.05 || (v.safra && document.body.classList.contains("entressafra"))) continue;
+        if (v.hx === undefined || (v.op ?? 1) < 0.05 || (v.safra && entressafra)) continue;
         nctx.globalAlpha = 0.85 * night * (v.op ?? 1);
         const fx = v.hx + v.dx * 9, fy = v.hy + v.dy * 9 - 2.5;
         nctx.drawImage(head, fx + v.dx * 5 - 9, fy + v.dy * 5 - 9, 18, 18);
       }
       nctx.globalAlpha = 1;
     }
-    for (const fn of drawers) fn(ctxs[0], ctxs[1], dt, performance.now() / 1000);
+    const nowS = performance.now() / 1000;
+    for (const fn of drawers) fn(ctxs[0], ctxs[1], dt, nowS);
   }
   const vehicles = W.vehicles.map((v, i) => {
     const el = document.getElementById(v.id);
@@ -323,18 +330,20 @@ export function createStage(svg, { stops, onPick }) {
       const dx = v.pts[k + 1][0] - v.pts[k][0], dy = v.pts[k + 1][1] - v.pts[k][1];
       const head = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "px" : "nx") : dy > 0 ? "py" : "ny";
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      segs.push({ a, b, len, head, start: total }); total += len;
+      const inv = 1 / (len || 1);
+      segs.push({ a, b, len, inv, ux: (b[0] - a[0]) * inv, uy: (b[1] - a[1]) * inv, head, start: total }); total += len;
     }
     const variants = Object.fromEntries(["px", "nx", "py", "ny"].map((h) => [h, el.querySelector(`.veh-${h}`)]));
     const loop = v.pts[0][0] === v.pts[v.pts.length - 1][0] && v.pts[0][1] === v.pts[v.pts.length - 1][1];
     return { el, segs, total, variants, loop, safra: v.season === "safra", cur: null, off: i * 173, speed: v.speed ?? (v.kind === "car" ? 46 : 32) };
   });
   function place(v, d) {
-    const s = v.segs.find((sg) => d <= sg.start + sg.len) || v.segs[v.segs.length - 1];
-    const u = s.len ? (d - s.start) / s.len : 0;
+    let s = v.segs[v.segs.length - 1];
+    for (let i = 0; i < v.segs.length; i++) if (d <= v.segs[i].start + v.segs[i].len) { s = v.segs[i]; break; }
+    const u = (d - s.start) * s.inv;
     if (v.cur !== s.head) { if (v.cur) v.variants[v.cur].style.display = "none"; v.variants[s.head].style.display = ""; v.cur = s.head; }
     v.hx = s.a[0] + (s.b[0] - s.a[0]) * u; v.hy = s.a[1] + (s.b[1] - s.a[1]) * u;
-    v.dx = (s.b[0] - s.a[0]) / (s.len || 1); v.dy = (s.b[1] - s.a[1]) / (s.len || 1);
+    v.dx = s.ux; v.dy = s.uy;
     const tr = `translate(${v.hx.toFixed(1)} ${v.hy.toFixed(1)})`;
     if (tr !== v.tr) { v.el.setAttribute("transform", tr); v.tr = tr; }
   }
@@ -367,13 +376,19 @@ export function createStage(svg, { stops, onPick }) {
         const t = now / 1000;
         dashTick(t);
         drawParticles(dt);
+        const entressafra = document.body.classList.contains("entressafra");
         for (const v of vehicles) {
+          if (v.safra && entressafra) continue;
           if (v.loop) { place(v, (t * v.speed + v.off) % v.total); continue; }
           const cycle = v.total + 70;
           const d = (t * v.speed + v.off) % cycle;
-          place(v, Math.min(d, v.total));
-          const op = d >= v.total ? 0 : Math.max(0, Math.min(1, d / 12, (v.total - d) / 12));
-          if (Math.abs(op - (v.op ?? -1)) > 0.04 || op === 0 || op === 1) { if (op !== v.op) v.el.style.opacity = op.toFixed(2); v.op = op; }
+          if (d >= v.total) {
+            if (v.op !== 0) { v.el.style.opacity = "0"; v.op = 0; }
+            continue;
+          }
+          place(v, d);
+          const op = Math.max(0, Math.min(1, d / 12, (v.total - d) / 12));
+          if (Math.abs(op - (v.op ?? -1)) > 0.04 || op === 1) { if (op !== v.op) v.el.style.opacity = op.toFixed(2); v.op = op; }
         }
       }
     }

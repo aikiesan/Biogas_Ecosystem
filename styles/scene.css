@@ -2,7 +2,7 @@
 .sd .f { fill: var(--s1); }
 .sd .s0 { fill: var(--s0); } .sd .s1 { fill: var(--s1); } .sd .s2 { fill: var(--s2); } .sd .s3 { fill: var(--s3); }
 .sd .t { fill: var(--t); }
-.ln { fill: none; stroke: var(--e, #23414e); stroke-width: .7; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.ln { fill: none; stroke: var(--e, #23414e); stroke-width: .7; stroke-linejoin: round; stroke-linecap: round; }
 .ln.cr { stroke: var(--t); opacity: .9; }
 .ln.band { opacity: .4; }
 .ln.red-band { stroke: #C9483F; stroke-width: 2; opacity: .9; }
@@ -18,13 +18,13 @@
 .basebox .ln.cr { stroke: #4f7b8c; }
 .lawn .t { fill: #D3E6BE; }
 .plot .ln.ol { stroke-opacity: .3; }
-.rf { stroke: var(--e); stroke-width: .7; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.rf { stroke: var(--e); stroke-width: .7; stroke-linejoin: round; }
 .rf.rt { fill: var(--s1); } .rf.rl { fill: var(--t); }
-.gb { fill: var(--s1); stroke: var(--e); stroke-width: .7; vector-effect: non-scaling-stroke; }
-.glz { fill: #a9cbd8; stroke: #6d8f9c; stroke-width: .5; vector-effect: non-scaling-stroke; }
+.gb { fill: var(--s1); stroke: var(--e); stroke-width: .7; }
+.glz { fill: #a9cbd8; stroke: #6d8f9c; stroke-width: .5; }
 .dm { stroke: none; }
-.sph { stroke: #2e5a3a; stroke-width: .6; vector-effect: non-scaling-stroke; }
-.win { fill: #9cc6d6; stroke: #6e93a1; stroke-width: .35; vector-effect: non-scaling-stroke; }
+.sph { stroke: #2e5a3a; stroke-width: .6; }
+.win { fill: #9cc6d6; stroke: #6e93a1; stroke-width: .35; }
 .win.lit { fill: #F6E7A8; }
 .louvre { fill: rgba(15, 37, 48, .22); }
 .storefront { fill: #8fb4c2; opacity: .75; }
@@ -35,14 +35,14 @@
 .flag { fill: #00573A; stroke: #1E3E4C; stroke-width: .4; }
 .yard { fill: #CFE3B6; }
 .road { fill: #BAC6CB; }
-.lane { fill: none; stroke: #fff; stroke-width: 1; stroke-dasharray: 4 5; vector-effect: non-scaling-stroke; opacity: .9; }
+.lane { fill: none; stroke: #fff; stroke-width: 1; stroke-dasharray: 4 5; opacity: .9; }
 .zebra { fill: #fff; opacity: .85; }
 .weigh { fill: #9aaab2; stroke: #6f8790; stroke-width: .5; }
 .field { fill: #BE9A6C; }
 .strawrow { fill: #E2C268; }
 .pasture { fill: #BADB93; }
 .court { fill: #7DB79A; }
-.courtline { fill: none; stroke: #fff; stroke-width: .8; vector-effect: non-scaling-stroke; }
+.courtline { fill: none; stroke: #fff; stroke-width: .8; }
 .plaza { fill: #E6E0D2; }
 .park { fill: #BCDDA0; }
 .walk { fill: #E6E0D2; }
@@ -120,8 +120,8 @@
 .strata.topsoil { fill: #6B4F3A; } .strata.topsoil.s { fill: #7E5E45; }
 .pebble { fill: #C9B79C; opacity: .5; }
 .lot { fill: #C7D0D4; }
-.stall { fill: none; stroke: #fff; stroke-width: .8; vector-effect: non-scaling-stroke; }
-.solarp { fill: #2F4F6B; stroke: #9fb6c4; stroke-width: .4; vector-effect: non-scaling-stroke; }
+.stall { fill: none; stroke: #fff; stroke-width: .8; }
+.solarp { fill: #2F4F6B; stroke: #9fb6c4; stroke-width: .4; }
 /* camadas HTML em coordenadas de mundo: animadas só com transform (GPU) */
 .worldhtml { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; pointer-events: none; }
 .hcloud { position: absolute; width: 120px; height: 40px; will-change: transform; animation: drift 70s ease-in-out infinite alternate; }
@@ -149,13 +149,13 @@
 @keyframes shimmer2 { 50% { fill: #84C2DC; } }
 .bank, .bankfill { fill: #E8DDBF; }
 .pond { fill: #7DBAD6; }
-.current { fill: none; stroke: #fff; stroke-width: .6; stroke-dasharray: 6 26; opacity: .3; vector-effect: non-scaling-stroke; }
+.current { fill: none; stroke: #fff; stroke-width: .6; stroke-dasharray: 6 26; opacity: .3; }
 .current.c1 { stroke-dasharray: 4 30; } .current.c2 { stroke-dasharray: 10 40; }
 @keyframes current { to { stroke-dashoffset: -64; } }
 .creek { fill: none; stroke: #6FB3D2; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .spring { fill: #84C2DC; stroke: #fff; stroke-width: .6; }
 .euca-trunk { stroke: #CFC2AE; stroke-width: 1; }
-.euca-crown { fill: #8DB86B; stroke: #5E8C46; stroke-width: .5; vector-effect: non-scaling-stroke; }
+.euca-crown { fill: #8DB86B; stroke: #5E8C46; stroke-width: .5; }
 .euca-crown.b { fill: #7CAA5C; }
 .gasband { fill: #E69F00; }
 .boat .hull { fill: #fff; stroke: #1E3E4C; stroke-width: .5; }

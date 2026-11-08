@@ -83,16 +83,25 @@ function buildNetwork(houses) {
   return { doors, route };
 }
 
-// polilinha → tabela para percorrer por distância
-function track(pts) {
+// polilinha → tabela pré-projetada em coordenadas de tela para percorrer a 120 fps
+function track(pts, iso) {
   const segs = []; let total = 0;
-  for (let i = 0; i < pts.length - 1; i++) { const len = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); if (len > 0.01) { segs.push({ a: pts[i], b: pts[i + 1], len, start: total }); total += len; } }
+  for (let i = 0; i < pts.length - 1; i++) {
+    const len = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+    if (len > 0.01) {
+      const sa = iso([pts[i][0], pts[i][1], 1.8]), sb = iso([pts[i + 1][0], pts[i + 1][1], 1.8]);
+      let dx = sb[0] - sa[0], dy = sb[1] - sa[1]; const sL = Math.hypot(dx, dy) || 1; dx /= sL; dy /= sL;
+      segs.push({ sa, sb, dx, dy, len, inv: 1 / len, start: total });
+      total += len;
+    }
+  }
   return { segs, total };
 }
 function at(tr, d) {
-  const s = tr.segs.find((g) => d <= g.start + g.len) || tr.segs[tr.segs.length - 1];
-  const u = s.len ? Math.max(0, Math.min(1, (d - s.start) / s.len)) : 1;
-  return [s.a[0] + (s.b[0] - s.a[0]) * u, s.a[1] + (s.b[1] - s.a[1]) * u, s];
+  let s = tr.segs[tr.segs.length - 1];
+  for (let i = 0; i < tr.segs.length; i++) if (d <= tr.segs[i].start + tr.segs[i].len) { s = tr.segs[i]; break; }
+  const u = Math.max(0, Math.min(1, (d - s.start) * s.inv));
+  return [s.sa[0] + (s.sb[0] - s.sa[0]) * u, s.sa[1] + (s.sb[1] - s.sa[1]) * u, s];
 }
 
 export function addPeople(stage, { houses }) {
@@ -103,7 +112,7 @@ export function addPeople(stage, { houses }) {
   const works = net.doors.filter((d) => d.kind !== "casa");
   const trip = (A, B) => {
     const mid = net.route(A.path[A.path.length - 1], B.path[B.path.length - 1]);
-    return mid ? track([...A.path, ...mid.slice(1, -1), ...B.path.slice().reverse()]) : null;
+    return mid ? track([...A.path, ...mid.slice(1, -1), ...B.path.slice().reverse()], iso) : null;
   };
 
   // ---------- moradores que vão e voltam (horário próprio de cada um)
@@ -125,7 +134,7 @@ export function addPeople(stage, { houses }) {
     { pts: [[740, 600], [880, 600], [880, 604], [740, 604], [740, 600]], n: 3, speed: 6, from: 8, to: 17 }, // praça do governo
   ];
   const walkers = [];
-  loops.forEach((l, li) => { const tr = track(l.pts); for (let k = 0; k < l.n; k++) walkers.push({ tr, d: (k / l.n) * tr.total, speed: l.speed * (0.8 + rnd(li * 10 + k) * 0.4), from: l.from, to: l.to, shirt: SHIRTS[(li + k * 3) % SHIRTS.length], skin: SKIN[(li * 3 + k) % SKIN.length] }); });
+  loops.forEach((l, li) => { const tr = track(l.pts, iso); for (let k = 0; k < l.n; k++) walkers.push({ tr, d: (k / l.n) * tr.total, speed: l.speed * (0.8 + rnd(li * 10 + k) * 0.4), from: l.from, to: l.to, shirt: SHIRTS[(li + k * 3) % SHIRTS.length], skin: SKIN[(li * 3 + k) % SKIN.length] }); });
   // ---------- ciclistas nas ruas
   const cycleLoops = [
     [[914, 343], [1094, 343], [1094, 637], [914, 637], [914, 343]],
@@ -135,25 +144,22 @@ export function addPeople(stage, { houses }) {
     [[914, 651], [914, 930], [906, 930], [906, 651], [914, 651]],
   ];
   const cyclists = [];
-  cycleLoops.forEach((pts, ci) => { const tr = track(pts); const n = ci === 1 ? 3 : 2; for (let k = 0; k < n; k++) cyclists.push({ tr, d: (k / n) * tr.total + ci * 37, speed: 26 + rnd(ci * 7 + k) * 10, shirt: SHIRTS[(ci + k) % SHIRTS.length], skin: SKIN[(ci + k * 2) % SKIN.length] }); });
+  cycleLoops.forEach((pts, ci) => { const tr = track(pts, iso); const n = ci === 1 ? 3 : 2; for (let k = 0; k < n; k++) cyclists.push({ tr, d: (k / n) * tr.total + ci * 37, speed: 26 + rnd(ci * 7 + k) * 10, shirt: SHIRTS[(ci + k) % SHIRTS.length], skin: SKIN[(ci + k * 2) % SKIN.length] }); });
 
   let hour = 10;
   stage.onClock?.((h) => { hour = h; });
 
-  // ---------- desenho
-  const person = (ctx, x, y, shirt, skin, t, alpha = 1, kid = false) => {
-    const [sx, sy] = iso([x, y, 1.8]);
-    const s = kid ? 0.75 : 1, sw = Math.sin(t * 9 + x) * 0.6;
+  // ---------- desenho (já recebe sx, sy pré-projetados)
+  const person = (ctx, sx, sy, shirt, skin, t, alpha = 1, kid = false) => {
+    const s = kid ? 0.75 : 1, sw = Math.sin(t * 9 + sx) * 0.6;
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = "#2b3a40"; ctx.lineWidth = 0.7;
     ctx.beginPath(); ctx.moveTo(sx - 0.4 + sw * 0.5, sy); ctx.lineTo(sx, sy - 2.2 * s); ctx.lineTo(sx + 0.4 - sw * 0.5, sy); ctx.stroke();
     ctx.fillStyle = shirt; ctx.fillRect(sx - 0.85 * s, sy - 4.6 * s, 1.7 * s, 2.6 * s);
     ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(sx, sy - 5.5 * s, 0.85 * s, 0, Math.PI * 2); ctx.fill();
   };
-  const cyclist = (ctx, x, y, seg, shirt, skin) => {
-    const [sx, sy] = iso([x, y, 1.8]);
-    const a = iso([seg.a[0], seg.a[1], 1.8]), b = iso([seg.b[0], seg.b[1], 1.8]);
-    let dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+  const cyclist = (ctx, sx, sy, seg, shirt, skin) => {
+    const { dx, dy } = seg;
     ctx.globalAlpha = 1; ctx.strokeStyle = "#2b3a40"; ctx.lineWidth = 0.6;
     ctx.beginPath(); ctx.arc(sx - dx * 1.7, sy - dy * 1.7 - 1.1, 1.1, 0, Math.PI * 2); ctx.moveTo(sx + dx * 1.7 + 1.1, sy + dy * 1.7 - 1.1); ctx.arc(sx + dx * 1.7, sy + dy * 1.7 - 1.1, 1.1, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(sx - dx * 1.7, sy - dy * 1.7 - 1.1); ctx.lineTo(sx, sy - 2.4); ctx.lineTo(sx + dx * 1.7, sy + dy * 1.7 - 1.1); ctx.stroke();
@@ -174,21 +180,21 @@ export function addPeople(stage, { houses }) {
       if (!c.leg) continue;
       c.d += dt * c.speed;
       if (c.d >= c.leg.total) { c.leg = null; continue; } // entrou no prédio
-      const [x, y] = at(c.leg, c.d);
-      const fade = Math.min(1, c.d / 4, (c.leg.total - c.d) / 4);
-      person(ctx, x, y, c.shirt, c.skin, t, fade, c.kid);
+      const [sx, sy] = at(c.leg, c.d);
+      const fade = Math.min(1, c.d * 0.25, (c.leg.total - c.d) * 0.25);
+      person(ctx, sx, sy, c.shirt, c.skin, t, fade, c.kid);
     }
     for (const w of walkers) {
       if (!between(hour, w.from, w.to)) continue;
       w.d = (w.d + dt * w.speed) % w.tr.total;
-      const [x, y] = at(w.tr, w.d);
+      const [sx, sy] = at(w.tr, w.d);
       const edge = Math.min(1, (hour - w.from) * 2, (w.to - hour) * 2);
-      person(ctx, x, y, w.shirt, w.skin, t, edge);
+      person(ctx, sx, sy, w.shirt, w.skin, t, edge);
     }
     if (between(hour, 5.8, 21)) for (const c of cyclists) {
       c.d = (c.d + dt * c.speed) % c.tr.total;
-      const [x, y, seg] = at(c.tr, c.d);
-      cyclist(ctx, x, y, seg, c.shirt, c.skin);
+      const [sx, sy, seg] = at(c.tr, c.d);
+      cyclist(ctx, sx, sy, seg, c.shirt, c.skin);
     }
     ctx.globalAlpha = 1;
   });

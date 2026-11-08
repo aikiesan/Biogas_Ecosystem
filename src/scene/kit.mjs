@@ -46,13 +46,13 @@ export function createScene() {
 // ------------------------------------------------------------ sólidos
 export function solidSvg(paths, mat, cls = "") {
   let s = `<g class="sd m-${mat} ${cls}"><path class="f" d="${paths.fill}"/>`;
-  paths.shades.forEach((d, i) => { if (d) s += `<path class="s${i}" d="${d}"/>`; });
+  paths.shades.forEach((d, i) => { if (d && i !== 1) s += `<path class="s${i}" d="${d}"/>`; });
   s += `<path class="t" d="${paths.top}"/>`;
   if (paths.crease) s += `<path class="ln cr" d="${paths.crease}"/>`;
   s += `<path class="ln ol" d="${paths.outline}"/></g>`;
   return s;
 }
-export const slab = (plan, z, h, mat, cls, steps = 8) => solidSvg(K.slabOf(plan, z, h, P, steps), mat, cls);
+export const slab = (plan, z, h, mat, cls, steps = 6) => solidSvg(K.slabOf(plan, z, h, P, steps), mat, cls);
 // ------------------------------------------------------------ sombras projetadas
 // Luz vem da esquerda (lado -x/+y); a sombra cai para a direita (+x/-y).
 // Cada sólido apoiado no chão registra sua sombra; world.mjs desenha todas
@@ -70,11 +70,12 @@ export function takeShadows() { const d = SHADOWS.join(""); SHADOWS.length = 0; 
 export const NIGHT = { windows: [], lamps: [], houses: [] };
 export const box = (x, y, w, d, z, h, mat, o = {}) => {
   if (z <= 2 && !o.noShadow) castShadow([[x, y], [x + w, y], [x + w, y + d], [x, y + d]], h + z);
-  return solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0.6 }, z, h, P, o.steps ?? 2), mat, o.cls);
+  return solidSvg(K.slabOf({ x, y, w, d, r: o.r ?? 0 }, z, h, P, o.steps ?? 2), mat, o.cls);
 };
 export const cyl = (cx, cy, r, z, h, mat, o = {}) => {
-  if (z <= 2 && !o.noShadow && r > 1.5) castShadow(K.circleRing(cx, cy, r, 16), h + z + (o.extra ?? 0));
-  return solidSvg(K.cylinder(cx, cy, r, z, h, P, o.steps ?? 36), mat, o.cls);
+  if (z <= 2 && !o.noShadow && r > 1.5) castShadow(K.circleRing(cx, cy, r, 12), h + z + (o.extra ?? 0));
+  const steps = Math.min(o.steps ?? 24, 36);
+  return solidSvg(K.cylinder(cx, cy, r, z, h, P, steps), mat, o.cls);
 };
 export const prism = (ring, z, h, mat, o = {}) => solidSvg(K.extrude(ring, z, h, P, { convex: o.convex ?? true }), mat, o.cls);
 
@@ -87,7 +88,7 @@ function hull(points) {
   return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 // Metade da circunferência voltada ao observador (para faixas em tanques).
-export function frontArc(cx, cy, r, z, n = 48) {
+export function frontArc(cx, cy, r, z, n = 24) {
   const a0 = Math.atan2(VIEW[1], VIEW[0]);
   const pts = [];
   for (let i = 0; i <= n; i++) {
@@ -101,17 +102,17 @@ export const band = (cx, cy, r, z, cls = "ln band") => `<path class="${cls}" d="
 export function ladder(cx, cy, r, z0, z1, angle = Math.PI / 4) {
   const a = Math.atan2(VIEW[1], VIEW[0]) + angle;
   const p = (dr, z) => [cx + (r + 0.6) * Math.cos(a + dr), cy + (r + 0.6) * Math.sin(a + dr), z];
-  let s = `<path class="ln ladder" d="${pathOf([p(-0.04, z0), p(-0.04, z1)])}M${pathOf([p(0.04, z0), p(0.04, z1)]).slice(1)}"/>`;
-  for (let z = z0 + 2; z < z1; z += 2.4) s += `<path class="ln ladder" d="${pathOf([p(-0.04, z), p(0.04, z)])}"/>`;
-  return s;
+  let d = `${pathOf([p(-0.04, z0), p(-0.04, z1)])}${pathOf([p(0.04, z0), p(0.04, z1)])}`;
+  for (let z = z0 + 2; z < z1; z += 2.6) d += pathOf([p(-0.04, z), p(0.04, z)]);
+  return `<path class="ln ladder" d="${d}"/>`;
 }
 // Cúpula (hemisfério achatado). squash = altura / raio.
 export function dome(cx, cy, r, z, mat, { squash = 1, bands = 2, cls = "" } = {}) {
   const pts = [];
-  for (let i = 0; i <= 12; i++) {
-    const phi = (i / 12) * Math.PI / 2;
-    for (let j = 0; j < 48; j++) {
-      const th = (j / 48) * Math.PI * 2;
+  for (let i = 0; i <= 8; i++) {
+    const phi = (i / 8) * Math.PI / 2;
+    for (let j = 0; j < 28; j++) {
+      const th = (j / 28) * Math.PI * 2;
       pts.push(iso([cx + r * Math.cos(phi) * Math.cos(th), cy + r * Math.cos(phi) * Math.sin(th), z + r * squash * Math.sin(phi)]));
     }
   }
@@ -127,7 +128,7 @@ export function dome(cx, cy, r, z, mat, { squash = 1, bands = 2, cls = "" } = {}
 }
 // Cone (telhado de silo, pilha): base circular -> ponta.
 export function cone(cx, cy, r, z, h, mat) {
-  const pts = circleRing(cx, cy, r, 40).map(([x, y]) => iso([x, y, z]));
+  const pts = circleRing(cx, cy, r, 24).map(([x, y]) => iso([x, y, z]));
   pts.push(iso([cx, cy, z + h]));
   const hh = hull(pts);
   const d = `M${hh.map(([x, y]) => `${R(x)},${R(y)}`).join("L")}Z`;
@@ -170,9 +171,9 @@ export function sawtooth(x, y, w, d, h, n, wallMat, roofMat) {
   }
   return s;
 }
-// Janelas em grade numa face vertical (+y ou +x).
+// Janelas em grade numa face vertical (+y ou +x) — fundidas num único <path> por estilo.
 export function windows(x, y, w, d, z0, z1, face, cols, rows, cls = "win", lit = 0) {
-  let s = "";
+  let dBase = "", dLit = "";
   const gw = (face === "y" ? w : d) / cols;
   const gh = (z1 - z0) / rows;
   for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) {
@@ -181,13 +182,13 @@ export function windows(x, y, w, d, z0, z1, face, cols, rows, cls = "win", lit =
     const q = face === "y"
       ? [[x + a, y + d, za], [x + b, y + d, za], [x + b, y + d, zb], [x + a, y + d, zb]]
       : [[x + w, y + a, za], [x + w, y + b, za], [x + w, y + b, zb], [x + w, y + a, zb]];
-    const on = lit && ((c * 7 + r * 13 + Math.round(x + y)) % 11) < lit ? " lit" : "";
+    const isLit = lit && ((c * 7 + r * 13 + Math.round(x + y)) % 11) < lit;
     const qd = pathOf(q, true);
-    s += `<path class="${cls}${on}" d="${qd}"/>`;
+    if (isLit) dLit += qd; else dBase += qd;
     // à noite, cerca de 40% das janelas acendem (sempre as mesmas)
     if (cls === "win" && ((c * 5 + r * 11 + Math.round(x * 3 + y)) % 20) < 11) NIGHT.windows.push(qd);
   }
-  return s;
+  return (dBase ? `<path class="${cls}" d="${dBase}"/>` : "") + (dLit ? `<path class="${cls} lit" d="${dLit}"/>` : "");
 }
 // Faixa horizontal (ex.: vitrine do térreo, frisos) nas duas faces visíveis.
 export function stripe(x, y, w, d, z0, z1, cls = "storefront") {
@@ -211,14 +212,28 @@ export function tower(x, y, w, d, h, o = {}) {
   s += box(x, y, w, d, h, 1.4, o.trim ?? "steel");
   s += box(x + 1.4, y + 1.4, w - 2.8, d - 2.8, h, 1.0, "roofTop");
   // caixa d'água e casa de máquinas
-  s += box(x + w * 0.2, y + d * 0.2, 6, 6, h + 1, 5, "concrete");
-  s += box(x + w * 0.2 + 0.6, y + d * 0.2 + 0.6, 4.8, 4.8, h + 6, 0.8, "steelDark");
-  // condensadoras de ar-condicionado
-  for (let i = 0; i < Math.min(3, Math.floor(w / 10)); i++) s += box(x + w - 6 - i * 5, y + d - 6, 3.4, 3, h + 1, 2, "steel");
-  // painéis solares no teto
-  if (o.solar) for (let i = 0; i < Math.floor((w - 16) / 7); i++) for (let j = 0; j < 2; j++) s += box(x + w * 0.2 + 9 + i * 7, y + 3 + j * 5, 6, 4, h + 1, 0.7, "solar", { noShadow: true });
+  s += box(x + w * 0.2, y + d * 0.2, 6, 6, h + 1, 5, "concrete", { noShadow: true });
+  s += box(x + w * 0.2 + 0.6, y + d * 0.2 + 0.6, 4.8, 4.8, h + 6, 0.8, "steelDark", { noShadow: true });
+  // condensadora de ar-condicionado
+  if (w >= 24) s += box(x + w - 8, y + d - 6, 5, 3, h + 1, 2, "steel", { noShadow: true });
+  // painéis solares no teto (fundidos num único path)
+  if (o.solar) {
+    let sp = "";
+    for (let i = 0; i < Math.floor((w - 16) / 7); i++) for (let j = 0; j < 2; j++) {
+      const sx = x + w * 0.2 + 9 + i * 7, sy = y + 3 + j * 5, sz = h + 1.4;
+      sp += pathOf([[sx, sy, sz], [sx + 6, sy, sz], [sx + 6, sy + 4, sz], [sx, sy + 4, sz]], true);
+    }
+    if (sp) s += `<path class="solarp" d="${sp}"/>`;
+  }
   // varandas (faixas horizontais na fachada principal)
-  if (o.balcony) for (let z = 10; z < h - 3; z += 5.5) s += box(x + 2, y + d, w - 4, 1.8, z, 0.6, "steel", { noShadow: true }) + `<path class="ln rail" d="${pathOf([[x + 2, y + d + 1.8, z + 2], [x + w - 2, y + d + 1.8, z + 2]])}"/>`;
+  if (o.balcony) {
+    let rails = "";
+    for (let z = 10; z < h - 3; z += 7.5) {
+      s += box(x + 2, y + d, w - 4, 1.8, z, 0.6, "steel", { noShadow: true });
+      rails += pathOf([[x + 2, y + d + 1.8, z + 2], [x + w - 2, y + d + 1.8, z + 2]]);
+    }
+    if (rails) s += `<path class="ln rail" d="${rails}"/>`;
+  }
   return s;
 }
 // Casa térrea com telhado, porta, janelas, muro e quintal.
@@ -264,42 +279,42 @@ export function streetLight(x, y, dir = [1, 0]) {
   NIGHT.lamps.push([x + dir[0] * 3, y + dir[1] * 3, 14.4]);
   return `<path class="ln pole" d="${pathOf([[x, y, 1.7], [x, y, 14], [x + dir[0] * 3, y + dir[1] * 3, 14.8]])}"/>` + sphere([x + dir[0] * 3, y + dir[1] * 3, 14.4], 0.9, "lamp");
 }
-// Cerca de alambrado ao longo de uma poligonal.
+// Cerca de alambrado ao longo de uma poligonal (postes fundidos num único path).
 export function fence(pts, h = 4) {
-  let s = `<path class="ln fence-top" d="${pathOf(pts.map(([x, y]) => [x, y, h]))}"/>`;
+  let posts = "";
   for (let i = 0; i < pts.length - 1; i++) {
     const [a, b] = [pts[i], pts[i + 1]];
-    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 12));
-    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; s += `<path class="ln fence-post" d="${pathOf([[x, y, 1.7], [x, y, h]])}"/>`; }
+    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 14));
+    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; posts += pathOf([[x, y, 1.7], [x, y, h]]); }
   }
-  return s;
+  return `<path class="ln fence-top" d="${pathOf(pts.map(([x, y]) => [x, y, h]))}"/><path class="ln fence-post" d="${posts}"/>`;
 }
-// Rack de tubulação elevado com suportes em pórtico.
+// Rack de tubulação elevado com suportes em pórtico (fundidos num único path).
 export function pipeRack(pts, z = 10, stream = "biogas") {
-  let s = "";
+  let d = "";
   for (let i = 0; i < pts.length - 1; i++) {
     const [a, b] = [pts[i], pts[i + 1]];
-    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 16));
-    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; s += `<path class="ln rack" d="${pathOf([[x, y, 1.7], [x, y, z]])}"/>`; }
+    const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 18));
+    for (let k = 0; k <= n; k++) { const u = k / n; const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; d += pathOf([[x, y, 1.7], [x, y, z]]); }
   }
-  return s;
+  return `<path class="ln rack" d="${d}"/>`;
 }
 // Silo com teto cônico (ração, grãos).
 export function silo(x, y, r, h, mat = "steel") {
-  return cyl(x, y, r, 0, h, mat, { steps: 24 }) + band(x, y, r, h * 0.33) + band(x, y, r, h * 0.66) + cone(x, y, r, h, r * 0.8, mat);
+  return cyl(x, y, r, 0, h, mat, { steps: 20 }) + band(x, y, r, h * 0.33) + band(x, y, r, h * 0.66) + cone(x, y, r, h, r * 0.8, mat);
 }
-// Torre de transmissão em treliça.
+// Torre de transmissão em treliça (fundida num único path por estilo).
 export function pylon(x, y, top = 54) {
-  let s = "";
+  let d = "";
   const legs = [[-4, -4], [4, -4], [4, 4], [-4, 4]];
-  for (const [a, b] of legs) s += `<path class="ln tower" d="${pathOf([[x + a, y + b, 0], [x + a * 0.25, y + b * 0.25, top]])}"/>`;
+  for (const [a, b] of legs) d += pathOf([[x + a, y + b, 0], [x + a * 0.25, y + b * 0.25, top]]);
   for (let z = 8; z < top - 4; z += 10) {
     const f = 1 - (z / top) * 0.75, g = 1 - ((z + 10) / top) * 0.75;
-    s += `<path class="ln tower" d="${pathOf([[x - 4 * f, y - 4 * f, z], [x + 4 * g, y + 4 * g, z + 10]])}"/><path class="ln tower" d="${pathOf([[x + 4 * f, y - 4 * f, z], [x - 4 * g, y + 4 * g, z + 10]])}"/>`;
+    d += pathOf([[x - 4 * f, y - 4 * f, z], [x + 4 * g, y + 4 * g, z + 10]]) + pathOf([[x + 4 * f, y - 4 * f, z], [x - 4 * g, y + 4 * g, z + 10]]);
   }
-  s += `<path class="ln tower" d="${pathOf([[x - 10, y + 10, top - 6], [x + 10, y - 10, top - 6]])}"/><path class="ln tower" d="${pathOf([[x - 7, y + 7, top - 14], [x + 7, y - 7, top - 14]])}"/>`;
-  for (const k of [-10, 10]) s += `<path class="ln insul" d="${pathOf([[x + k, y - k, top - 6], [x + k, y - k, top - 8.5]])}"/>`;
-  return s;
+  d += pathOf([[x - 10, y + 10, top - 6], [x + 10, y - 10, top - 6]]) + pathOf([[x - 7, y + 7, top - 14], [x + 7, y - 7, top - 14]]);
+  const ins = pathOf([[x - 10, y + 10, top - 6], [x - 10, y + 10, top - 8.5]]) + pathOf([[x + 10, y - 10, top - 6], [x + 10, y - 10, top - 8.5]]);
+  return `<path class="ln tower" d="${d}"/><path class="ln insul" d="${ins}"/>`;
 }
 // Painel de texto pintado no chão de uma zona (nome do lugar).
 export const zoneLabel = (text, x, y, size = 9) => groundText(text, x, y, size, "gt", "x", 1.75);
