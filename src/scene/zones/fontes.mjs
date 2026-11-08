@@ -29,8 +29,7 @@ export function buildFontes(S) {
   const cows = [[170, 256, 0], [188, 270, 1], [208, 252, 0], [224, 282, 1], [176, 298, 0], [200, 302, 1], [226, 304, 0], [214, 266, 0]];
   for (const [x, y, c] of cows) {
     const m = c ? "cowBrown" : "cow";
-    const dl = ((x * 7 + y * 3) % 50) / 10;
-    S.dyn(`<g class="cow" style="animation-delay:-${dl}s;animation-duration:${9 + (x % 5)}s">` + box(x, y, 8, 3.6, 3, 3.6, m) + `<g class="cowhead">` + box(x + 8, y + 0.6, 2.6, 2.4, 5, 2.6, m) + `</g>` + box(x + 1, y + 0.4, 1, 1, 1.7, 1.4, "petrol") + box(x + 6, y + 2.2, 1, 1, 1.7, 1.4, "petrol") + `</g>`, [x + 4, y + 2, 0], "pec");
+    S.add(box(x, y, 8, 3.6, 3, 3.6, m, { r: 0.4, steps: 1 }) + box(x + 8, y + 0.6, 2.6, 2.4, 5, 2.6, m, { r: 0.3, steps: 1, noShadow: true }) + box(x + 1, y + 0.4, 1, 1, 1.7, 1.4, "petrol", { r: 0, steps: 1, noShadow: true }) + box(x + 6, y + 2.2, 1, 1, 1.7, 1.4, "petrol", { r: 0, steps: 1, noShadow: true }), [x + 4, y + 2, 0], "pec");
   }
   // free-stall do gado leiteiro
   S.add(gable(166, 330, 70, 30, 8, 6, "wall", "roofGreen", "x", { overhang: 2 }), [201, 345, 0], "pec");

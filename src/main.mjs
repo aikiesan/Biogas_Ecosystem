@@ -197,7 +197,7 @@ function setAutoPlay(on) {
   $("tour-auto").classList.toggle("on", on);
   $("tour-auto").setAttribute("aria-pressed", String(on));
   $("tour-auto-ico").textContent = on ? "❚❚" : "▶";
-  $("auto-bar").style.width = "0%";
+  $("auto-bar").style.transform = "scaleX(0)";
 }
 $("tour-auto").onclick = () => setAutoPlay(!autoPlay);
 stage.onFrame((t) => {
@@ -205,8 +205,8 @@ stage.onFrame((t) => {
   lastAutoT = t;
   if (!autoPlay || index < 0 || journey.running) return;
   autoElapsed += dt;
-  const pct = Math.min(100, (autoElapsed / AUTO_STEP_S) * 100);
-  $("auto-bar").style.width = `${pct.toFixed(1)}%`;
+  const ratio = Math.min(1, autoElapsed / AUTO_STEP_S);
+  $("auto-bar").style.transform = `scaleX(${ratio.toFixed(3)})`;
   if (autoElapsed >= AUTO_STEP_S) {
     autoElapsed = 0;
     const L = list();
@@ -230,7 +230,7 @@ function show(i) {
   const L = list();
   index = Math.max(0, Math.min(L.length - 1, i));
   autoElapsed = 0;
-  $("auto-bar").style.width = "0%";
+  $("auto-bar").style.transform = "scaleX(0)";
   const stop = L[index];
   body.innerHTML = renderStop(stop, { index, total: L.length, inTour: mode === "tour" });
   body.scrollTop = 0;
@@ -291,7 +291,19 @@ $("back-overview").onclick = () => setMode("overview");
 $("btn-tour").onclick = () => setMode("tour");
 $("prev").onclick = () => { const L = list(); show((index - 1 + L.length) % L.length); };
 $("next").onclick = () => { const L = list(); show((index + 1) % L.length); };
-$("sheet-handle").onclick = () => panel.classList.toggle("min");
+let sheetY0 = null;
+const toggleSheet = (forceMin) => {
+  panel.classList.toggle("min", forceMin);
+  setTimeout(() => stage.relayout(), 260);
+};
+$("sheet-handle").onclick = () => toggleSheet();
+$("sheet-handle").addEventListener("pointerdown", (e) => { sheetY0 = e.clientY; });
+$("sheet-handle").addEventListener("pointerup", (e) => {
+  if (sheetY0 === null) return;
+  const dy = e.clientY - sheetY0;
+  sheetY0 = null;
+  if (Math.abs(dy) > 18) toggleSheet(dy > 0);
+});
 
 body.addEventListener("click", (e) => {
   if (e.target.closest("summary")) setAutoPlay(false); // pausa auto-play se o usuário abrir "Saiba mais" ou "Fontes"

@@ -55,9 +55,9 @@ export function addLife(stage) {
   }).join("");
   html += cuts;
 
-  // 7) fertirrigação: canhão de digestato molhando o canavial
+  // 7) fertirrigação: canhão de digestato molhando o canavial (gotas desenhadas no canvas)
   const gun = [196, 118, 6];
-  { const [gx, gy] = iso(gun); html += `<g class="sprinkler"><circle class="reel" cx="${gx.toFixed(1)}" cy="${(gy + 2).toFixed(1)}" r="3.4"/><g id="drops"></g></g>`; }
+  { const [gx, gy] = iso(gun); html += `<g class="sprinkler"><circle class="reel" cx="${gx.toFixed(1)}" cy="${(gy + 2).toFixed(1)}" r="3.4"/></g>`; }
 
   // 8) manômetros na purificação e nível do tanque de CO₂
   [[520, 412, 9], [528, 412, 9]].forEach(([x, y, z], i) => { const [gx, gy] = iso([x, y, z]); html += `<circle class="gauge-face" cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="2.6"/><line class="gauge-needle" x1="${gx.toFixed(1)}" y1="${gy.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${(gy - 2.2).toFixed(1)}" style="transform-origin:${gx.toFixed(1)}px ${gy.toFixed(1)}px;animation-delay:-${i * 1.3}s"/>`; });
@@ -72,7 +72,7 @@ export function addLife(stage) {
 
   // 11) avião com rastro e nuvem de chuva passando sobre o campo
   fg += `<div class="hplane"><svg viewBox="-160 -10 170 20" width="170" height="20"><path class="trail" d="M-150,0 L-8,0"/><path class="plane-body" d="M0,0 l-9,-1.2 l-2,-4 l-2,0 l1,4 l-5,.4 l-1.6,-2 l-1.4,0 l.8,2.6 l-.8,2.6 l1.4,0 l1.6,-2 l5,.4 l-1,4 l2,0 l2,-4 l9,-1.2z"/></svg></div>`;
-  { const [rx, ry] = iso([110, 100, 80]); let rain = ""; for (let k = 0; k < 18; k++) rain += `<line class="drop" x1="${(rx - 40 + (k * 9) % 80).toFixed(1)}" y1="${(ry + 8 + (k * 7) % 14).toFixed(1)}" x2="${(rx - 43 + (k * 9) % 80).toFixed(1)}" y2="${(ry + 20 + (k * 7) % 14).toFixed(1)}" style="animation-delay:-${(k * 0.13).toFixed(2)}s"/>`;
+  { const [rx, ry] = iso([110, 100, 80]); let rain = ""; for (let k = 0; k < 10; k++) rain += `<line class="drop" x1="${(rx - 36 + (k * 13) % 72).toFixed(1)}" y1="${(ry + 8 + (k * 7) % 14).toFixed(1)}" x2="${(rx - 39 + (k * 13) % 72).toFixed(1)}" y2="${(ry + 20 + (k * 7) % 14).toFixed(1)}" style="animation-delay:-${(k * 0.14).toFixed(2)}s"/>`;
     fg += `<div class="hrain" style="left:${(rx - 60).toFixed(0)}px;top:${(ry - 30).toFixed(0)}px"><svg viewBox="${(rx - 60).toFixed(0)} ${(ry - 30).toFixed(0)} 120 70" width="120" height="70"><g class="cloud"><ellipse cx="${rx}" cy="${ry}" rx="44" ry="13"/><ellipse cx="${rx - 18}" cy="${ry - 7}" rx="22" ry="13"/><ellipse cx="${rx + 14}" cy="${ry - 10}" rx="24" ry="15"/></g>${rain}</svg></div>`; }
   document.getElementById("ly-world-fg").innerHTML = fg;
 
@@ -81,50 +81,51 @@ export function addLife(stage) {
 
   layer.innerHTML = html;
   stage.refreshDash();
-  const boats = [0, 1, 2].map((k) => ({ el: layer.querySelector(`#boat-${k}`), k }));
-  let lastB = 0;
-  stage.onFrame((t) => {
-    if (t - lastB < 1 / 30) return; lastB = t;
-    boats.forEach(({ el, k }) => {
-      const a = t * (0.05 + k * 0.012) + k * 2.1;
-      const [x, y] = iso([928 + Math.cos(a) * (95 - k * 22), -172 + Math.sin(a) * (52 - k * 12), 0.6]);
-      el.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})${Math.sin(a) > 0 ? " scale(-1 1)" : ""}`);
-    });
-  });
+  const boats = [0, 1, 2].map((k) => ({ el: layer.querySelector(`#boat-${k}`), k, tr: "" }));
   const blades = DIGESTERS.slice(0, 2).map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#blade-${i}`) }));
-  const drops = layer.querySelector("#drops");
-  const DROPS = 26;
-  drops.innerHTML = Array.from({ length: DROPS }, () => `<circle class="drop-dig" r="1.1"/>`).join("");
-  const dEls = [...drops.children];
+  const arms = CLARIFIERS.map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#arm-${i}`), d: "" }));
 
-  const arms = CLARIFIERS.map(([cx, cy], i) => ({ cx, cy, el: layer.querySelector(`#arm-${i}`) }));
+  // jato do canhão de fertirrigação desenhado em lote no canvas (zero mutações de DOM)
+  const DROPS = 22;
+  stage.addDrawer((ctx, _ctxAir, _dt, t) => {
+    if ((t % 24) >= 14 || document.body.classList.contains("entressafra")) return;
+    const sweep = Math.sin(t * 0.5) * 0.6;
+    ctx.fillStyle = "rgba(110, 127, 43, 0.78)";
+    ctx.beginPath();
+    for (let k = 0; k < DROPS; k++) {
+      const u = (t * 0.9 + k / DROPS) % 1;
+      const dir = Math.PI + 0.35 + sweep + ((k % 5) - 2) * 0.05;
+      const reach = 70 * u;
+      const [sx, sy] = iso([196 + Math.cos(dir) * reach, 118 + Math.sin(dir) * reach, 6 + 48 * u * (1 - u)]);
+      ctx.moveTo(sx + 1.1, sy);
+      ctx.arc(sx, sy, 1.1, 0, Math.PI * 2);
+    }
+    ctx.fill();
+  });
+
   let lastL = 0;
   stage.onFrame((t) => {
     if (t - lastL < 1 / 30) return; lastL = t;
-    // pás do agitador girando (dentro do corte)
-    blades.forEach(({ cx, cy, el }, i) => {
-      const a = t * 2.2 + i;
-      const p0 = iso([cx - 12 * Math.cos(a), cy - 12 * Math.sin(a), 11]), p1 = iso([cx + 12 * Math.cos(a), cy + 12 * Math.sin(a), 11]);
-      el.setAttribute("d", `M${p0[0].toFixed(1)},${p0[1].toFixed(1)}L${p1[0].toFixed(1)},${p1[1].toFixed(1)}`);
-    });
-    // jato do canhão de fertirrigação: liga 14 s, desliga 10 s; varre o talhão
-    const on = (t % 24) < 14;
-    drops.style.opacity = on ? 1 : 0;
-    if (on) {
-      const sweep = Math.sin(t * 0.5) * 0.6;
-      dEls.forEach((el, k) => {
-        const u = ((t * 0.9 + k / DROPS) % 1);
-        const dir = Math.PI + 0.35 + sweep + ((k % 5) - 2) * 0.05;
-        const reach = 70;
-        const x = 196 + Math.cos(dir) * reach * u, y = 118 + Math.sin(dir) * reach * u, z = 6 + 30 * u * (1 - u) * 1.6;
-        const [sx, sy] = iso([x, y, z]);
-        el.setAttribute("cx", sx.toFixed(1)); el.setAttribute("cy", sy.toFixed(1));
+    for (const b of boats) {
+      const a = t * (0.05 + b.k * 0.012) + b.k * 2.1;
+      const [x, y] = iso([928 + Math.cos(a) * (95 - b.k * 22), -172 + Math.sin(a) * (52 - b.k * 12), 0.6]);
+      const tr = `translate(${x.toFixed(1)} ${y.toFixed(1)})${Math.sin(a) > 0 ? " scale(-1 1)" : ""}`;
+      if (tr !== b.tr) { b.el.setAttribute("transform", tr); b.tr = tr; }
+    }
+    // pás do agitador: só calcula/atualiza quando o corte interno do CSTR está visível
+    const cutVis = stage.root.dataset.hover === "cstr" || (stage.root.dataset.sel && stage.root.dataset.sel.includes("cstr"));
+    if (cutVis) {
+      blades.forEach(({ cx, cy, el }, i) => {
+        const a = t * 2.2 + i;
+        const p0 = iso([cx - 12 * Math.cos(a), cy - 12 * Math.sin(a), 11]), p1 = iso([cx + 12 * Math.cos(a), cy + 12 * Math.sin(a), 11]);
+        el.setAttribute("d", `M${p0[0].toFixed(1)},${p0[1].toFixed(1)}L${p1[0].toFixed(1)},${p1[1].toFixed(1)}`);
       });
     }
-    arms.forEach(({ cx, cy, el }, i) => {
+    arms.forEach((arm, i) => {
       const a = t * 0.25 + i * 1.7;
-      const p0 = iso([cx, cy, 8.2]), p1 = iso([cx + 17 * Math.cos(a), cy + 17 * Math.sin(a), 8.2]);
-      el.setAttribute("d", `M${p0[0].toFixed(1)},${p0[1].toFixed(1)}L${p1[0].toFixed(1)},${p1[1].toFixed(1)}`);
+      const p0 = iso([arm.cx, arm.cy, 8.2]), p1 = iso([arm.cx + 17 * Math.cos(a), arm.cy + 17 * Math.sin(a), 8.2]);
+      const d = `M${p0[0].toFixed(1)},${p0[1].toFixed(1)}L${p1[0].toFixed(1)},${p1[1].toFixed(1)}`;
+      if (d !== arm.d) { arm.el.setAttribute("d", d); arm.d = d; }
     });
   });
 }

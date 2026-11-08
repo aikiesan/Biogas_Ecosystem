@@ -44,8 +44,13 @@ export function buildWorld() {
   // estacionamentos
   const parking = (x, y, w, d, n, cars = []) => {
     S.floor(groundRect(x, y, w, d, "lot", 1.72));
-    for (let i = 1; i < n; i++) S.floor(groundLine([[x + (i * w) / n, y + 1], [x + (i * w) / n, y + d * 0.42]], "stall", 1.78) + groundLine([[x + (i * w) / n, y + d - 1], [x + (i * w) / n, y + d * 0.58]], "stall", 1.78));
-    for (const [k, row, mat] of cars) S.add(box(x + (k + 0.5) * (w / n) - 2.2, y + (row ? d - 9.5 : 1.5), 4.4, 8, 1.7, 3, mat, { r: 1 }) + box(x + (k + 0.5) * (w / n) - 2, y + (row ? d - 7.6 : 3.4), 4, 4.2, 4.7, 1.8, "glass", { r: 0.8, noShadow: true }), [x + (k + 0.5) * (w / n), y + (row ? d - 5 : 5), 0]);
+    let stalls = "";
+    for (let i = 1; i < n; i++) {
+      const sx = x + (i * w) / n;
+      stalls += pathOf([[sx, y + 1, 1.78], [sx, y + d * 0.42, 1.78]]) + pathOf([[sx, y + d - 1, 1.78], [sx, y + d * 0.58, 1.78]]);
+    }
+    S.floor(`<path class="stall" d="${stalls}"/>`);
+    for (const [k, row, mat] of cars) S.add(box(x + (k + 0.5) * (w / n) - 2.2, y + (row ? d - 9.5 : 1.5), 4.4, 8, 1.7, 3, mat, { r: 0.8, steps: 1 }) + box(x + (k + 0.5) * (w / n) - 2, y + (row ? d - 7.6 : 3.4), 4, 4.2, 4.7, 1.8, "glass", { r: 0.6, steps: 1, noShadow: true }), [x + (k + 0.5) * (w / n), y + (row ? d - 5 : 5), 0]);
   };
   parking(124, 880, 100, 24, 10, [[0, 0, "red"], [2, 1, "wall"], [3, 0, "urban"], [6, 1, "steelDark"], [8, 0, "lima"]]);
   parking(1000, 76, 90, 24, 9, [[1, 0, "wall"], [2, 1, "petrol"], [5, 0, "red"], [7, 1, "steel"]]);

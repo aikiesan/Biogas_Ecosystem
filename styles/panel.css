@@ -35,7 +35,7 @@ details p { margin-top: 8px !important; font-size: 13px !important; }
 .tour-auto.on { background: var(--petrol); border-color: var(--petrol); color: var(--lima); }
 .progress { flex: 1; height: 6px; border-radius: 3px; background: var(--line); position: relative; overflow: hidden; }
 .progress::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: var(--verde-escuro); transition: width .5s var(--ease); }
-.auto-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 0%; background: var(--lima); z-index: 2; pointer-events: none; }
+.auto-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--lima); z-index: 2; pointer-events: none; transform-origin: 0 50%; transform: scaleX(0); will-change: transform; }
 
 /* índice */
 .home .eyebrow { margin: 0 0 4px; font-size: 11.5px; color: var(--ink-muted); }
@@ -56,8 +56,17 @@ details p { margin-top: 8px !important; font-size: 13px !important; }
 .idx small { display: block; font-size: 12px; line-height: 1.4; color: var(--ink-muted); margin-top: 2px; }
 
 @media (max-width: 820px) {
-  .panel { border-left: 0; border-top: 1px solid var(--line); box-shadow: 0 -6px 18px -8px rgba(30, 62, 76, .25); }
-  .panel-body { padding: 16px 16px 12px; }
-  .panel-body h2 { font-size: 18px; }
-  .home h2 { font-size: 20px; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; box-shadow: 0 -6px 18px -8px rgba(30, 62, 76, .25); }
+  .sheet-handle { display: flex; align-items: center; justify-content: center; width: 100%; height: 20px; border: 0; background: transparent; cursor: pointer; padding: 0; flex: none; touch-action: none; }
+  .sheet-handle span { width: 38px; height: 4px; border-radius: 2px; background: #CBD5DA; transition: background .15s, width .15s; }
+  .sheet-handle:hover span, .sheet-handle:active span { background: var(--petrol); width: 48px; }
+  .panel-body { padding: 6px 14px 10px; -webkit-overflow-scrolling: touch; }
+  .panel-body h2 { font-size: 16.5px; margin: 4px 0 8px; }
+  .panel-body p { font-size: 12.5px; margin-bottom: 6px; }
+  .panel-nav { padding: 6px 12px 8px; gap: 8px; }
+  .nav-btn { width: 32px; height: 32px; font-size: 18px; }
+  .tour-auto { height: 28px; padding: 0 8px; font-size: 10.5px; }
+  .home h2 { font-size: 18px; }
+  .home-ctas { margin: 4px 0 10px; }
+  .cta-tour, .cta-journey { padding: 8px 10px; font-size: 12px; }
 }
