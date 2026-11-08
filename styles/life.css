@@ -92,7 +92,6 @@ body.journey .journey-btn { background: #B83A2D; }
 .kitchen.on { opacity: 1; }
 .kitchen .kglow { fill: #5AA9E6; opacity: .45; }
 body.entressafra .vehicle.safra { visibility: hidden; }
-.canerow { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--cane, 1)); }
 
 /* ---------- corte do biodigestor */
 .cutaway { opacity: 0; transition: opacity .5s var(--ease); pointer-events: none; }

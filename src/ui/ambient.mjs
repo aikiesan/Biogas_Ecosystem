@@ -100,9 +100,6 @@ export function createAmbient(stage, { night, onTick, daySeconds, startHour = 10
     if (m !== lastMonth) {
       lastMonth = m;
       document.body.classList.toggle("entressafra", !SAFRA(m));
-      // a cana cresce na entressafra (dez → mar) e está alta na safra
-      const grow = SAFRA(m) ? 1 : [0.3, 0.45, 0.6, 0.8][(m + 1) % 12] ?? 0.4;
-      root.style.setProperty("--cane", grow);
     }
     stage.emitClock(h);
     onTick({ h, m, month: MONTHS[m], safra: SAFRA(m), pico: PICO(m), night: n, demand: dem, gasLevel: 0.55 + 0.35 * Math.cos((2 * Math.PI * (h - 8)) / 24), running });

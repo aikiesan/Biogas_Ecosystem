@@ -189,7 +189,7 @@ function padding() {
 function list() { return mode === "tour" ? tourStops : exploreStops; }
 
 // ---------- avanço automático das etapas (Tour guiado e exploração)
-const AUTO_STEP_S = 8.5; // segundos por etapa
+const AUTO_STEP_S = 5.0; // segundos por etapa
 let autoPlay = false, autoElapsed = 0, lastAutoT = 0;
 function setAutoPlay(on) {
   autoPlay = on;
@@ -210,8 +210,9 @@ stage.onFrame((t) => {
   if (autoElapsed >= AUTO_STEP_S) {
     autoElapsed = 0;
     const L = list();
+    const firstZone = mode === "tour" ? Math.max(0, L.findIndex((s) => !s.tourOnly)) : 0;
     if (index < L.length - 1) show(index + 1);
-    else show(0); // reinicia o ciclo automaticamente
+    else show(firstZone); // reinicia o ciclo direto na primeira zona
   }
 });
 
@@ -256,6 +257,7 @@ function open(id) {
 function setMode(m, { auto = m === "tour" } = {}) {
   if (journey.running) journey.stop();
   if (document.body.classList.contains("panel-hidden")) setPanelHidden(false, true);
+  const prevId = index >= 0 ? list()[index]?.id : null;
   mode = m;
   document.body.dataset.mode = m;
   stage.setFollow(m === "tour");
@@ -265,8 +267,12 @@ function setMode(m, { auto = m === "tour" } = {}) {
   $("btn-tour").setAttribute("aria-pressed", String(m === "tour"));
   $("back-overview").hidden = m !== "tour";
   setAutoPlay(auto);
-  if (m === "tour") show(0);
-  else { stage.frame(null, 900); showIndex(); }
+  if (m === "tour") {
+    const L = list();
+    const resumeIdx = prevId ? L.findIndex((s) => s.id === prevId) : -1;
+    const firstZone = Math.max(0, L.findIndex((s) => !s.tourOnly));
+    show(resumeIdx >= 0 ? resumeIdx : firstZone);
+  } else { stage.frame(null, 750); showIndex(); }
 }
 
 // ---------- controles de zoom e navegação livre no mapa

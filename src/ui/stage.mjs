@@ -145,7 +145,7 @@ export function createStage(svg, { stops, onPick }) {
   }
   const overviewRect = () => fit(B, 1.0);
   let current = null;
-  function frame(stop, ms = 1200) {
+  function frame(stop, ms = 850) {
     if (!follow) {
       if (userZoomed && stop) return;
       userZoomed = false;

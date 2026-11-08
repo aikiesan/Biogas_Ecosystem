@@ -10,7 +10,7 @@ export function buildFontes(S) {
     const y = 18 + i * 12;
     const cut = i >= 11; // talhão já colhido: só a palha no chão
     if (cut) S.floor(groundRect(14, y, 182, 5, "strawrow", 1.75));
-    else S.add(`<g class="canerow" style="transition-delay:${i * 0.12}s">` + box(14, y, 182, 5, 1.6, 7 + (i % 3), "cane", { r: 2, steps: 3 }) + `</g>`, [105, y + 2.5, 0], "agro");
+    else S.add(`<g class="canerow">` + box(14, y, 182, 5, 1.6, 7 + (i % 3), "cane", { r: 2, steps: 3 }) + `</g>`, [105, y + 2.5, 0], "agro");
   }
   // fardos de palha empilhados
   for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) S.add(box(208 + j * 14, 130 + i * 18, 12, 14, 1.6, i === 0 ? 12 : 6, "straw") + `<path class="ln twine" d="${pathOf([[214 + j * 14, 130 + i * 18, (i === 0 ? 13.6 : 7.6)], [214 + j * 14, 144 + i * 18, (i === 0 ? 13.6 : 7.6)]])}"/>`, [214 + j * 14, 137 + i * 18, 0], "agro");
