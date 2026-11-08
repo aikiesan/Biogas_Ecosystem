@@ -78,7 +78,7 @@ const F = {
       row.steps.forEach((s, i) => {
         const x = 40 + i * 110;
         const c = s.tone ? KEY[s.tone] : null;
-        b += node(s.icon, x, y + 10, 18, c, `pop d${i + r * 3}`);
+        b += node(s.icon, x, y + 10, 18, c, `pop d${i + r * 3}`, s.tag);
         if (s.label) b += label(s.label, x + 24, y + 14, `fl ${s.tone || ""}`, "start");
         if (i < row.steps.length - 1) b += arrow(x + 22, y + 10, x + 110 - 24, y + 10, "arr flowing");
       });
@@ -89,10 +89,10 @@ const F = {
     let b = DEFS;
     inputs.forEach((s, i) => {
       const y = 28 + i * 64;
-      b += node(s.icon, 34, y, 20, null, `pop d${i}`) + label(s.label, 62, y - 2, "fl", "start") + label(s.note, 62, y + 12, "fn", "start");
+      b += node(s.icon, 34, y, 20, null, `pop d${i}`, s.tag) + label(s.label, 62, y - 2, "fl", "start") + label(s.note, 62, y + 12, "fn", "start");
       b += `<path class="arr flowing" d="M150,${y} C200,${y} 200,60 236,60" marker-end="url(#ah)"/>`;
     });
-    b += node(output.icon, 266, 60, 26, STREAMS.biometano.color, "pop d3") + label(output.label, 266, 104, "fl") + label(output.note, 266, 118, "fn");
+    b += node(output.icon, 266, 60, 26, STREAMS.biometano.color, "pop d3", output.tag) + label(output.label, 266, 104, "fl") + label(output.note, 266, 118, "fn");
     return svg(128, b, `${inputs.map((i) => i.label).join(" + ")} = ${output.label}`);
   },
   stages({ steps, chips }) {
@@ -145,7 +145,7 @@ const F = {
   },
   fork({ input, outs }) {
     const gap = outs.length > 2 ? 54 : 68, top = 26, mid = top + ((outs.length - 1) * gap) / 2;
-    let b = DEFS + node(input.icon, 34, mid, 24, null, "pop d0") + wrap(input.label, 34, mid + 40, 12, "fl");
+    let b = DEFS + node(input.icon, 34, mid, 24, null, "pop d0", input.tag) + wrap(input.label, 34, mid + 40, 12, "fl");
     outs.forEach((o, i) => {
       const y = top + i * gap;
       b += `<path class="arr flowing" d="M62,${mid} C100,${mid} 100,${y} 140,${y}" marker-end="url(#ah)"/>`;
@@ -159,7 +159,7 @@ const F = {
     steps.forEach((s, i) => {
       const a = -Math.PI / 2 + (i / steps.length) * Math.PI * 2;
       const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
-      b += node(s.icon, x, y, 19, i === steps.length - 1 ? STREAMS.digestato.color : null, `pop d${i}`);
+      b += node(s.icon, x, y, 19, i === steps.length - 1 ? STREAMS.digestato.color : null, `pop d${i}`, s.tag);
       const lx = x + (Math.cos(a) >= 0.3 ? 26 : Math.cos(a) <= -0.3 ? -26 : 0), ly = y + (Math.abs(Math.cos(a)) < 0.3 ? (Math.sin(a) < 0 ? -26 : 34) : 4);
       b += label(s.label, lx, ly, "fl", Math.cos(a) >= 0.3 ? "start" : Math.cos(a) <= -0.3 ? "end" : "middle");
     });
@@ -198,7 +198,7 @@ const F = {
     nodes.forEach((n, i) => {
       const x = gw * (i + 0.5), y = 112;
       b += `<path class="link flowing" d="M${cx},${cy} Q${(cx + x) / 2},${y - 10} ${x},${y - 20}" stroke="${STREAMS.conhecimento.color}"/>`;
-      b += node(n.icon, x, y, 19, null, `pop d${i + 1}`) + wrap(n.label, x, y + 34, 15, "fl", 12);
+      b += node(n.icon, x, y, 19, null, `pop d${i + 1}`, n.tag) + wrap(n.label, x, y + 34, 15, "fl", 12);
     });
     b += `<circle class="pop d0" cx="${cx}" cy="${cy}" r="28" fill="${STREAMS.conhecimento.color}"/>` + label(center, cx, cy + 5, "fbig on");
     let html = svg(176, b, `${center} conecta ${nodes.map((n) => n.label).join(", ")}`);

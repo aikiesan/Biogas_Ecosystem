@@ -78,6 +78,8 @@ export function createStage(svg, { stops, onPick }) {
   // as camadas já desenhadas (barato) e, ao chegar, redesenha nítido no novo viewBox.
   const B = W.bounds;
   let vb = { ...B }, raster = { ...B }, tween = null, follow = false, viewPad = { top: 0, bottom: 0 }, pinScale = 1;
+  let userZoomed = false, settleTimer = null;
+  const viewChangeFns = [];
   const scaled = [...root.querySelectorAll(".scaled")];
   const size = () => { const r = root.getBoundingClientRect(); return { w: r.width || 1, h: r.height || 1 }; };
   const dpr = () => Math.min(2, window.devicePixelRatio || 1);
@@ -85,8 +87,10 @@ export function createStage(svg, { stops, onPick }) {
     const { w, h } = size(), d = dpr();
     for (const c of canvases) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
   }
+  const emitView = () => { for (const fn of viewChangeFns) fn({ userZoomed, vb }); };
   function apply() {
     // redesenha as camadas no viewBox atual (caro: só no fim de um voo ou ao redimensionar)
+    clearTimeout(settleTimer);
     const { w } = size();
     const vbs = `${vb.x.toFixed(2)} ${vb.y.toFixed(2)} ${vb.w.toFixed(2)} ${vb.h.toFixed(2)}`;
     for (const el of svgs) el.setAttribute("viewBox", vbs);
@@ -99,12 +103,17 @@ export function createStage(svg, { stops, onPick }) {
     const kk = w / vb.w;
     for (const el of root.querySelectorAll(".worldhtml")) el.style.transform = `matrix(${kk},0,0,${kk},${(-vb.x * kk).toFixed(2)},${(-vb.y * kk).toFixed(2)})`;
     if (typeof refreshHalos === "function") try { refreshHalos(); } catch {}
+    emitView();
   }
   function camTransform() {
     // mapeia o raster (feito em `raster`) para a vista atual `vb`, sem repintar
     const { w } = size();
     const k = w / vb.w, s = raster.w / vb.w;
     cam.style.transform = `translate(${((raster.x - vb.x) * k).toFixed(2)}px, ${((raster.y - vb.y) * k).toFixed(2)}px) scale(${s.toFixed(4)})`;
+  }
+  function scheduleSettle(ms = 180) {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(apply, ms);
   }
   function fit(rect, pad = 1) {
     const { w, h } = size();
@@ -113,8 +122,19 @@ export function createStage(svg, { stops, onPick }) {
     const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
     return { x: cx - (w / 2) * k, y: cy - (viewPad.top + ah / 2) * k, w: w * k, h: h * k };
   }
+  function clampVb(next) {
+    const ov = overviewRect();
+    const minW = ov.w / 6.5, maxW = ov.w * 1.15;
+    const ratio = ov.h / ov.w;
+    const w = Math.max(minW, Math.min(maxW, next.w));
+    const h = w * ratio;
+    const cx = Math.max(B.x - ov.w * 0.1, Math.min(B.x + B.w + ov.w * 0.1, next.x + next.w / 2));
+    const cy = Math.max(B.y - ov.h * 0.1, Math.min(B.y + B.h + ov.h * 0.1, next.y + next.h / 2));
+    return { x: cx - w / 2, y: cy - h / 2, w, h };
+  }
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   function flyTo(target, ms = 1200) {
+    clearTimeout(settleTimer);
     if (reduceMotion || ms <= 1) { vb = target; tween = null; apply(); return; }
     const from = { ...vb }, t0 = performance.now();
     tween = (now) => {
@@ -126,9 +146,36 @@ export function createStage(svg, { stops, onPick }) {
   const overviewRect = () => fit(B, 1.0);
   let current = null;
   function frame(stop, ms = 1200) {
-    if (!follow || !stop || stop.focus === "all") return flyTo(overviewRect(), ms);
+    if (!follow) {
+      if (userZoomed && stop) return;
+      userZoomed = false;
+      return flyTo(overviewRect(), ms);
+    }
+    if (!stop || stop.focus === "all") {
+      userZoomed = false;
+      return flyTo(overviewRect(), ms);
+    }
     const [x0, y0, x1, y1] = stop.focus;
+    userZoomed = false;
     flyTo(fit(focusRect([x0, y0, x1, y1], 50), 1.1), ms);
+  }
+  function zoomBy(factor, clientX, clientY, animate = false) {
+    const r = root.getBoundingClientRect();
+    const px = clientX !== undefined ? (clientX - r.left) / (r.width || 1) : 0.5;
+    const py = clientY !== undefined ? (clientY - r.top) / (r.height || 1) : 0.5;
+    const wx = vb.x + px * vb.w, wy = vb.y + py * vb.h;
+    const nextW = vb.w / factor, nextH = vb.h / factor;
+    const next = clampVb({ x: wx - px * nextW, y: wy - py * nextH, w: nextW, h: nextH });
+    const ov = overviewRect();
+    userZoomed = Math.abs(next.w - ov.w) > ov.w * 0.04 || Math.hypot(next.x - ov.x, next.y - ov.y) > ov.w * 0.04;
+    emitView();
+    if (animate) flyTo(next, 320);
+    else { tween = null; vb = next; camTransform(); scheduleSettle(180); }
+  }
+  function resetView(ms = 650) {
+    userZoomed = false;
+    emitView();
+    flyTo(overviewRect(), ms);
   }
 
   // ---------- contorno (halo) pré-renderizado como imagem
@@ -357,25 +404,131 @@ export function createStage(svg, { stops, onPick }) {
     hotIds = new Set(hot.map((el) => el.id));
   }
 
-  // ---------- interação com pinos
-  const activate = (el) => { const fn = () => onPick(el.dataset.stop); el.addEventListener("click", fn); el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }); };
+  // ---------- interação com pinos e navegação livre (pan/zoom no mapa)
+  let didDrag = false;
+  const activate = (el) => { const fn = () => { if (!didDrag) onPick(el.dataset.stop); }; el.addEventListener("click", fn); el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }); };
   root.querySelectorAll(".pin").forEach(activate);
   // clique numa zona destacável também abre a etapa correspondente
   const byTag = Object.fromEntries(stops.filter((s) => s.tags && !s.badge).map((s) => [s.tags[0], s.id]));
+  Object.assign(byTag, {
+    aterro: "urb",
+    nativa: "florestas",
+    agua: "florestas",
+    distribuidora: "citygate",
+    cidade: "injecao",
+    governo: "cp2b",
+    industria: "injecao",
+    subestacao: "chp",
+    usina: "recepcao",
+  });
   root.addEventListener("click", (e) => {
+    if (didDrag) return;
     if (e.target.closest(".pin")) return;
     const g = e.target.closest("[data-tag]");
     if (g && byTag[g.dataset.tag]) onPick(byTag[g.dataset.tag]);
   });
 
+  // roda do mouse / trackpad para zoom
+  root.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const dy = e.deltaMode === 1 ? e.deltaY * 18 : e.deltaY;
+    const factor = Math.pow(1.0016, -Math.max(-240, Math.min(240, dy)));
+    zoomBy(factor, e.clientX, e.clientY, false);
+  }, { passive: false });
+
+  // duplo clique aproxima na região clicada (ou reseta se já estiver bem próximo)
+  root.addEventListener("dblclick", (e) => {
+    if (e.target.closest(".pin")) return;
+    const ov = overviewRect();
+    if (vb.w < ov.w * 0.35) resetView(550);
+    else zoomBy(1.85, e.clientX, e.clientY, true);
+  });
+
+  // arrastar (pan) e gesto de pinça no celular
+  const ptrs = new Map();
+  let panStart = null, pinchStart = null;
+  root.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    didDrag = false;
+    if (ptrs.size === 1) {
+      panStart = { x: e.clientX, y: e.clientY, vb: { ...vb } };
+      pinchStart = null;
+    } else if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      pinchStart = { dist: Math.hypot(b.x - a.x, b.y - a.y) || 1, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, vb: { ...vb } };
+      panStart = null;
+    }
+  });
+  addEventListener("pointermove", (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 2 && pinchStart) {
+      const [a, b] = [...ptrs.values()];
+      const dist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+      const scale = dist / pinchStart.dist;
+      const r = root.getBoundingClientRect();
+      const px = (pinchStart.cx - r.left) / (r.width || 1), py = (pinchStart.cy - r.top) / (r.height || 1);
+      const wx = pinchStart.vb.x + px * pinchStart.vb.w, wy = pinchStart.vb.y + py * pinchStart.vb.h;
+      const nextW = pinchStart.vb.w / scale, nextH = pinchStart.vb.h / scale;
+      const dx = ((cx - pinchStart.cx) / (r.width || 1)) * nextW;
+      const dy = ((cy - pinchStart.cy) / (r.height || 1)) * nextH;
+      vb = clampVb({ x: wx - px * nextW - dx, y: wy - py * nextH - dy, w: nextW, h: nextH });
+      tween = null; didDrag = true; userZoomed = true;
+      root.classList.add("panning");
+      camTransform(); emitView();
+      scheduleSettle(200);
+    } else if (ptrs.size === 1 && panStart) {
+      const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y;
+      if (!didDrag && Math.hypot(dx, dy) > 5) {
+        didDrag = true;
+        root.classList.add("panning");
+      }
+      if (didDrag) {
+        const { w, h } = size();
+        vb = clampVb({
+          x: panStart.vb.x - (dx / w) * panStart.vb.w,
+          y: panStart.vb.y - (dy / h) * panStart.vb.h,
+          w: panStart.vb.w,
+          h: panStart.vb.h,
+        });
+        tween = null;
+        const ov = overviewRect();
+        userZoomed = Math.abs(vb.w - ov.w) > ov.w * 0.04 || Math.hypot(vb.x - ov.x, vb.y - ov.y) > ov.w * 0.04;
+        camTransform(); emitView();
+      }
+    }
+  });
+  const endPtr = (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    if (ptrs.size === 0) {
+      root.classList.remove("panning");
+      if (didDrag) {
+        scheduleSettle(80);
+        setTimeout(() => { didDrag = false; }, 40);
+      }
+      panStart = null; pinchStart = null;
+    } else if (ptrs.size === 1) {
+      const [p] = [...ptrs.values()];
+      panStart = { x: p.x, y: p.y, vb: { ...vb } };
+      pinchStart = null;
+    }
+  };
+  addEventListener("pointerup", endPtr);
+  addEventListener("pointercancel", endPtr);
+
   return {
     svg: root, root, iso,
     night: W.night,
+    byTag,
     onFrame(fn) { frameFns.push(fn); },
     addDrawer(fn) { drawers.push(fn); },
     setNight(n) { night = n; },
     onClock(fn) { clockFns.push(fn); },
     emitClock(h) { for (const fn of clockFns) fn(h); },
+    onViewChange(fn) { viewChangeFns.push(fn); },
     refreshDash,
     setSpeed(stream, m) { speedMul[stream] = m; },
     scale() { return pinScale; },
@@ -384,8 +537,10 @@ export function createStage(svg, { stops, onPick }) {
     setFollow(v) { follow = v; },
     setPadding(p) { viewPad = p; },
     frame,
+    zoomBy,
+    resetView,
     highlight,
     toggleStream,
-    relayout() { sizeCanvases(); frame(current, 1); },
+    relayout() { sizeCanvases(); if (userZoomed && !follow) apply(); else frame(current, 1); },
   };
 }
