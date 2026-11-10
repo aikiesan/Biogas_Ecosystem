@@ -11,7 +11,7 @@ import { addLife } from "./ui/life.mjs";
 import { createJourney } from "./ui/journey.mjs";
 import { createAmbient } from "./ui/ambient.mjs";
 import { addPeople } from "./ui/people.mjs";
-import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
+import { POTENCIAL_SP, POTENCIAL_SP_SEG, CAPACIDADE_SP_SEG, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
 // ---------- modo tela (papel de parede / proteção de tela / vídeo)
@@ -36,15 +36,15 @@ addLife(stage);
 addPeople(stage, { houses: stage.night.houses });
 
 // ---------- contador ao vivo (dados CP2b e ANP)
-const POT_S = (POTENCIAL_SP.medianaBiAno * 1e9) / (365 * 86400); // m³ CH₄/s ≈ 189
-const REAL_S = (CAPACIDADE_SP_DIA * 1e6) / 86400; // m³/s ≈ 4,6
+const POT_S = POTENCIAL_SP_SEG; // m³ CH₄/s ≈ 189
+const REAL_S = CAPACIDADE_SP_SEG; // m³/s ≈ 4,6
 const t0 = performance.now();
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 let lastHud = 0;
 // equivalências que se alternam a cada 5 s (fontes em DATA.md)
 const EQS = [
   { f: (m) => m / CASA_M3_MES, t: "casas abastecidas por um mês (≈ 8,2 m³/mês, ARSESP)" },
-  { f: (m) => m / ONIBUS_M3_DIA_REF, t: "ônibus rodando um dia inteiro (≈ 150–240 m³/dia)" },
+  { f: (m) => m / ONIBUS_M3_DIA_REF, t: `ônibus rodando um dia inteiro (≈ ${ONIBUS.m3Dia[0]}–${ONIBUS.m3Dia[1]} m³/dia)` },
   { f: (m) => m * EVITADO_DIESEL.ref, t: "t de CO₂e evitadas, se substituíssem diesel (EPE)" },
   { f: (m) => (m * CBIO.porMil_m3) / 1000, t: "CBIOs, se virassem biometano certificado (ref. EPE)" },
 ];

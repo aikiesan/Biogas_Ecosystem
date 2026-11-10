@@ -22,6 +22,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Verificar consistência dos números
+        run: node tools/verificar-dados.mjs
       - name: Montar pasta do site
         run: |
           mkdir -p _site
