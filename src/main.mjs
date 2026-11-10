@@ -11,7 +11,7 @@ import { addLife } from "./ui/life.mjs";
 import { createJourney } from "./ui/journey.mjs";
 import { createAmbient } from "./ui/ambient.mjs";
 import { addPeople } from "./ui/people.mjs";
-import { POTENCIAL_SP, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
+import { POTENCIAL_SP, POTENCIAL_SP_SEG, CAPACIDADE_SP_SEG, CAPACIDADE_SP_DIA, CBIO, CASA_M3_MES, ONIBUS, ONIBUS_M3_DIA_REF, EVITADO_DIESEL } from "./data/numeros.mjs";
 
 const $ = (id) => document.getElementById(id);
 // ---------- modo tela (papel de parede / proteção de tela / vídeo)
@@ -19,6 +19,12 @@ const $ = (id) => document.getElementById(id);
 //   &passeio         a câmera passeia devagar pelas etapas
 //   &dia=300         duração de um dia, em segundos (padrão 60)
 //   &hora=19         hora inicial (padrão 10)
+// ícones de interface (sprite em index.html): troca o desenho só quando muda
+const setIco = (el, name) => {
+  const href = `#i-${name}`, use = el.querySelector("use");
+  if (use) { if (use.getAttribute("href") !== href) use.setAttribute("href", href); return; }
+  el.innerHTML = `<svg class="i" aria-hidden="true"><use href="${href}"/></svg>`;
+};
 const params = new URLSearchParams(location.search);
 const TELA = params.has("tela");
 if (TELA) document.body.classList.add("tela");
@@ -32,19 +38,47 @@ const exploreStops = STOPS.filter((s) => !s.tourOnly);
 
 const stage = createStage(svg, { stops: STOPS, onPick: (id) => open(id) });
 $("loading").remove();
+// abertura: mapa, cartões e pinos entram em sequência (ver styles/motion.css)
+document.body.classList.add("booting");
+setTimeout(() => document.body.classList.remove("booting"), 2200);
+
+// seletor de modo: indicador que desliza até a opção ativa
+const modesEl = document.querySelector(".modes");
+const modesInd = Object.assign(document.createElement("span"), { className: "modes-ind" });
+modesInd.setAttribute("aria-hidden", "true");
+modesEl.prepend(modesInd);
+function syncModes() {
+  const on = modesEl.querySelector(".pill.on");
+  modesInd.style.visibility = on ? "" : "hidden";
+  if (!on) return;
+  modesInd.style.setProperty("--x", `${on.offsetLeft}px`);
+  modesInd.style.setProperty("--w", `${on.offsetWidth}px`);
+}
+new MutationObserver(syncModes).observe(modesEl, { subtree: true, attributes: true, attributeFilter: ["class"] });
+addEventListener("resize", syncModes);
+syncModes();
+requestAnimationFrame(() => requestAnimationFrame(() => modesEl.classList.add("ready")));
+
+// painel: conteúdo novo entra em cascata (dir: −1 voltando, 1 avançando, 0 neutro)
+function animatePanel(dir = 0) {
+  body.classList.remove("enter");
+  body.style.setProperty("--dir", String(dir));
+  void body.offsetWidth;
+  body.classList.add("enter");
+}
 addLife(stage);
 addPeople(stage, { houses: stage.night.houses });
 
 // ---------- contador ao vivo (dados CP2b e ANP)
-const POT_S = (POTENCIAL_SP.medianaBiAno * 1e9) / (365 * 86400); // m³ CH₄/s ≈ 189
-const REAL_S = (CAPACIDADE_SP_DIA * 1e6) / 86400; // m³/s ≈ 4,6
+const POT_S = POTENCIAL_SP_SEG; // m³ CH₄/s ≈ 189
+const REAL_S = CAPACIDADE_SP_SEG; // m³/s ≈ 4,6
 const t0 = performance.now();
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 let lastHud = 0;
 // equivalências que se alternam a cada 5 s (fontes em DATA.md)
 const EQS = [
   { f: (m) => m / CASA_M3_MES, t: "casas abastecidas por um mês (≈ 8,2 m³/mês, ARSESP)" },
-  { f: (m) => m / ONIBUS_M3_DIA_REF, t: "ônibus rodando um dia inteiro (≈ 150–240 m³/dia)" },
+  { f: (m) => m / ONIBUS_M3_DIA_REF, t: `ônibus rodando um dia inteiro (≈ ${ONIBUS.m3Dia[0]}–${ONIBUS.m3Dia[1]} m³/dia)` },
   { f: (m) => m * EVITADO_DIESEL.ref, t: "t de CO₂e evitadas, se substituíssem diesel (EPE)" },
   { f: (m) => (m * CBIO.porMil_m3) / 1000, t: "CBIOs, se virassem biometano certificado (ref. EPE)" },
 ];
@@ -64,7 +98,6 @@ const toggleHud = () => {
   const exp = $("hud-body").hidden;
   $("hud-body").hidden = !exp;
   $("hud-compact-row").hidden = exp;
-  $("hud-toggle").textContent = exp ? "▴" : "▾";
   $("hud-toggle").setAttribute("aria-expanded", String(exp));
 };
 $("hud-toggle").onclick = toggleHud;
@@ -78,14 +111,14 @@ const ambient = createAmbient(stage, {
   onTick({ h, month, safra, pico, night, gasLevel }) {
     const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 10) * 10;
     $("clk-time").textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
-    $("clk-ico").textContent = night > 0.5 ? "☾" : h < 8 || h > 17 ? "◐" : "☀";
+    { const ic = `#i-${night > 0.5 ? "moon" : h < 8 || h > 17 ? "dusk" : "sun"}`; if ($("clk-ico").getAttribute("href") !== ic) $("clk-ico").setAttribute("href", ic); }
     $("clk-month").textContent = month;
     $("clk-season").textContent = safra ? (pico ? "pico da safra" : "safra da cana") : "entressafra";
     $("clk-season").classList.toggle("off", !safra);
     $("gas-lvl").style.width = `${Math.round(gasLevel * 100)}%`;
   },
 });
-$("clk-pause").onclick = () => { const r = ambient.toggle(); $("clk-pause").textContent = r ? "❚❚" : "▶"; $("clk-pause").setAttribute("aria-label", r ? "Pausar o relógio" : "Retomar o relógio"); };
+$("clk-pause").onclick = () => { const r = ambient.toggle(); setIco($("clk-pause"), r ? "pause" : "play"); $("clk-pause").setAttribute("aria-label", r ? "Pausar o relógio" : "Retomar o relógio"); };
 
 // ---------- figuras do painel conversam com o mapa
 body.addEventListener("pointerover", (e) => { const g = e.target.closest("[data-tag]"); if (g && !journey.running) stage.hover(g.dataset.tag); });
@@ -95,7 +128,7 @@ body.addEventListener("pointerout", (e) => { if (e.target.closest("[data-tag]") 
 function setPanelHidden(hide, relayout = true) {
   const changed = document.body.classList.contains("panel-hidden") !== hide;
   document.body.classList.toggle("panel-hidden", hide);
-  $("btn-panel-toggle").textContent = hide ? "⇤" : "⇥";
+  setIco($("btn-panel-toggle"), hide ? "panel-show" : "panel-hide");
   $("btn-panel-toggle").setAttribute("aria-expanded", String(!hide));
   $("btn-panel-toggle").title = hide ? "Mostrar painel lateral (P)" : "Ocultar painel lateral (P)";
   if (changed && relayout) setTimeout(() => stage.relayout(), 220);
@@ -112,7 +145,7 @@ const journey = createJourney(stage, {
     $("cap-badge").style.background = color;
     $("cap-zone").textContent = leg.zone;
     $("cap-step").innerHTML = Array.from({ length: n }, (_, k) => `<button type="button" class="cap-dot ${k < i ? "done" : k === i ? "on" : ""}" data-leg="${k}" title="Etapa ${k + 1}" aria-label="Etapa ${k + 1}"></button>`).join("");
-    $("cap-pause").textContent = paused ? "▶" : "❚❚";
+    setIco($("cap-pause"), paused ? "play" : "pause");
     $("cap-pause").setAttribute("aria-label", paused ? "Retomar" : "Pausar");
     $("cap-cam").classList.toggle("on", followCam);
     $("cap-cam").setAttribute("aria-pressed", String(followCam));
@@ -128,6 +161,7 @@ const journey = createJourney(stage, {
     $("btn-journey").classList.toggle("on", on);
     $("btn-journey").setAttribute("aria-pressed", String(on));
     document.body.classList.toggle("journey", on);
+    setLegend(!on && mode !== "tour");
     if (on) {
       $("btn-overview").classList.remove("on");
       $("btn-tour").classList.remove("on");
@@ -175,7 +209,13 @@ svg.addEventListener("pointerleave", () => { if (!journey.running) stage.hover(n
 
 // legenda / camadas
 $("legend").innerHTML = renderLegend();
+// a legenda recolhe sozinha no tour e na jornada (o mapa precisa de espaço) e volta na visão geral
+function setLegend(open) {
+  $("legend").classList.toggle("collapsed", !open);
+  $("legend-head").setAttribute("aria-expanded", String(open));
+}
 $("legend").addEventListener("click", (e) => {
+  if (e.target.closest("#legend-head")) { setLegend($("legend").classList.contains("collapsed")); return; }
   const b = e.target.closest("[data-stream]");
   if (b) b.setAttribute("aria-pressed", String(stage.toggleStream(b.dataset.stream)));
 });
@@ -196,7 +236,7 @@ function setAutoPlay(on) {
   autoElapsed = 0;
   $("tour-auto").classList.toggle("on", on);
   $("tour-auto").setAttribute("aria-pressed", String(on));
-  $("tour-auto-ico").textContent = on ? "❚❚" : "▶";
+  $("tour-auto-ico").setAttribute("href", on ? "#i-pause" : "#i-play");
   $("auto-bar").style.transform = "scaleX(0)";
 }
 $("tour-auto").onclick = () => setAutoPlay(!autoPlay);
@@ -221,6 +261,7 @@ function showIndex() {
   setAutoPlay(false);
   body.innerHTML = renderIndex(STOPS, CHAPTERS);
   body.scrollTop = 0;
+  if (!document.body.classList.contains("booting")) animatePanel(0);
   $("panel-nav").hidden = true;
   stage.highlight(null);
   history.replaceState(null, "", location.pathname);
@@ -228,16 +269,18 @@ function showIndex() {
 
 function show(i) {
   const L = list();
+  const prev = index;
   index = Math.max(0, Math.min(L.length - 1, i));
   autoElapsed = 0;
   $("auto-bar").style.transform = "scaleX(0)";
   const stop = L[index];
   body.innerHTML = renderStop(stop, { index, total: L.length, inTour: mode === "tour" });
   body.scrollTop = 0;
+  animatePanel(prev < 0 ? 0 : Math.sign(index - prev));
   $("panel-nav").hidden = false;
   $("prev").disabled = index === 0 && !autoPlay;
   $("next").disabled = index === L.length - 1 && !autoPlay;
-  progress.style.setProperty("--p", `${((index + 1) / L.length) * 100}%`);
+  progress.style.setProperty("--p", ((index + 1) / L.length).toFixed(4));
   progress.setAttribute("aria-label", `Etapa ${index + 1} de ${L.length}`);
   stage.highlight(stop.tags || stop.streams !== "all" ? stop : null);
   stage.frame(stop);
@@ -266,6 +309,7 @@ function setMode(m, { auto = m === "tour" } = {}) {
   $("btn-overview").setAttribute("aria-pressed", String(m === "overview"));
   $("btn-tour").setAttribute("aria-pressed", String(m === "tour"));
   $("back-overview").hidden = m !== "tour";
+  setLegend(m !== "tour");
   setAutoPlay(auto);
   if (m === "tour") {
     const L = list();
@@ -382,3 +426,22 @@ if (TELA) {
   const wake = () => { document.body.classList.remove("idle"); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add("idle"), 2000); };
   addEventListener("pointermove", wake); wake();
 }
+
+// ---------- dica de navegação: aparece uma vez, some no primeiro gesto ou após 9 s
+(() => {
+  const hint = $("map-hint");
+  let seen = false;
+  try { seen = localStorage.getItem("eco-hint") === "1"; } catch {}
+  if (seen || TELA) return;
+  if (matchMedia("(pointer: coarse)").matches) hint.textContent = "Arraste para mover · pince para aproximar";
+  const done = () => {
+    hint.classList.add("out");
+    setTimeout(() => (hint.hidden = true), 400);
+    try { localStorage.setItem("eco-hint", "1"); } catch {}
+    svg.removeEventListener("pointerdown", done); svg.removeEventListener("wheel", done);
+  };
+  setTimeout(() => { if (!hint.classList.contains("out")) hint.hidden = false; }, 1600);
+  setTimeout(done, 10600);
+  svg.addEventListener("pointerdown", done, { passive: true });
+  svg.addEventListener("wheel", done, { passive: true });
+})();

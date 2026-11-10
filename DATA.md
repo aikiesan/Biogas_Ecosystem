@@ -1,6 +1,6 @@
 # Fontes dos números
 
-O foco da experiência é explicar, não calcular. Os números do potencial e dos resíduos são **medianas** das bases do CP2b. Todos estão centralizados em `src/data/numeros.mjs`.
+O foco da experiência é explicar, não calcular. Os números do potencial e dos resíduos são **medianas** das bases do CP2b. Todos estão centralizados em `src/data/numeros.mjs`. Valores derivados (metano por tonelada, m³/s, participação da cana, PCI em kWh, consumo do ônibus) são **calculados** a partir dos parâmetros primários, não digitados. Rode `node tools/verificar-dados.mjs` para checar a consistência interna (também roda no CI antes de publicar).
 
 ## Metano por tonelada de resíduo fresco
 

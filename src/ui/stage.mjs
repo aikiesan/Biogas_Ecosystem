@@ -17,20 +17,22 @@ export function createStage(svg, { stops, onPick }) {
   document.head.appendChild(style);
 
   // ---------- pinos numerados e selos de certificado
-  const pin = (s) => {
+  // .pin-in: invólucro só para movimento em CSS (cresce a partir do pé do pino)
+  const pin = (s, i) => {
     const [x, y] = iso(s.anchor);
     return `<g class="pin" data-stop="${s.id}" tabindex="0" role="button" aria-label="${s.n}. ${s.kicker}">
-      <g class="scaled" data-x="${x}" data-y="${y}"><path class="ps" d="M0,0 L0,-9"/><circle class="ring" cx="0" cy="-20" r="11"/><circle class="pc" cx="0" cy="-20" r="11"/><text class="pt" x="0" y="-20">${s.n}</text>
-      <text class="pin-label" x="16" y="-20">${s.kicker}</text></g></g>`;
+      <g class="scaled" data-x="${x}" data-y="${y}"><g class="pin-in" style="--i:${i}"><path class="ps" d="M0,0 L0,-9"/><circle class="ring" cx="0" cy="-20" r="11"/><circle class="pc" cx="0" cy="-20" r="11"/><text class="pt" x="0" y="-20">${s.n}</text>
+      <text class="pin-label" x="16" y="-20">${s.kicker}</text></g></g></g>`;
   };
-  const badge = (s) => {
+  const badge = (s, i) => {
     const [x, y] = iso(s.badge.at);
     const hex = Array.from({ length: 6 }, (_, k) => { const a = Math.PI / 6 + (k * Math.PI) / 3; return `${(Math.cos(a) * 15).toFixed(1)},${(Math.sin(a) * 15).toFixed(1)}`; }).join(" ");
     return `<g class="pin cert" data-stop="${s.id}" tabindex="0" role="button" aria-label="${s.n}. ${s.kicker}">
-      <g class="scaled" data-x="${x}" data-y="${y}"><polygon class="ring" points="${hex}"/><polygon class="hx" points="${hex}" fill="${CERT[s.id]}"/><text class="ht">${s.badge.tag}</text>
-      <text class="pin-label" x="20" y="0">${s.kicker}</text></g></g>`;
+      <g class="scaled" data-x="${x}" data-y="${y}"><g class="pin-in" style="--i:${i}"><polygon class="ring" points="${hex}"/><polygon class="hx" points="${hex}" fill="${CERT[s.id]}"/><text class="ht">${s.badge.tag}</text>
+      <text class="pin-label" x="20" y="0">${s.kicker}</text></g></g></g>`;
   };
-  const pins = stops.filter((s) => s.anchor).map(pin).join("") + stops.filter((s) => s.badge).map(badge).join("");
+  const anchored = stops.filter((s) => s.anchor);
+  const pins = anchored.map((s, i) => pin(s, i)).join("") + stops.filter((s) => s.badge).map((s, i) => badge(s, anchored.length + i)).join("");
 
   // ---------- efeitos
   const fx = [];
@@ -136,14 +138,29 @@ export function createStage(svg, { stops, onPick }) {
     return { x: cx - w / 2, y: cy - h / 2, w, h };
   }
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  // Voo da câmera. Entre pontos distantes, a câmera recua no meio do trajeto e volta a
+  // aproximar (arco de zoom, como num mapa). Assim o olho não perde o contexto e o
+  // deslocamento aparente na tela fica mais uniforme. O redesenho nítido (caro) só roda
+  // depois que a câmera para, para não engasgar justamente na desaceleração.
   function flyTo(target, ms = 1200) {
     clearTimeout(settleTimer);
     if (reduceMotion || ms <= 1) { vb = target; tween = null; apply(); return; }
     const from = { ...vb }, t0 = performance.now();
+    const c0 = [from.x + from.w / 2, from.y + from.h / 2], c1 = [target.x + target.w / 2, target.y + target.h / 2];
+    const dist = Math.hypot(c1[0] - c0[0], c1[1] - c0[1]);
+    const wMax = Math.max(from.w, target.w), cap = overviewRect().w;
+    const peak = Math.min(cap, Math.max(wMax, dist * 0.9 + Math.min(from.w, target.w) * 0.6));
+    const lift = Math.max(0, peak - wMax); // quanto a câmera recua no meio do voo
+    const ratio = target.h / target.w;
+    const dur = ms * (1 + Math.min(0.35, lift / cap)); // voos com arco ganham um pouco de tempo
     tween = (now) => {
-      const t = Math.min(1, (now - t0) / ms), e = ease(t);
-      vb = { x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e, w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e };
-      if (t >= 1) { tween = null; apply(); } else camTransform();
+      const t = Math.min(1, (now - t0) / dur), e = ease(t);
+      const w = from.w + (target.w - from.w) * e + lift * 4 * t * (1 - t);
+      const h = from.h + (target.h - from.h) * e + lift * ratio * 4 * t * (1 - t);
+      const cx = c0[0] + (c1[0] - c0[0]) * e, cy = c0[1] + (c1[1] - c0[1]) * e;
+      vb = { x: cx - w / 2, y: cy - h / 2, w, h };
+      camTransform();
+      if (t >= 1) { tween = null; vb = target; camTransform(); scheduleSettle(70); }
     };
   }
   const overviewRect = () => fit(B, 1.0);

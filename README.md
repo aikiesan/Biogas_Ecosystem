@@ -39,7 +39,7 @@ Depois abra <http://localhost:8000>.
 
 ```
 index.html
-styles/            base (layout, marca) · scene (diorama) · panel · figures
+styles/            base (layout, marca) · scene (diorama) · panel · figures · life · motion (durações, curvas, transições)
 src/
   main.mjs         liga tudo: modos, navegação, URL
   data/
@@ -81,6 +81,9 @@ docs/ARQUITETURA.md   como editar e os princípios das figuras
 - **Tracejados animados:** são atualizados a 20 Hz por um único relógio; as animações escondidas ficam pausadas.
 
 - **Noite:** as luzes (janelas, postes, refletores e LEDs da usina) ficam numa camada desenhada uma vez; o ciclo dia/noite só muda a opacidade dela, a cada quadro, sem degraus. Os faróis e o brilho dos fluxos usam sprites no canvas.
+- **Câmera em arco:** entre pontos distantes, a câmera recua no meio do voo e volta a aproximar. O redesenho nítido só roda ~70 ms depois que ela para, para não engasgar na chegada.
+- **Sem desfoque de fundo:** os cartões sobre o mapa não usam `backdrop-filter`, que teria de ser recalculado a cada quadro.
+- **Sistema de movimento:** `styles/motion.css` reúne as durações (120/200/340/560 ms), as curvas (expo-out, ease-in-out e mola) e todas as transições da interface. Respeita `prefers-reduced-motion`.
 - **Medidor:** abra `…/?fps` para ver quadros por segundo e o custo de JavaScript por quadro.
 
 ## Publicação

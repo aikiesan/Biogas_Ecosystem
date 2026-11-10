@@ -6,7 +6,7 @@
 // - tags:    zonas destacadas no diorama · streams: fluxos em evidência
 // - anchor:  posição do pino (mundo) · focus: enquadramento do tour
 import { DIGESTATO, CASA_M3_MES, ONIBUS, PCI, EVITADO_DIESEL } from "../data/numeros.mjs";
-import { METANO_POR_TONELADA as T, POTENCIAL_SP as SP, POTENCIAL_SP_DIA, CAPACIDADE_SP_DIA, BIOGAS, BIOMETANO_CH4_MIN, BIOMETANO_SPEC, CHP, CSTR, INTENSIDADE, REDUCAO_DIESEL, RSU_ORGANICO_BR, CBIO, CGOB } from "../data/numeros.mjs";
+import { METANO_POR_TONELADA as T, POTENCIAL_SP as SP, POTENCIAL_SP_DIA, DIAS_ANO, CANA_PARTICIPACAO, CAPACIDADE_SP_DIA, BIOGAS, BIOMETANO_CH4_MIN, BIOMETANO_SPEC, CHP, CSTR, INTENSIDADE, REDUCAO_DIESEL, RSU_ORGANICO_BR, CBIO, CGOB } from "../data/numeros.mjs";
 const mid = ([a, b]) => (a + b) / 2;
 import { FONTES } from "../data/fontes.mjs";
 
@@ -37,7 +37,7 @@ export const STOPS = [
     figure: { type: "share", unit: "% do potencial de metano de SP (mediana)", parts: [
       { label: "Palha", v: SP.cana.palha, tone: "agricola" }, { label: "Torta", v: SP.cana.torta, tone: "agricola", shade: 1 },
       { label: "Vinhaça", v: SP.cana.vinhaca, tone: "agricola", shade: 2 }, { label: "Bagaço", v: SP.cana.bagaco, tone: "agricola", shade: 3 },
-      { label: "Outros", v: 100 - 81.8, tone: "neutral" }] },
+      { label: "Outros", v: 100 - CANA_PARTICIPACAO, tone: "neutral" }] },
     text: ["Palha, torta de filtro, vinhaça e bagaço sobram da produção de açúcar e etanol, em volumes enormes."],
     more: ["A colheita no Centro-Sul vai de abril/maio a novembro, com pico de junho a outubro. Na entressafra (dezembro a março), vinhaça e palha quase param, salvo estoques. No mapa, o relógio mostra a safra passando."],
     tags: ["agro", "ind"], streams: ["substrato"], anchor: [110, 100, 18], focus: [0, 0, 250, 215], sources: ["cp2bEvidencia", "conab"],
@@ -183,7 +183,7 @@ export const STOPS = [
   },
   {
     id: "posto", chapter: "destino", kicker: "Mobilidade",
-    message: "Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.",
+    message: `Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.`,
     figure: { type: "compare", unit: "gCO₂e por MJ de combustível, ciclo poço à roda (EPE)", ratioLabel: `−${REDUCAO_DIESEL}%`, rows: [
       { label: "Diesel B", v: INTENSIDADE.dieselB, tone: "neutral", prefix: "< " },
       { label: "Biometano (plantas certificadas no RenovaBio)", v: INTENSIDADE.biometano, tone: "biometano" }] },
@@ -261,7 +261,7 @@ export const STOPS = [
     id: "fim", chapter: null, tourOnly: true, kicker: "O potencial de São Paulo",
     message: `SP poderia produzir cerca de ${Math.round(POTENCIAL_SP_DIA / CAPACIDADE_SP_DIA)} vezes mais biometano do que tem hoje.`,
     figure: { type: "compare", unit: "milhões de m³ de metano por dia", rows: [
-      { label: "Potencial (mediana CP2b)", v: POTENCIAL_SP_DIA, lo: SP.p5BiAno * 1000 / 365, hi: SP.p95BiAno * 1000 / 365, tone: "biometano" },
+      { label: "Potencial (mediana CP2b)", v: POTENCIAL_SP_DIA, lo: SP.p5BiAno * 1000 / DIAS_ANO, hi: SP.p95BiAno * 1000 / DIAS_ANO, tone: "biometano" },
       { label: "Capacidade instalada (ANP, 2024)", v: CAPACIDADE_SP_DIA, tone: "neutral" }] },
     text: [`Somando os resíduos dos ${SP.municipios} municípios: ≈ ${fmt(SP.medianaBiAno, 1)} bilhões de m³ de metano por ano (intervalo de 90%: ${fmt(SP.p5BiAno, 1)}–${fmt(SP.p95BiAno, 1)}).`],
     focus: "all", streams: "all", sources: ["cp2bEvidencia"],
