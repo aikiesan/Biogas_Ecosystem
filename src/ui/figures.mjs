@@ -7,6 +7,9 @@ import { STREAMS, SECTORS, NEUTRAL, INK, MUTED, CERT, KEY, toneColor } from "./p
 const W = 340;
 const fmt = (n, d = 0) => n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const svg = (h, body, label) => `<svg class="fig" viewBox="0 0 ${W} ${h}" role="img" aria-label="${label || ""}">${body}</svg>`;
+// texto branco ou escuro, o que contrastar mais com o fundo (WCAG, luminância relativa)
+const lum = (c) => { const v = c.startsWith("#") ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)) : c.match(/\d+/g).map(Number); const l = v.map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2]; };
+const lightInk = (bg) => 1.05 / (lum(bg) + 0.05) >= (lum(bg) + 0.05) / (lum("#1E3E4C") + 0.05);
 const shadeOf = (hex, k) => { const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)); return `rgb(${c.map((v) => Math.round(v + (255 - v) * k * 0.22)).join(",")})`; };
 const arrow = (x1, y1, x2, y2, cls = "arr") => `<path class="${cls}" d="M${x1},${y1} L${x2},${y2}" marker-end="url(#ah)"/>`;
 const DEFS = `<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="${MUTED}"/></marker></defs>`;
@@ -40,7 +43,7 @@ const F = {
       const w = (p.v / total) * W;
       const c = p.tone === "neutral" ? NEUTRAL : shadeOf(toneColor(p.tone), p.shade || 0);
       b += `<rect class="grow d${i}" ${p.tone === "agricola" ? 'data-tag="agro"' : ""} x="${x}" y="${y}" width="${Math.max(0, w - 1.5)}" height="${h}" fill="${c}" rx="2"/>`;
-      if (w > 34) b += label(`${fmt(p.v, 0)}%`, x + w / 2, y + h / 2 + 4, `fv ${p.tone === "neutral" ? "" : "on"}`);
+      if (w > 34) b += label(`${fmt(p.v, 0)}%`, x + w / 2, y + h / 2 + 4, `fv ${lightInk(c) ? "on" : ""}`);
       b += wrap(p.label, x + w / 2, y + h + 16, 10, "fn");
       x += w;
     });

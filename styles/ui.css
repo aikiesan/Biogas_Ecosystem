@@ -1,0 +1,172 @@
+/* Acabamento visual da interface: tipografia, ícones, cartões do mapa e painel.
+   Carregado depois dos estilos de base e antes de motion.css. */
+
+/* ---------- tipografia
+   Neulis Sans (marca CP2b) vem primeiro, para quem a tiver instalada. Para os demais, Figtree
+   (OFL, servida localmente, ~30 KB): geométrica e próxima do espírito da marca. Os poucos
+   caracteres que ela não tem (₂ ₄ → ≈) vêm da fonte do sistema. */
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-display: swap; font-weight: 300 900;
+  src: url("../assets/fonts/figtree-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-display: swap; font-weight: 300 900;
+  src: url("../assets/fonts/figtree-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+:root {
+  --font: "Neulis Sans", "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 14px;
+  --card: 0 1px 2px rgba(30, 62, 76, .06), 0 12px 32px -12px rgba(30, 62, 76, .28);
+}
+body { font-feature-settings: "cv11", "ss01"; text-rendering: optimizeLegibility; }
+.titles h1 { font-size: 18px; font-weight: 800; letter-spacing: -.015em; }
+.titles p { font-size: 13px; }
+.pill { font-size: 13px; padding: 7px 14px; }
+.panel-body p { font-size: 14.5px; line-height: 1.55; }
+.panel-body h2 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.home h2 { font-size: 24px; }
+.kicker { font-size: 13px; }
+.idx b { font-size: 14.5px; }
+.idx small { font-size: 13px; }
+.chip { font-size: 12.5px; }
+.clock, .hud-compact-row { font-size: 12.5px; }
+.hud-u, .hud-eq, .gasbar { font-size: 11.5px; }
+.cap-text { font-size: 15px; }
+.tip { font-size: 13.5px; }
+.tip span { font-size: 12px; }
+.fig text { font-family: var(--font); }
+
+/* ---------- ícones de traço (sprite em index.html) */
+.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+:is(.cta-tour, .cta-journey, .back, .back-overview) { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.back-overview[hidden] { display: none; }
+:is(.cta-tour, .cta-journey) .i { width: 16px; height: 16px; }
+.cta-journey .i { color: var(--verde-escuro); }
+
+/* ---------- barra superior */
+.top { border-bottom-color: transparent; box-shadow: 0 1px 0 var(--line), 0 6px 18px -14px rgba(30, 62, 76, .35); }
+.panel-toggle-btn { width: 36px; height: 36px; border-radius: 10px; background: #fff; }
+.panel-toggle-btn .i { width: 19px; height: 19px; }
+
+/* ---------- HUD do relógio: uma linha limpa + contador. O botão "Siga o carbono" daqui
+   repetia o seletor do topo e o atalho do painel; fica só lá. */
+.hud { width: auto; min-width: 232px; padding: 9px 10px 8px 12px; border-radius: var(--radius); }
+.hud .journey-btn { display: none; }
+.clock { gap: 7px; }
+.clock .clk-ico { width: 17px; height: 17px; color: #C98A00; }
+body.night .clock .clk-ico { color: var(--petrol); }
+.clock b { font-size: 14px; font-weight: 800; letter-spacing: -.01em; }
+.clock #clk-month { color: var(--ink-muted); }
+.clock .season { margin-left: auto; font-weight: 700; font-size: 11px; padding: 2px 8px; }
+.clock button { width: 26px; height: 26px; border: 0; border-radius: 8px; background: transparent; color: var(--petrol); }
+.clock button .i { width: 15px; height: 15px; }
+.clock button:hover { background: var(--paper-sunken); }
+.hud-toggle .i { transition: rotate var(--dur-3, .3s) var(--ease-out, ease); }
+.hud-toggle[aria-expanded="true"] .i { rotate: 180deg; }
+.hud-compact-row { padding: 6px 0 1px; gap: 7px; }
+.hud-compact-row b { font-size: 14px; font-weight: 800; }
+.hud-v { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.hud-v2 { font-size: 14px; font-weight: 800; }
+.hud-bar { height: 6px; border-radius: 3px; }
+
+/* ---------- legenda: cabeçalho recolhível; recolhida mostra só uma faixa de cores */
+.legend { padding: 0; overflow: hidden; border-radius: var(--radius); max-width: 452px; }
+.legend-head { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; padding: 10px 12px 8px; cursor: pointer; text-align: left; }
+.legend-head .legend-title { margin: 0; }
+.legend-head small { font-size: 11.5px; color: var(--ink-muted); }
+.legend-head .i { width: 16px; height: 16px; margin-left: auto; color: var(--ink-muted); transition: rotate var(--dur-3, .3s) var(--ease-out, ease); }
+.legend-head:hover .i { color: var(--petrol); }
+.legend-sw { display: none; gap: 3px; }
+.legend-sw i { width: 12px; height: 4px; border-radius: 2px; }
+.legend .chips { padding: 0 12px 12px; }
+.legend.collapsed .chips, .legend.collapsed .legend-head small { display: none; }
+.legend.collapsed .legend-sw { display: inline-flex; }
+.legend.collapsed .legend-head { padding: 9px 12px; }
+.legend.collapsed .legend-head .i { rotate: -90deg; }
+.chip { padding: 4px 10px 4px 7px; gap: 7px; }
+.chip i { width: 15px; height: 4px; }
+.chip[aria-pressed="false"] { opacity: 1; color: var(--ink-muted); background: var(--paper-sunken); text-decoration: line-through; text-decoration-color: rgba(84, 102, 110, .5); }
+.chip[aria-pressed="false"] i { opacity: .3; }
+
+/* ---------- controles do mapa */
+.zoom-ctrls { border-radius: var(--radius); }
+.zm-btn { width: 36px; height: 36px; border-radius: 10px; }
+.zm-btn .i { width: 18px; height: 18px; }
+.zm-reset { border-radius: 10px; border-top: 0; padding: 0; }
+.back-overview { padding: 8px 14px 8px 11px; font-weight: 700; color: var(--petrol); border-radius: 999px; }
+.back-overview .i { width: 17px; height: 17px; color: var(--verde-escuro); }
+.back-overview:hover { background: var(--paper-sunken); }
+
+/* ---------- jornada: barra de controle */
+.caption { padding: 12px 16px 13px; border-radius: 16px; }
+.cap-btn { width: 30px; height: 28px; border-radius: 8px; border-color: rgba(255, 255, 255, .16); }
+.cap-btn .i { width: 15px; height: 15px; }
+.cap-badge { font-size: 11px; padding: 3px 9px; }
+.cap-zone { font-size: 12.5px; }
+
+/* ---------- dica de navegação (uma vez) */
+.map-hint {
+  position: absolute; top: 14px; left: 50%; translate: -50% 0; z-index: 9; pointer-events: none;
+  padding: 8px 14px; border-radius: 999px; background: rgba(30, 62, 76, .9); color: #fff;
+  font-size: 12.5px; font-weight: 600; white-space: nowrap; box-shadow: var(--card);
+  animation: hintin var(--dur-4, .5s) var(--ease-out, ease) both;
+  transition: opacity .35s, translate .35s;
+}
+.map-hint[hidden] { display: none; }
+.map-hint.out { opacity: 0; translate: -50% -6px; }
+@keyframes hintin { from { opacity: 0; translate: -50% -8px; } }
+body[data-mode="tour"] .map-hint, body.journey .map-hint { display: none; }
+
+/* ---------- painel */
+.home .eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .02em; color: var(--verde-escuro); }
+.home .lede { font-size: 14px; line-height: 1.5; }
+.cta-tour, .cta-journey { padding: 11px 12px; border-radius: 12px; font-size: 13.5px; }
+.chapter h3 { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; font-size: 11px; font-weight: 800; color: var(--ink-muted); }
+.chapter h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.idx { position: relative; padding: 9px 30px 9px 8px; border-radius: 12px; }
+.idx::after {
+  content: ""; position: absolute; right: 10px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+  background: var(--verde-escuro); opacity: 0; translate: -4px 0; transition: opacity var(--dur-2, .2s), translate var(--dur-2, .2s) var(--ease-out, ease);
+  -webkit-mask: var(--chev) center / contain no-repeat; mask: var(--chev) center / contain no-repeat;
+}
+.idx:hover::after, .idx:focus-visible::after { opacity: 1; translate: 0 0; }
+:root { --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
+  --ext: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16L16 8M9 8h7v7'/%3E%3C/svg%3E"); }
+.back { padding: 5px 10px 5px 6px; margin: -2px 0 12px -2px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+.back .i { width: 15px; height: 15px; }
+.back:hover { background: var(--paper-sunken); }
+.cta { border-radius: 12px; font-weight: 700; }
+.cta::after { content: ""; width: 15px; height: 15px; background: var(--lima); -webkit-mask: var(--ext) center / contain no-repeat; mask: var(--ext) center / contain no-repeat; }
+summary { display: flex; align-items: center; gap: 6px; font-size: 13.5px; padding: 2px 0; }
+summary::before { content: ""; width: 14px; height: 14px; background: currentColor; -webkit-mask: var(--chev) center / contain no-repeat; mask: var(--chev) center / contain no-repeat; transition: rotate var(--dur-2, .2s) var(--ease-out, ease); }
+details[open] summary::before { content: ""; rotate: 90deg; }
+.tag { font-size: 12px; padding: 4px 10px 4px 8px; }
+
+/* navegação do tour: o tempo do avanço automático fica no próprio botão "Auto";
+   a barra ao lado mostra só em que etapa você está */
+.nav-btn { display: grid; place-items: center; width: 40px; height: 40px; }
+.nav-btn .i { width: 20px; height: 20px; }
+.tour-auto { position: relative; overflow: hidden; height: 34px; padding: 0 12px 0 10px; gap: 6px; font-size: 12px; }
+.tour-auto .i { width: 13px; height: 13px; }
+.tour-auto small { font-size: 12px; }
+.auto-bar { height: 3px; background: var(--lima); }
+.tour-auto:not(.on) .auto-bar { display: none; }
+.progress { height: 6px; background: var(--paper-sunken); box-shadow: inset 0 0 0 1px var(--line); }
+
+@media (max-width: 820px) {
+  .legend { padding: 5px 8px; border-radius: 10px; }
+  .legend-head { display: none; }
+  .legend .chips, .legend.collapsed .chips { display: flex; padding: 0; }
+  .panel-body p { font-size: 13.5px; }
+  .panel-body h2 { font-size: 18px; }
+  .home h2 { font-size: 19px; }
+  .panel-toggle-btn { width: 30px; height: 30px; }
+  .pill { font-size: 11.5px; padding: 5px 9px; }
+  .hud { min-width: 0; }
+  .map-hint { top: auto; bottom: 50px; left: 8px; right: 52px; translate: none; white-space: normal; text-align: center; font-size: 11.5px; padding: 7px 12px; }
+  .map-hint.out { translate: 0 6px; }
+  .nav-btn { width: 34px; height: 34px; }
+  .tour-auto { height: 30px; }
+}

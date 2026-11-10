@@ -19,6 +19,12 @@ const $ = (id) => document.getElementById(id);
 //   &passeio         a câmera passeia devagar pelas etapas
 //   &dia=300         duração de um dia, em segundos (padrão 60)
 //   &hora=19         hora inicial (padrão 10)
+// ícones de interface (sprite em index.html): troca o desenho só quando muda
+const setIco = (el, name) => {
+  const href = `#i-${name}`, use = el.querySelector("use");
+  if (use) { if (use.getAttribute("href") !== href) use.setAttribute("href", href); return; }
+  el.innerHTML = `<svg class="i" aria-hidden="true"><use href="${href}"/></svg>`;
+};
 const params = new URLSearchParams(location.search);
 const TELA = params.has("tela");
 if (TELA) document.body.classList.add("tela");
@@ -92,7 +98,6 @@ const toggleHud = () => {
   const exp = $("hud-body").hidden;
   $("hud-body").hidden = !exp;
   $("hud-compact-row").hidden = exp;
-  $("hud-toggle").textContent = exp ? "▴" : "▾";
   $("hud-toggle").setAttribute("aria-expanded", String(exp));
 };
 $("hud-toggle").onclick = toggleHud;
@@ -106,14 +111,14 @@ const ambient = createAmbient(stage, {
   onTick({ h, month, safra, pico, night, gasLevel }) {
     const hh = Math.floor(h), mm = Math.floor((h - hh) * 60 / 10) * 10;
     $("clk-time").textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
-    $("clk-ico").textContent = night > 0.5 ? "☾" : h < 8 || h > 17 ? "◐" : "☀";
+    { const ic = `#i-${night > 0.5 ? "moon" : h < 8 || h > 17 ? "dusk" : "sun"}`; if ($("clk-ico").getAttribute("href") !== ic) $("clk-ico").setAttribute("href", ic); }
     $("clk-month").textContent = month;
     $("clk-season").textContent = safra ? (pico ? "pico da safra" : "safra da cana") : "entressafra";
     $("clk-season").classList.toggle("off", !safra);
     $("gas-lvl").style.width = `${Math.round(gasLevel * 100)}%`;
   },
 });
-$("clk-pause").onclick = () => { const r = ambient.toggle(); $("clk-pause").textContent = r ? "❚❚" : "▶"; $("clk-pause").setAttribute("aria-label", r ? "Pausar o relógio" : "Retomar o relógio"); };
+$("clk-pause").onclick = () => { const r = ambient.toggle(); setIco($("clk-pause"), r ? "pause" : "play"); $("clk-pause").setAttribute("aria-label", r ? "Pausar o relógio" : "Retomar o relógio"); };
 
 // ---------- figuras do painel conversam com o mapa
 body.addEventListener("pointerover", (e) => { const g = e.target.closest("[data-tag]"); if (g && !journey.running) stage.hover(g.dataset.tag); });
@@ -123,7 +128,7 @@ body.addEventListener("pointerout", (e) => { if (e.target.closest("[data-tag]") 
 function setPanelHidden(hide, relayout = true) {
   const changed = document.body.classList.contains("panel-hidden") !== hide;
   document.body.classList.toggle("panel-hidden", hide);
-  $("btn-panel-toggle").textContent = hide ? "⇤" : "⇥";
+  setIco($("btn-panel-toggle"), hide ? "panel-show" : "panel-hide");
   $("btn-panel-toggle").setAttribute("aria-expanded", String(!hide));
   $("btn-panel-toggle").title = hide ? "Mostrar painel lateral (P)" : "Ocultar painel lateral (P)";
   if (changed && relayout) setTimeout(() => stage.relayout(), 220);
@@ -140,7 +145,7 @@ const journey = createJourney(stage, {
     $("cap-badge").style.background = color;
     $("cap-zone").textContent = leg.zone;
     $("cap-step").innerHTML = Array.from({ length: n }, (_, k) => `<button type="button" class="cap-dot ${k < i ? "done" : k === i ? "on" : ""}" data-leg="${k}" title="Etapa ${k + 1}" aria-label="Etapa ${k + 1}"></button>`).join("");
-    $("cap-pause").textContent = paused ? "▶" : "❚❚";
+    setIco($("cap-pause"), paused ? "play" : "pause");
     $("cap-pause").setAttribute("aria-label", paused ? "Retomar" : "Pausar");
     $("cap-cam").classList.toggle("on", followCam);
     $("cap-cam").setAttribute("aria-pressed", String(followCam));
@@ -156,6 +161,7 @@ const journey = createJourney(stage, {
     $("btn-journey").classList.toggle("on", on);
     $("btn-journey").setAttribute("aria-pressed", String(on));
     document.body.classList.toggle("journey", on);
+    setLegend(!on && mode !== "tour");
     if (on) {
       $("btn-overview").classList.remove("on");
       $("btn-tour").classList.remove("on");
@@ -203,7 +209,13 @@ svg.addEventListener("pointerleave", () => { if (!journey.running) stage.hover(n
 
 // legenda / camadas
 $("legend").innerHTML = renderLegend();
+// a legenda recolhe sozinha no tour e na jornada (o mapa precisa de espaço) e volta na visão geral
+function setLegend(open) {
+  $("legend").classList.toggle("collapsed", !open);
+  $("legend-head").setAttribute("aria-expanded", String(open));
+}
 $("legend").addEventListener("click", (e) => {
+  if (e.target.closest("#legend-head")) { setLegend($("legend").classList.contains("collapsed")); return; }
   const b = e.target.closest("[data-stream]");
   if (b) b.setAttribute("aria-pressed", String(stage.toggleStream(b.dataset.stream)));
 });
@@ -224,7 +236,7 @@ function setAutoPlay(on) {
   autoElapsed = 0;
   $("tour-auto").classList.toggle("on", on);
   $("tour-auto").setAttribute("aria-pressed", String(on));
-  $("tour-auto-ico").textContent = on ? "❚❚" : "▶";
+  $("tour-auto-ico").setAttribute("href", on ? "#i-pause" : "#i-play");
   $("auto-bar").style.transform = "scaleX(0)";
 }
 $("tour-auto").onclick = () => setAutoPlay(!autoPlay);
@@ -297,6 +309,7 @@ function setMode(m, { auto = m === "tour" } = {}) {
   $("btn-overview").setAttribute("aria-pressed", String(m === "overview"));
   $("btn-tour").setAttribute("aria-pressed", String(m === "tour"));
   $("back-overview").hidden = m !== "tour";
+  setLegend(m !== "tour");
   setAutoPlay(auto);
   if (m === "tour") {
     const L = list();
@@ -413,3 +426,22 @@ if (TELA) {
   const wake = () => { document.body.classList.remove("idle"); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add("idle"), 2000); };
   addEventListener("pointermove", wake); wake();
 }
+
+// ---------- dica de navegação: aparece uma vez, some no primeiro gesto ou após 9 s
+(() => {
+  const hint = $("map-hint");
+  let seen = false;
+  try { seen = localStorage.getItem("eco-hint") === "1"; } catch {}
+  if (seen || TELA) return;
+  if (matchMedia("(pointer: coarse)").matches) hint.textContent = "Arraste para mover · pince para aproximar";
+  const done = () => {
+    hint.classList.add("out");
+    setTimeout(() => (hint.hidden = true), 400);
+    try { localStorage.setItem("eco-hint", "1"); } catch {}
+    svg.removeEventListener("pointerdown", done); svg.removeEventListener("wheel", done);
+  };
+  setTimeout(() => { if (!hint.classList.contains("out")) hint.hidden = false; }, 1600);
+  setTimeout(done, 10600);
+  svg.addEventListener("pointerdown", done, { passive: true });
+  svg.addEventListener("wheel", done, { passive: true });
+})();

@@ -7,14 +7,36 @@
   <meta name="description" content="Do resíduo à energia: um diorama animado do ecossistema do biogás e do biometano, dos coprodutos e dos certificados ambientais. CP2b – Centro Paulista de Estudos em Biogás e Bioprodutos.">
   <meta name="theme-color" content="#1E3E4C">
   <link rel="icon" href="assets/cp2b-logo.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles/base.css">
   <link rel="stylesheet" href="styles/scene.css">
   <link rel="stylesheet" href="styles/panel.css">
   <link rel="stylesheet" href="styles/figures.css">
   <link rel="stylesheet" href="styles/life.css">
+  <link rel="stylesheet" href="styles/ui.css">
   <link rel="stylesheet" href="styles/motion.css">
 </head>
 <body>
+  <!-- ícones de interface (traço 24×24, cor herdada) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.6v12.8a.8.8 0 0 0 1.2.7l10.3-6.4a.8.8 0 0 0 0-1.4L9.2 4.9A.8.8 0 0 0 8 5.6z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.9" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-panel-hide" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M15 4v16M8.5 10l2 2-2 2"/></symbol>
+    <symbol id="i-panel-show" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M15 4v16M10.5 10l-2 2 2 2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-dusk" viewBox="0 0 24 24"><path d="M3 18h18M6.5 18a5.5 5.5 0 0 1 11 0M12 5v4M4.9 10.9l1.4 1.4M19.1 10.9l-1.4 1.4"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20"/></symbol>
+    <symbol id="i-cycle" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></symbol>
+  </svg>
   <header class="top">
     <a class="brand" href="https://cp2b.unicamp.br/pilar2b/pt-BR" target="_blank" rel="noopener">
       <img src="assets/cp2b-logo.svg" alt="CP2b — Centro Paulista de Estudos em Biogás e Bioprodutos" width="96" height="37">
@@ -28,7 +50,7 @@
       <button type="button" id="btn-journey" class="pill" aria-pressed="false">Siga o carbono</button>
       <button type="button" id="btn-tour" class="pill" aria-pressed="false">Tour guiado</button>
     </nav>
-    <button type="button" id="btn-panel-toggle" class="panel-toggle-btn" title="Ocultar ou mostrar painel lateral (P)" aria-label="Alternar painel lateral" aria-expanded="true">⇥</button>
+    <button type="button" id="btn-panel-toggle" class="panel-toggle-btn" title="Ocultar ou mostrar painel lateral (P)" aria-label="Alternar painel lateral" aria-expanded="true"><svg class="i" aria-hidden="true"><use href="#i-panel-hide"/></svg></button>
   </header>
 
   <main class="app">
@@ -38,12 +60,12 @@
       <div class="loading" id="loading">Montando o ecossistema…</div>
       <div class="hud" id="hud">
         <div class="clock">
-          <span class="ico" id="clk-ico">☀</span>
+          <svg class="i clk-ico" aria-hidden="true"><use id="clk-ico" href="#i-sun"/></svg>
           <b id="clk-time">10:00</b>
           <span id="clk-month">junho</span>
           <span class="season" id="clk-season">safra</span>
-          <button type="button" id="clk-pause" title="Pausar ou retomar relógio" aria-label="Pausar o relógio">❚❚</button>
-          <button type="button" id="hud-toggle" class="hud-toggle" title="Expandir ou recolher contador ao vivo" aria-label="Alternar contador ao vivo" aria-expanded="false">▾</button>
+          <button type="button" id="clk-pause" title="Pausar ou retomar relógio" aria-label="Pausar o relógio"><svg class="i" aria-hidden="true"><use href="#i-pause"/></svg></button>
+          <button type="button" id="hud-toggle" class="hud-toggle" title="Expandir ou recolher contador ao vivo" aria-label="Alternar contador ao vivo" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-chev-d"/></svg></button>
         </div>
         <div class="hud-compact-row" id="hud-compact-row" title="Clique para ver detalhes">
           <span class="hud-dot"></span>
@@ -66,33 +88,34 @@
           <span class="cap-zone" id="cap-zone">Agricultura</span>
           <div class="cap-step" id="cap-step" role="tablist" aria-label="Etapas do ciclo do carbono"></div>
           <div class="cap-ctrls">
-            <button type="button" id="cap-prev" class="cap-btn" title="Trecho anterior (←)" aria-label="Trecho anterior">‹</button>
-            <button type="button" id="cap-pause" class="cap-btn" title="Pausar ou retomar (Espaço)" aria-label="Pausar">❚❚</button>
-            <button type="button" id="cap-next" class="cap-btn" title="Próximo trecho (→)" aria-label="Próximo trecho">›</button>
-            <button type="button" id="cap-cam" class="cap-btn on" title="Acompanhar com a câmera" aria-label="Acompanhar com a câmera" aria-pressed="true">⌖</button>
-            <button type="button" id="cap-close" class="cap-btn" title="Sair (Esc)" aria-label="Sair">✕</button>
+            <button type="button" id="cap-prev" class="cap-btn" title="Trecho anterior (←)" aria-label="Trecho anterior"><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+            <button type="button" id="cap-pause" class="cap-btn" title="Pausar ou retomar (Espaço)" aria-label="Pausar"><svg class="i" aria-hidden="true"><use href="#i-pause"/></svg></button>
+            <button type="button" id="cap-next" class="cap-btn" title="Próximo trecho (→)" aria-label="Próximo trecho"><svg class="i" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+            <button type="button" id="cap-cam" class="cap-btn on" title="Acompanhar com a câmera" aria-label="Acompanhar com a câmera" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></button>
+            <button type="button" id="cap-close" class="cap-btn" title="Sair (Esc)" aria-label="Sair"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
           </div>
         </div>
         <div class="cap-text" id="cap-text"></div>
       </div>
       <div class="tip" id="tip" hidden></div>
+      <div class="map-hint" id="map-hint" hidden>Arraste para mover · role ou pince para aproximar</div>
       <div class="legend" id="legend" aria-label="Legenda e camadas"></div>
       <div class="zoom-ctrls" id="zoom-ctrls" aria-label="Controles do mapa">
-        <button type="button" id="zm-in" class="zm-btn" title="Aproximar (+)" aria-label="Aproximar">+</button>
-        <button type="button" id="zm-out" class="zm-btn" title="Afastar (−)" aria-label="Afastar">−</button>
-        <button type="button" id="zm-reset" class="zm-btn zm-reset" title="Enquadrar mapa inteiro (0)" aria-label="Enquadrar mapa inteiro" hidden>⟲</button>
+        <button type="button" id="zm-in" class="zm-btn" title="Aproximar (+)" aria-label="Aproximar"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <button type="button" id="zm-out" class="zm-btn" title="Afastar (−)" aria-label="Afastar"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+        <button type="button" id="zm-reset" class="zm-btn zm-reset" title="Enquadrar mapa inteiro (0)" aria-label="Enquadrar mapa inteiro" hidden><svg class="i" aria-hidden="true"><use href="#i-fit"/></svg></button>
       </div>
-      <button type="button" class="back-overview" id="back-overview" hidden>⤺ Visão geral</button>
+      <button type="button" class="back-overview" id="back-overview" hidden><svg class="i" aria-hidden="true"><use href="#i-map"/></svg>Visão geral</button>
     </section>
 
     <aside class="panel" id="panel" aria-live="polite">
       <button type="button" class="sheet-handle" id="sheet-handle" aria-label="Expandir ou recolher painel"><span></span></button>
       <div class="panel-body" id="panel-body"></div>
       <footer class="panel-nav" id="panel-nav">
-        <button type="button" id="prev" class="nav-btn" aria-label="Etapa anterior">‹</button>
-        <button type="button" id="tour-auto" class="tour-auto" title="Avanço automático (Espaço)" aria-label="Alternar avanço automático" aria-pressed="true"><span id="tour-auto-ico">❚❚</span><small>Auto</small></button>
-        <div class="progress" id="progress"><i class="auto-bar" id="auto-bar"></i></div>
-        <button type="button" id="next" class="nav-btn primary" aria-label="Próxima etapa">›</button>
+        <button type="button" id="prev" class="nav-btn" aria-label="Etapa anterior"><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+        <button type="button" id="tour-auto" class="tour-auto" title="Avanço automático (Espaço)" aria-label="Alternar avanço automático" aria-pressed="true"><svg class="i" aria-hidden="true"><use id="tour-auto-ico" href="#i-pause"/></svg><small>Auto</small><i class="auto-bar" id="auto-bar"></i></button>
+        <div class="progress" id="progress"></div>
+        <button type="button" id="next" class="nav-btn primary" aria-label="Próxima etapa"><svg class="i" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
       </footer>
     </aside>
   </main>

@@ -13,8 +13,8 @@ export function renderIndex(stops, chapters) {
     <h2>Do resíduo à energia, num só mapa.</h2>
     <p class="lede">Toque num número no mapa ou escolha uma etapa abaixo. Cada etapa traz uma mensagem e uma figura.</p>
     <div class="home-ctas">
-      <button type="button" class="cta-tour" data-tour>▶ Tour guiado</button>
-      <button type="button" class="cta-journey" data-journey>↻ Siga o carbono</button>
+      <button type="button" class="cta-tour" data-tour><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Tour guiado</button>
+      <button type="button" class="cta-journey" data-journey><svg class="i" aria-hidden="true"><use href="#i-cycle"/></svg>Siga o carbono</button>
     </div>
     ${groups}
   </div>`;
@@ -24,7 +24,7 @@ export function renderStop(stop, { index, total, inTour }) {
   const streams = stop.streams && stop.streams !== "all" ? `<div class="tags">${stop.streams.map((k) => `<span class="tag"><i style="background:${STREAMS[k].color}"></i>${STREAMS[k].label}</span>`).join("")}</div>` : "";
   const more = stop.more ? `<details class="more"><summary>Saiba mais</summary>${stop.more.map((p) => `<p>${p}</p>`).join("")}</details>` : "";
   const src = stop.sources ? `<details class="sources"><summary>Fontes</summary><ul>${stop.sources.map((id) => FONTES[id]).filter(Boolean).map((f) => (f.u ? `<li><a href="${f.u}" target="_blank" rel="noopener">${f.t}</a></li>` : `<li>${f.t}</li>`)).join("")}</ul></details>` : "";
-  const back = inTour ? "" : `<button type="button" class="back" data-home>‹ Todas as etapas</button>`;
+  const back = inTour ? "" : `<button type="button" class="back" data-home><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg>Todas as etapas</button>`;
   return `${back}
     <div class="kicker">${stop.n ? `<span class="num ${stop.badge ? "hex" : ""}">${stop.badge ? stop.badge.tag : stop.n}</span>` : ""}${stop.kicker}${inTour ? `<span class="count">${index + 1}/${total}</span>` : ""}</div>
     <h2>${stop.message}</h2>
@@ -36,5 +36,6 @@ export function renderStop(stop, { index, total, inTour }) {
 }
 
 export function renderLegend() {
-  return `<div class="legend-title">Fluxos <small>toque para ocultar</small></div><div class="chips">${Object.entries(STREAMS).map(([k, s]) => `<button type="button" class="chip" data-stream="${k}" aria-pressed="true"><i style="background:${s.color}"></i>${s.label}</button>`).join("")}</div>`;
+  const sw = Object.values(STREAMS).map((s) => `<i style="background:${s.color}"></i>`).join("");
+  return `<button type="button" class="legend-head" id="legend-head" aria-expanded="true" aria-controls="legend-chips"><span class="legend-title">Fluxos</span><span class="legend-sw" aria-hidden="true">${sw}</span><small>toque para ocultar</small><svg class="i" aria-hidden="true"><use href="#i-chev-d"/></svg></button><div class="chips" id="legend-chips">${Object.entries(STREAMS).map(([k, s]) => `<button type="button" class="chip" data-stream="${k}" aria-pressed="true"><i style="background:${s.color}"></i>${s.label}</button>`).join("")}</div>`;
 }
