@@ -43,5 +43,10 @@ ok(perto(N.CGOB.volumeMeta2026_mi_m3 / N.CGOB.m3PorCertificado, 1.81728, 1e-6), 
 ok(N.SAFRA.pico.every((m) => N.SAFRA.meses.includes(m)), "Safra: pico contido nos meses de colheita");
 ok(N.RSU_ORGANICO_BR + N.RSU_RECICLAVEL_BR <= 100, "RSU: orgânico + reciclável ≤ 100%");
 
+// 7. Textos das etapas: nenhum marcador ${…} sem interpolar (aspas em vez de crase)
+const { STOPS } = await import("../src/content/paradas.mjs");
+const crus = STOPS.filter((s) => /\$\{/.test(JSON.stringify(s)));
+ok(!crus.length, `Etapas sem marcadores \${…} crus${crus.length ? `: ${crus.map((s) => s.id).join(", ")}` : ""}`);
+
 console.log(falhas ? `\n${falhas} verificação(ões) falharam.` : "\nTodos os números são consistentes.");
 process.exit(falhas ? 1 : 0);

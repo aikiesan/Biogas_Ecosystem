@@ -32,6 +32,34 @@ const exploreStops = STOPS.filter((s) => !s.tourOnly);
 
 const stage = createStage(svg, { stops: STOPS, onPick: (id) => open(id) });
 $("loading").remove();
+// abertura: mapa, cartões e pinos entram em sequência (ver styles/motion.css)
+document.body.classList.add("booting");
+setTimeout(() => document.body.classList.remove("booting"), 2200);
+
+// seletor de modo: indicador que desliza até a opção ativa
+const modesEl = document.querySelector(".modes");
+const modesInd = Object.assign(document.createElement("span"), { className: "modes-ind" });
+modesInd.setAttribute("aria-hidden", "true");
+modesEl.prepend(modesInd);
+function syncModes() {
+  const on = modesEl.querySelector(".pill.on");
+  modesInd.style.visibility = on ? "" : "hidden";
+  if (!on) return;
+  modesInd.style.setProperty("--x", `${on.offsetLeft}px`);
+  modesInd.style.setProperty("--w", `${on.offsetWidth}px`);
+}
+new MutationObserver(syncModes).observe(modesEl, { subtree: true, attributes: true, attributeFilter: ["class"] });
+addEventListener("resize", syncModes);
+syncModes();
+requestAnimationFrame(() => requestAnimationFrame(() => modesEl.classList.add("ready")));
+
+// painel: conteúdo novo entra em cascata (dir: −1 voltando, 1 avançando, 0 neutro)
+function animatePanel(dir = 0) {
+  body.classList.remove("enter");
+  body.style.setProperty("--dir", String(dir));
+  void body.offsetWidth;
+  body.classList.add("enter");
+}
 addLife(stage);
 addPeople(stage, { houses: stage.night.houses });
 
@@ -221,6 +249,7 @@ function showIndex() {
   setAutoPlay(false);
   body.innerHTML = renderIndex(STOPS, CHAPTERS);
   body.scrollTop = 0;
+  if (!document.body.classList.contains("booting")) animatePanel(0);
   $("panel-nav").hidden = true;
   stage.highlight(null);
   history.replaceState(null, "", location.pathname);
@@ -228,16 +257,18 @@ function showIndex() {
 
 function show(i) {
   const L = list();
+  const prev = index;
   index = Math.max(0, Math.min(L.length - 1, i));
   autoElapsed = 0;
   $("auto-bar").style.transform = "scaleX(0)";
   const stop = L[index];
   body.innerHTML = renderStop(stop, { index, total: L.length, inTour: mode === "tour" });
   body.scrollTop = 0;
+  animatePanel(prev < 0 ? 0 : Math.sign(index - prev));
   $("panel-nav").hidden = false;
   $("prev").disabled = index === 0 && !autoPlay;
   $("next").disabled = index === L.length - 1 && !autoPlay;
-  progress.style.setProperty("--p", `${((index + 1) / L.length) * 100}%`);
+  progress.style.setProperty("--p", ((index + 1) / L.length).toFixed(4));
   progress.setAttribute("aria-label", `Etapa ${index + 1} de ${L.length}`);
   stage.highlight(stop.tags || stop.streams !== "all" ? stop : null);
   stage.frame(stop);

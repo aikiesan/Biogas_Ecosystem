@@ -183,7 +183,7 @@ export const STOPS = [
   },
   {
     id: "posto", chapter: "destino", kicker: "Mobilidade",
-    message: "Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.",
+    message: `Trocar diesel por biometano corta cerca de ${REDUCAO_DIESEL}% das emissões por MJ.`,
     figure: { type: "compare", unit: "gCO₂e por MJ de combustível, ciclo poço à roda (EPE)", ratioLabel: `−${REDUCAO_DIESEL}%`, rows: [
       { label: "Diesel B", v: INTENSIDADE.dieselB, tone: "neutral", prefix: "< " },
       { label: "Biometano (plantas certificadas no RenovaBio)", v: INTENSIDADE.biometano, tone: "biometano" }] },
